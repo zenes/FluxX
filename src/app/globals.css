@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+
+
+@layer base {
+  :root {
+    --background: 0 0% 4%; /* #0a0a0a */
+    --foreground: 215 15% 90%; /* pale slate text for readability */
+    --card: 0 0% 6%; /* slightly lighter */
+    --card-foreground: 215 15% 90%;
+    --popover: 0 0% 6%;
+    --popover-foreground: 215 15% 90%;
+    --primary: 215 70% 50%; /* Slate blue accent */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 215 25% 15%; /* dark slate blue for secondary forms/buttons */
+    --secondary-foreground: 215 70% 60%;
+    --muted: 0 0% 10%; /* very dark gray for muted surfaces */
+    --muted-foreground: 215 15% 50%; /* grayish blue text */
+    --accent: 215 30% 20%; /* secondary hover states */
+    --accent-foreground: 215 80% 70%;
+    --destructive: 0 60% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 15%; /* sharp faint borders */
+    --input: 0 0% 15%;
+    --ring: 215 70% 50%; /* same as primary */
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --radius: 0.25rem; /* sharper, more military/enterprise feel */
+  }
+  .dark {
+    --background: 0 0% 4%;
+    --foreground: 215 15% 90%;
+    --card: 0 0% 6%;
+    --card-foreground: 215 15% 90%;
+    --popover: 0 0% 6%;
+    --popover-foreground: 215 15% 90%;
+    --primary: 215 70% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 215 25% 15%;
+    --secondary-foreground: 215 70% 60%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 215 15% 50%;
+    --accent: 215 30% 20%;
+    --accent-foreground: 215 80% 70%;
+    --destructive: 0 60% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 215 70% 50%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --radius: 0.25rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
