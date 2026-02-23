@@ -24,6 +24,7 @@
     "recharts": "^3.7.0",
     "tailwind-merge": "^3.5.0",
     "tailwindcss-animate": "^1.0.7",
+    "use-debounce": "^10.1.0",
     "yahoo-finance2": "^3.13.0"
   },
   "devDependencies": {

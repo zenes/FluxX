@@ -5,6 +5,9 @@ import ExchangeRateChart from "@/components/ExchangeRateChart";
 import GoldPriceChart from "@/components/GoldPriceChart";
 import AuthButton from "@/components/AuthButton";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { getAssets } from "@/lib/actions";
 
 type GoldType = 'global' | 'krx';
 
@@ -25,16 +28,24 @@ export default function Home() {
   const [isGoldLoading, setIsGoldLoading] = useState(true);
   const [showGoldChart, setShowGoldChart] = useState(false);
 
+  // Portfolio state
+  const [netWorth, setNetWorth] = useState<number | null>(null);
+  const [isNetWorthLoading, setIsNetWorthLoading] = useState(true);
+
   // Drag and Drop state
-  const [cardsOrder, setCardsOrder] = useState(['nodes', 'gold', 'exchange']);
+  const [cardsOrder, setCardsOrder] = useState(['portfolio', 'gold', 'exchange']);
   const [isMounted, setIsMounted] = useState(false);
+
+  const router = useRouter();
 
   useEffect(() => {
     setIsMounted(true);
     const savedOrder = localStorage.getItem('fluxx-dashboard-cards');
     if (savedOrder) {
       try {
-        setCardsOrder(JSON.parse(savedOrder));
+        const parsed = JSON.parse(savedOrder);
+        // Map any old 'nodes' to 'portfolio' for seamless update
+        setCardsOrder(parsed.map((item: string) => item === 'nodes' ? 'portfolio' : item));
       } catch (e) { }
     }
   }, []);
@@ -85,9 +96,56 @@ export default function Home() {
     }
   };
 
+  const fetchNetWorth = async () => {
+    try {
+      setIsNetWorthLoading(true);
+      const assets = await getAssets();
+
+      const stockSymbols = assets.filter(a => a.assetType === 'stock' && a.assetSymbol).map(a => a.assetSymbol).join(',');
+
+      const [fxRes, goldRes, stockRes] = await Promise.all([
+        fetch('/api/exchange-rate').then(r => r.json()).catch(() => ({})),
+        fetch('/api/gold-price?market=global').then(r => r.json()).catch(() => ({})),
+        stockSymbols ? fetch(`/api/stock-price?symbols=${stockSymbols}`).then(r => r.json()).catch(() => ({})) : Promise.resolve({})
+      ]);
+
+      const usdKrw = fxRes?.rate || 1400;
+      const goldUsd = goldRes?.price || 2600;
+      const stockPrices = stockRes?.quotes || {};
+
+      const getAmount = (type: string) => assets.find(a => a.assetType === type)?.amount || 0;
+      const goldAmount = getAmount('gold');
+      const usdAmount = getAmount('usd');
+      const krwAmount = getAmount('krw');
+
+      const goldKrw = (goldAmount / 31.1034768) * goldUsd * usdKrw;
+      const usdKrwVal = usdAmount * usdKrw;
+
+      let totalStockKrw = 0;
+      assets.filter(a => a.assetType === 'stock' && a.assetSymbol).forEach(stock => {
+        const symbol = stock.assetSymbol!;
+        const priceData = stockPrices[symbol];
+        const currentPrice = priceData ? priceData.price : (stock.avgPrice || 0);
+        totalStockKrw += (stock.amount * currentPrice) * usdKrw;
+      });
+
+      setNetWorth(goldKrw + usdKrwVal + krwAmount + totalStockKrw);
+    } catch (error) {
+      console.error('Error fetching net worth:', error);
+    } finally {
+      setIsNetWorthLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchExchangeRate();
     const intervalId = setInterval(fetchExchangeRate, 60000); // Poll every 1 minute
+    return () => clearInterval(intervalId); // Cleanup on unmount
+  }, []);
+
+  useEffect(() => {
+    fetchNetWorth();
+    const intervalId = setInterval(fetchNetWorth, 60000); // Poll every 1 minute
     return () => clearInterval(intervalId); // Cleanup on unmount
   }, []);
 
@@ -98,24 +156,33 @@ export default function Home() {
   }, [goldType]); // Refetch when type changes
 
   const renderCard = (cardId: string, provided: any, snapshot: any) => {
-    if (cardId === 'nodes') {
+    if (cardId === 'portfolio') {
       return (
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
           style={{ ...provided.draggableProps.style }}
-          className={`rounded-md border bg-card text-card-foreground shadow-sm relative overflow-hidden flex flex-col h-full transition-shadow ${snapshot.isDragging ? 'shadow-2xl scale-[1.02] z-50 ring-1 ring-primary' : ''}`}
+          className={`rounded-md border bg-card text-card-foreground shadow-sm relative overflow-hidden flex flex-col h-full cursor-pointer hover:bg-muted/20 transition-all ${snapshot.isDragging ? 'shadow-2xl scale-[1.02] z-50 ring-1 ring-primary' : ''}`}
+          onClick={() => router.push('/operations')}
         >
           <div className="absolute top-0 left-0 w-1 h-full bg-primary/80"></div>
           <div className="p-5 flex flex-col gap-1 h-full">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-              <span {...provided.dragHandleProps} className="cursor-grab hover:text-foreground text-muted-foreground/50 transition-colors">⠿</span>
-              Active Nodes
+              <span {...provided.dragHandleProps} className="cursor-grab hover:text-foreground text-muted-foreground/50 transition-colors" onClick={(e) => e.stopPropagation()}>⠿</span>
+              Total Asset Value
             </span>
-            <span className="text-3xl font-bold tracking-tight text-foreground">1,248</span>
+            <div className="mt-1 flex-1 flex flex-col justify-center">
+              {isNetWorthLoading && netWorth === null ? (
+                <span className="flex h-10 w-32 items-center bg-muted/50 rounded-sm animate-pulse"></span>
+              ) : (
+                <span className="text-3xl font-bold tracking-tight text-foreground">
+                  ₩{(netWorth || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                </span>
+              )}
+            </div>
             <span className="text-xs text-primary mt-2 flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-              System nominal
+              Live Sync
             </span>
           </div>
         </div>
@@ -281,9 +348,9 @@ export default function Home() {
         </div>
         <nav className="flex items-center gap-6">
           <div className="flex gap-4 mr-2">
-            <a href="#" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">Dashboard</a>
-            <a href="#" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">Operations</a>
-            <a href="#" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">Intelligence</a>
+            <Link href="/" className="text-xs font-medium text-foreground transition-colors">Dashboard</Link>
+            <Link href="/operations" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">Operations</Link>
+            <Link href="#" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">Intelligence</Link>
           </div>
           <AuthButton />
         </nav>

@@ -22,11 +22,15 @@ model User {
 }
 
 model Asset {
-  id              String    @id @default(cuid())
-  userId          String
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  assetType       String    // e.g., 'gold', 'usd', 'krw'
-  amountEncrypted String    // AES-256 encrypted balance string
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id                String    @id @default(cuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assetType         String    // e.g., 'gold', 'usd', 'krw', 'stock'
+  assetSymbol       String?   // Ticker symbol (e.g., 'AAPL', 'TSLA') for stocks
+  amountEncrypted   String    // AES-256 encrypted balance/shares string
+  avgPriceEncrypted String?   // AES-256 encrypted average acquisition price (for stocks)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@unique([userId, assetType, assetSymbol]) // Ensure uniqueness per user+type+symbol
 }
