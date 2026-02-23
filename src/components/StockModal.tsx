@@ -62,6 +62,26 @@ export default function StockModal({
         setShowDropdown(false);
     };
 
+    const isDirty = ticker !== '' || shares !== '' || avgPrice !== '';
+
+    const handleClose = () => {
+        if (isDirty) {
+            const confirm = window.confirm('You have unsaved changes. Are you sure you want to cancel?');
+            if (!confirm) return;
+        }
+        onClose();
+    };
+
+    useEffect(() => {
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') handleClose();
+        };
+        if (isOpen) {
+            window.addEventListener('keydown', handleEsc);
+        }
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, [isOpen, isDirty, ticker, shares, avgPrice]);
+
     if (!isOpen) return null;
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -80,8 +100,14 @@ export default function StockModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-            <div className="w-full max-w-sm bg-card border border-primary/20 shadow-[0_0_20px_rgba(59,130,246,0.15)] rounded-md p-6 overflow-visible relative">
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+            onClick={handleClose}
+        >
+            <div
+                className="w-full max-w-sm bg-card border border-primary/20 shadow-[0_0_20px_rgba(59,130,246,0.15)] rounded-md p-6 overflow-visible relative"
+                onClick={(e) => e.stopPropagation()}
+            >
                 <h2 className="text-lg font-bold tracking-widest text-foreground uppercase mb-6 flex items-center gap-2">
                     <span className="text-primary opacity-70">///</span> Register US Stock
                 </h2>
@@ -168,7 +194,7 @@ export default function StockModal({
                     <div className="flex justify-end gap-3 mt-4">
                         <button
                             type="button"
-                            onClick={onClose}
+                            onClick={handleClose}
                             disabled={loading}
                             className="px-4 py-2 text-xs font-medium border border-input rounded-sm hover:bg-muted transition-colors uppercase tracking-widest"
                         >

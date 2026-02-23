@@ -21,9 +21,25 @@ export default function AssetModal({
     const [amount, setAmount] = useState<string>(currentAmount.toString());
     const [loading, setLoading] = useState(false);
 
+    const isDirty = amount !== currentAmount.toString();
+
+    const handleClose = () => {
+        if (isDirty) {
+            const confirm = window.confirm('You have unsaved changes. Are you sure you want to cancel?');
+            if (!confirm) return;
+        }
+        onClose();
+    };
+
     useEffect(() => {
-        setAmount(currentAmount.toString());
-    }, [currentAmount]);
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') handleClose();
+        };
+        if (isOpen) {
+            window.addEventListener('keydown', handleEsc);
+        }
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, [isOpen, isDirty, amount]);
 
     if (!isOpen) return null;
 
@@ -41,8 +57,14 @@ export default function AssetModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-            <div className="w-full max-w-sm bg-card border border-primary/20 shadow-[0_0_20px_rgba(59,130,246,0.15)] rounded-md p-6">
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+            onClick={handleClose}
+        >
+            <div
+                className="w-full max-w-sm bg-card border border-primary/20 shadow-[0_0_20px_rgba(59,130,246,0.15)] rounded-md p-6"
+                onClick={(e) => e.stopPropagation()}
+            >
                 <h2 className="text-lg font-bold tracking-widest text-foreground uppercase mb-6 flex items-center gap-2">
                     <span className="text-primary opacity-70">///</span> Update {label}
                 </h2>
@@ -71,7 +93,7 @@ export default function AssetModal({
                     <div className="flex justify-end gap-3 mt-2">
                         <button
                             type="button"
-                            onClick={onClose}
+                            onClick={handleClose}
                             disabled={loading}
                             className="px-4 py-2 text-xs font-medium border border-input rounded-sm hover:bg-muted transition-colors uppercase tracking-widest"
                         >
