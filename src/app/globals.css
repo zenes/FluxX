@@ -75,6 +75,34 @@
     --chart-5: 340 75% 55%;
     --radius: 0.25rem;
   }
+
+  .cyber {
+    --background: 222 47% 11%; /* Mid-tone navy #0b1120 */
+    --foreground: 180 100% 50%; /* Cyan #00ffff */
+    --card: 222 47% 15%; /* Slightly lighter navy */
+    --card-foreground: 180 100% 50%;
+    --popover: 222 47% 15%;
+    --popover-foreground: 180 100% 50%;
+    --primary: 300 100% 50%; /* Magenta #ff00ff */
+    --primary-foreground: 180 100% 50%;
+    --secondary: 222 47% 20%;
+    --secondary-foreground: 300 100% 50%;
+    --muted: 222 47% 15%;
+    --muted-foreground: 180 100% 70%;
+    --accent: 300 100% 50%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 180 100% 50%;
+    --input: 222 47% 20%;
+    --ring: 300 100% 50%;
+    --chart-1: 180 100% 50%;
+    --chart-2: 300 100% 50%;
+    --chart-3: 160 100% 50%;
+    --chart-4: 280 100% 60%;
+    --chart-5: 340 100% 50%;
+    --radius: 0.25rem;
+  }
 }
 
 @layer base {
