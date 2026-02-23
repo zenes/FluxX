@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { upsertAsset } from '@/lib/actions';
+import ConfirmModal from './ConfirmModal';
 
 export default function AssetModal({
     isOpen,
@@ -20,26 +21,46 @@ export default function AssetModal({
 }) {
     const [amount, setAmount] = useState<string>(currentAmount.toString());
     const [loading, setLoading] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
+
+    // Sync amount when currentAmount changes (or modal opens)
+    useEffect(() => {
+        if (isOpen) {
+            setAmount(currentAmount.toString());
+            setShowConfirm(false); // Reset confirm state when opening
+        }
+    }, [isOpen, currentAmount]);
 
     const isDirty = amount !== currentAmount.toString();
 
-    const handleClose = () => {
-        if (isDirty) {
-            const confirm = window.confirm('You have unsaved changes. Are you sure you want to cancel?');
-            if (!confirm) return;
+    const handleCloseRequest = (e?: React.MouseEvent | KeyboardEvent) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
         }
+
+        // If confirm modal is already showing, don't trigger anything else from the parent
+        if (showConfirm) return;
+
+        if (isDirty) {
+            setShowConfirm(true);
+            return;
+        }
+
         onClose();
     };
 
     useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') handleClose();
+            if (e.key === 'Escape') {
+                handleCloseRequest(e);
+            }
         };
         if (isOpen) {
             window.addEventListener('keydown', handleEsc);
         }
         return () => window.removeEventListener('keydown', handleEsc);
-    }, [isOpen, isDirty, amount]);
+    }, [isOpen, isDirty, showConfirm]);
 
     if (!isOpen) return null;
 
@@ -57,58 +78,70 @@ export default function AssetModal({
     };
 
     return (
-        <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
-            onClick={handleClose}
-        >
+        <>
             <div
-                className="w-full max-w-sm bg-card border border-primary/20 shadow-[0_0_20px_rgba(59,130,246,0.15)] rounded-md p-6"
-                onClick={(e) => e.stopPropagation()}
+                className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+                onClick={handleCloseRequest}
             >
-                <h2 className="text-lg font-bold tracking-widest text-foreground uppercase mb-6 flex items-center gap-2">
-                    <span className="text-primary opacity-70">///</span> Update {label}
-                </h2>
+                <div
+                    className="w-full max-w-sm bg-card border border-primary/20 shadow-[0_0_20px_rgba(59,130,246,0.15)] rounded-md p-6"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <h2 className="text-lg font-bold tracking-widest text-foreground uppercase mb-6 flex items-center gap-2">
+                        <span className="text-primary opacity-70">///</span> Update {label}
+                    </h2>
 
-                <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-                    <div className="flex flex-col gap-2">
-                        <label className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest">
-                            New Balance ({unit})
-                        </label>
-                        <div className="relative">
-                            <input
-                                type="number"
-                                step="any"
-                                value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
-                                className="w-full px-4 py-3 bg-muted/40 border border-input rounded-sm text-lg font-mono tracking-wider focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all pr-12 text-foreground"
-                                required
-                            />
-                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-mono text-xs">{unit}</span>
+                    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+                        <div className="flex flex-col gap-2">
+                            <label className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest">
+                                New Balance ({unit})
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    step="any"
+                                    value={amount}
+                                    onChange={(e) => setAmount(e.target.value)}
+                                    className="w-full px-4 py-3 bg-muted/40 border border-input rounded-sm text-lg font-mono tracking-wider focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all pr-12 text-foreground"
+                                    required
+                                />
+                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground font-mono text-xs">{unit}</span>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground font-mono mt-1 opacity-70">
+                                * Data is secured via AES-256 encryption.
+                            </p>
                         </div>
-                        <p className="text-[10px] text-muted-foreground font-mono mt-1 opacity-70">
-                            * Data is secured via AES-256 encryption.
-                        </p>
-                    </div>
 
-                    <div className="flex justify-end gap-3 mt-2">
-                        <button
-                            type="button"
-                            onClick={handleClose}
-                            disabled={loading}
-                            className="px-4 py-2 text-xs font-medium border border-input rounded-sm hover:bg-muted transition-colors uppercase tracking-widest"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="px-6 py-2 bg-primary/20 text-primary border border-primary/50 text-xs font-bold uppercase tracking-widest rounded-sm hover:bg-primary/30 transition-colors shadow-[0_0_10px_rgba(59,130,246,0.3)] disabled:opacity-50"
-                        >
-                            {loading ? 'Processing...' : 'Confirm'}
-                        </button>
-                    </div>
-                </form>
+                        <div className="flex justify-end gap-3 mt-2">
+                            <button
+                                type="button"
+                                onClick={handleCloseRequest}
+                                disabled={loading}
+                                className="px-4 py-2 text-xs font-medium border border-input rounded-sm hover:bg-muted transition-colors uppercase tracking-widest"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="px-6 py-2 bg-primary/20 text-primary border border-primary/50 text-xs font-bold uppercase tracking-widest rounded-sm hover:bg-primary/30 transition-colors shadow-[0_0_10px_rgba(59,130,246,0.3)] disabled:opacity-50"
+                            >
+                                {loading ? 'Processing...' : 'Confirm'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </div>
+
+            {/* Custom Confirmation Modal */}
+            <ConfirmModal
+                isOpen={showConfirm}
+                onConfirm={() => {
+                    setShowConfirm(false);
+                    onClose();
+                }}
+                onCancel={() => setShowConfirm(false)}
+            />
+        </>
     );
 }
