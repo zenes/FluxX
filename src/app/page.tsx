@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import ExchangeRateChart from "@/components/ExchangeRateChart";
 import GoldPriceChart from "@/components/GoldPriceChart";
+import AuthButton from "@/components/AuthButton";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 type GoldType = 'global' | 'krx';
@@ -278,10 +279,13 @@ export default function Home() {
           </div>
           <span className="text-sm font-semibold tracking-wide text-foreground uppercase">FluxX Command Center</span>
         </div>
-        <nav className="flex gap-4">
-          <a href="#" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">Dashboard</a>
-          <a href="#" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">Operations</a>
-          <a href="#" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">Intelligence</a>
+        <nav className="flex items-center gap-6">
+          <div className="flex gap-4 mr-2">
+            <a href="#" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">Dashboard</a>
+            <a href="#" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">Operations</a>
+            <a href="#" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">Intelligence</a>
+          </div>
+          <AuthButton />
         </nav>
       </header>
 
