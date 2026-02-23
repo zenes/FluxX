@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import ExchangeRateChart from "@/components/ExchangeRateChart";
 import GoldPriceChart from "@/components/GoldPriceChart";
 import AuthButton from "@/components/AuthButton";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -347,12 +348,15 @@ export default function Home() {
           <span className="text-sm font-semibold tracking-wide text-foreground uppercase">FluxX Command Center</span>
         </div>
         <nav className="flex items-center gap-6">
-          <div className="flex gap-4 mr-2">
+          <div className="flex gap-4 mr-2 items-center">
             <Link href="/" className="text-xs font-medium text-foreground transition-colors">Dashboard</Link>
             <Link href="/operations" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">Operations</Link>
             <Link href="#" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">Intelligence</Link>
           </div>
-          <AuthButton />
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            <AuthButton />
+          </div>
         </nav>
       </header>
 

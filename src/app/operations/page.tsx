@@ -3,6 +3,7 @@ import ClientOperations from './ClientOperations';
 import { redirect } from 'next/navigation';
 import { auth } from '@/../auth';
 import Link from 'next/link';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export const metadata = {
     title: 'Operations Portfolio | FluxX',
@@ -32,6 +33,7 @@ export default async function OperationsPage() {
                         <Link href="/operations" className="text-xs font-medium text-foreground transition-colors">Operations</Link>
                         <Link href="#" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">Intelligence</Link>
                     </div>
+                    <ThemeToggle />
                 </nav>
             </header>
             <ClientOperations assets={assets} />

@@ -12,34 +12,44 @@
 
 @layer base {
   :root {
-    --background: 0 0% 4%; /* #0a0a0a */
-    --foreground: 215 15% 90%; /* pale slate text for readability */
-    --card: 0 0% 6%; /* slightly lighter */
-    --card-foreground: 215 15% 90%;
-    --popover: 0 0% 6%;
-    --popover-foreground: 215 15% 90%;
-    --primary: 215 70% 50%; /* Slate blue accent */
+    --background: 40 20% 98%;
+    /* Warm off-white #faf8f5 */
+    --foreground: 220 10% 15%;
+    /* Deep slate text */
+    --card: 0 0% 100%;
+    /* Pure white cards */
+    --card-foreground: 220 10% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 10% 15%;
+    --primary: 215 70% 45%;
+    /* Blue accent */
     --primary-foreground: 0 0% 100%;
-    --secondary: 215 25% 15%; /* dark slate blue for secondary forms/buttons */
-    --secondary-foreground: 215 70% 60%;
-    --muted: 0 0% 10%; /* very dark gray for muted surfaces */
-    --muted-foreground: 215 15% 50%; /* grayish blue text */
-    --accent: 215 30% 20%; /* secondary hover states */
-    --accent-foreground: 215 80% 70%;
-    --destructive: 0 60% 50%;
+    --secondary: 40 10% 90%;
+    /* Soft warm gray for secondary */
+    --secondary-foreground: 220 20% 25%;
+    --muted: 40 15% 94%;
+    /* Gentle muted backgrounds */
+    --muted-foreground: 215 15% 50%;
+    --accent: 40 20% 90%;
+    /* Soft accent hover states */
+    --accent-foreground: 220 20% 25%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 15%; /* sharp faint borders */
-    --input: 0 0% 15%;
-    --ring: 215 70% 50%; /* same as primary */
+    --border: 40 10% 85%;
+    /* Soft borders */
+    --input: 40 10% 85%;
+    --ring: 215 70% 45%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    --radius: 0.25rem; /* sharper, more military/enterprise feel */
+    --radius: 0.25rem;
   }
+
   .dark {
     --background: 0 0% 4%;
+    /* #0a0a0a */
     --foreground: 215 15% 90%;
     --card: 0 0% 6%;
     --card-foreground: 215 15% 90%;
@@ -71,6 +81,7 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
