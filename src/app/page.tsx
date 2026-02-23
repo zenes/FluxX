@@ -9,6 +9,7 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getAssets } from "@/lib/actions";
+import { Moon, Sun, Monitor, Terminal, Menu, X } from "lucide-react";
 
 type GoldType = 'global' | 'krx';
 
@@ -19,6 +20,7 @@ export default function Home() {
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showChart, setShowChart] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // Gold state
   const [goldType, setGoldType] = useState<GoldType>('global');
@@ -36,11 +38,16 @@ export default function Home() {
   // Drag and Drop state
   const [cardsOrder, setCardsOrder] = useState(['portfolio', 'gold', 'exchange']);
   const [isMounted, setIsMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const router = useRouter();
 
   useEffect(() => {
     setIsMounted(true);
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
     const savedOrder = localStorage.getItem('fluxx-dashboard-cards');
     if (savedOrder) {
       try {
@@ -49,6 +56,7 @@ export default function Home() {
         setCardsOrder(parsed.map((item: string) => item === 'nodes' ? 'portfolio' : item));
       } catch (e) { }
     }
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   const onDragEnd = (result: any) => {
@@ -176,7 +184,7 @@ export default function Home() {
               {isNetWorthLoading && netWorth === null ? (
                 <span className="flex h-10 w-32 items-center bg-muted/50 rounded-sm animate-pulse"></span>
               ) : (
-                <span className="text-3xl font-bold tracking-tight text-foreground">
+                <span className="text-xl md:text-3xl font-bold tracking-tight text-foreground">
                   ₩{(netWorth || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                 </span>
               )}
@@ -202,7 +210,7 @@ export default function Home() {
           <div className="absolute top-0 left-0 w-1 h-full bg-destructive/80"></div>
           <div className="p-5 flex flex-col gap-1 h-full">
             <div className="flex justify-between items-start">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                   <span {...provided.dragHandleProps} className="cursor-grab hover:text-foreground text-muted-foreground/50 transition-colors" onClick={(e) => e.stopPropagation()}>⠿</span>
                   Gold Market Price
@@ -215,7 +223,7 @@ export default function Home() {
                     className={`px-1.5 py-0.5 ${goldType === 'krx' ? 'bg-destructive text-destructive-foreground' : 'hover:bg-muted-foreground/20'}`}
                     onClick={() => setGoldType('krx')}
                   >
-                    KRX(ETF)
+                    KRX
                   </button>
                   <button
                     className={`px-1.5 py-0.5 ${goldType === 'global' ? 'bg-destructive text-destructive-foreground' : 'hover:bg-muted-foreground/20'}`}
@@ -235,16 +243,16 @@ export default function Home() {
 
             {isGoldLoading && goldPrice === null ? (
               <div className="mt-2 text-xl font-bold tracking-tight text-muted-foreground animate-pulse">
-                Establishing uplink...
+                Uplink...
               </div>
             ) : (
               <>
-                <span className="text-3xl font-bold tracking-tight text-foreground mt-2">
+                <span className="text-xl md:text-3xl font-bold tracking-tight text-foreground mt-2">
                   {goldType === 'krx' ? '₩' : '$'}
                   {goldPrice ? goldPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A'}
                 </span>
 
-                <div className="flex items-center gap-2 mt-2">
+                <div className="flex items-center gap-2 mt-2 flex-wrap">
                   <span className={`text-xs font-medium ${goldChange && goldChange > 0
                     ? 'text-destructive'
                     : goldChange && goldChange < 0
@@ -256,14 +264,14 @@ export default function Home() {
                     ({goldChangePercent ? (goldChangePercent >= 0 ? '+' : '') + goldChangePercent.toFixed(2) : '0.00'}%)
                   </span>
                   <span className="text-[10px] text-muted-foreground ml-auto uppercase opacity-70">
-                    L/U: {goldLastUpdated || 'Unknown'}
+                    {goldLastUpdated || 'Unknown'}
                   </span>
                 </div>
               </>
             )}
 
             {showGoldChart && goldPrice !== null && (
-              <div onClick={(e) => e.stopPropagation()}>
+              <div onClick={(e) => e.stopPropagation()} className="mt-4">
                 <GoldPriceChart currentRate={goldPrice} type={goldType} />
               </div>
             )}
@@ -286,8 +294,8 @@ export default function Home() {
             <div className="flex justify-between items-start">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                 <span {...provided.dragHandleProps} className="cursor-grab hover:text-foreground text-muted-foreground/50 transition-colors" onClick={(e) => e.stopPropagation()}>⠿</span>
-                USD/KRW Exchange
-                <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-sm group-hover:bg-primary/20 transition-colors ml-1">{showChart ? 'Hide Trend' : 'View Trend'}</span>
+                USD/KRW
+                <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-sm group-hover:bg-primary/20 transition-colors ml-1 hidden sm:inline-block">{showChart ? 'Hide' : 'Trend'}</span>
               </span>
               {isLoading && (
                 <span className="flex h-3 w-3 relative">
@@ -299,15 +307,15 @@ export default function Home() {
 
             {isLoading && exchangeRate === null ? (
               <div className="mt-2 text-xl font-bold tracking-tight text-muted-foreground animate-pulse">
-                Establishing uplink...
+                Uplink...
               </div>
             ) : (
               <>
-                <span className="text-3xl font-bold tracking-tight text-foreground mt-2">
+                <span className="text-xl md:text-3xl font-bold tracking-tight text-foreground mt-2">
                   {exchangeRate ? `₩${exchangeRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A'}
                 </span>
 
-                <div className="flex items-center gap-2 mt-2">
+                <div className="flex items-center gap-2 mt-2 flex-wrap">
                   <span className={`text-xs font-medium ${rateChange && rateChange > 0
                     ? 'text-destructive'
                     : rateChange && rateChange < 0
@@ -319,14 +327,14 @@ export default function Home() {
                     ({rateChangePercent ? (rateChangePercent >= 0 ? '+' : '') + rateChangePercent.toFixed(2) : '0.00'}%)
                   </span>
                   <span className="text-[10px] text-muted-foreground ml-auto uppercase opacity-70">
-                    L/U: {lastUpdated || 'Unknown'}
+                    {lastUpdated || 'Unknown'}
                   </span>
                 </div>
               </>
             )}
 
             {showChart && !isLoading && exchangeRate !== null && (
-              <div onClick={(e) => e.stopPropagation()}>
+              <div onClick={(e) => e.stopPropagation()} className="mt-4">
                 <ExchangeRateChart currentRate={exchangeRate} />
               </div>
             )}
@@ -340,14 +348,16 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-6">
+      <header className="flex h-16 items-center gap-4 border-b bg-muted/40 px-4 md:px-6 sticky top-0 z-50 backdrop-blur-md">
         <div className="flex flex-1 items-center gap-2">
-          <div className="flex size-7 items-center justify-center rounded-sm bg-primary text-primary-foreground font-bold text-xs shadow-md">
+          <div className="flex size-8 items-center justify-center rounded-sm bg-primary text-primary-foreground font-bold text-sm shadow-md">
             FX
           </div>
-          <span className="text-sm font-semibold tracking-wide text-foreground uppercase">FluxX Command Center</span>
+          <span className="text-xs md:text-sm font-semibold tracking-wide text-foreground uppercase truncate">FluxX Command Center</span>
         </div>
-        <nav className="flex items-center gap-6">
+
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex items-center gap-6">
           <div className="flex gap-4 mr-2 items-center">
             <Link href="/" className="text-xs font-medium text-foreground transition-colors">Dashboard</Link>
             <Link href="/operations" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">Operations</Link>
@@ -358,32 +368,55 @@ export default function Home() {
             <AuthButton />
           </div>
         </nav>
+
+        {/* Mobile Navigation Toggle */}
+        <div className="flex md:hidden items-center gap-2">
+          <ThemeToggle />
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="p-2 rounded-md hover:bg-muted transition-colors"
+          >
+            {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
+
+        {/* Mobile Menu Overlay */}
+        {isMenuOpen && (
+          <div className="absolute top-16 left-0 w-full bg-card border-b shadow-xl p-4 flex flex-col gap-4 md:hidden animate-in slide-in-from-top duration-200">
+            <Link href="/" className="text-sm font-medium p-2 rounded-md hover:bg-muted" onClick={() => setIsMenuOpen(false)}>Dashboard</Link>
+            <Link href="/operations" className="text-sm font-medium p-2 rounded-md hover:bg-muted" onClick={() => setIsMenuOpen(false)}>Operations</Link>
+            <Link href="#" className="text-sm font-medium p-2 rounded-md hover:bg-muted" onClick={() => setIsMenuOpen(false)}>Intelligence</Link>
+            <div className="pt-2 border-t flex justify-between items-center">
+              <span className="text-xs text-muted-foreground">User Session</span>
+              <AuthButton />
+            </div>
+          </div>
+        )}
       </header>
 
-      <main className="flex-1 p-6 md:p-8 bg-background">
-        <div className="mb-6 flex items-center justify-between">
+      <main className="flex-1 p-4 md:p-8 bg-background">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
-            <p className="text-sm text-muted-foreground mt-1">Global system status and active operations.</p>
+            <p className="text-sm text-muted-foreground mt-1">Global system status.</p>
           </div>
-          <button className="inline-flex items-center justify-center whitespace-nowrap rounded-sm text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-4 py-2 shadow-[0_0_10px_rgba(59,130,246,0.3)]">
+          <button className="inline-flex items-center justify-center whitespace-nowrap rounded-sm text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 shadow-[0_0_10px_rgba(59,130,246,0.3)] w-full sm:w-auto">
             Deploy Unit
           </button>
         </div>
 
         {!isMounted ? (
-          <div className="grid gap-6 md:grid-cols-3">
-            {/* SSR / Initial Hydration Placeholder (Empty or Skeleton) */}
+          <div className="grid gap-4 md:grid-cols-3">
             <div className="h-[140px] rounded-md border bg-card w-full shadow-sm animate-pulse"></div>
             <div className="h-[140px] rounded-md border bg-card w-full shadow-sm animate-pulse"></div>
             <div className="h-[140px] rounded-md border bg-card w-full shadow-sm animate-pulse"></div>
           </div>
         ) : (
           <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable droppableId="dashboard-cards" direction="horizontal">
+            <Droppable droppableId="dashboard-cards" direction={isMobile ? "vertical" : "horizontal"}>
               {(provided) => (
                 <div
-                  className="grid gap-6 md:grid-cols-3 select-none"
+                  className="grid gap-4 grid-cols-1 md:grid-cols-3 select-none"
                   {...provided.droppableProps}
                   ref={provided.innerRef}
                 >
@@ -399,38 +432,38 @@ export default function Home() {
           </DragDropContext>
         )}
 
-        <div className="mt-6 rounded-md border bg-card text-card-foreground shadow-sm">
-          <div className="p-5 border-b">
+        <div className="mt-6 rounded-md border bg-card text-card-foreground shadow-sm overflow-hidden">
+          <div className="p-5 border-b flex justify-between items-center">
             <h3 className="text-sm font-medium">Recent Activity Log</h3>
           </div>
-          <div className="p-0">
+          <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground uppercase text-[10px] tracking-wider">Timestamp</th>
-                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground uppercase text-[10px] tracking-wider">Event ID</th>
-                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground uppercase text-[10px] tracking-wider">Severity</th>
-                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground uppercase text-[10px] tracking-wider">Details</th>
+                <tr className="border-b transition-colors hover:bg-muted/50">
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground uppercase text-[10px] tracking-wider whitespace-nowrap">Timestamp</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground uppercase text-[10px] tracking-wider whitespace-nowrap">Event ID</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground uppercase text-[10px] tracking-wider whitespace-nowrap">Severity</th>
+                  <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground uppercase text-[10px] tracking-wider whitespace-nowrap">Details</th>
                 </tr>
               </thead>
               <tbody>
                 <tr className="border-b transition-colors hover:bg-muted/50">
-                  <td className="p-4 align-middle text-xs text-muted-foreground font-mono">14:26:03.192Z</td>
+                  <td className="p-4 align-middle text-xs text-muted-foreground font-mono whitespace-nowrap">14:26:03.192Z</td>
                   <td className="p-4 align-middle font-mono text-xs">EVT-9982-A</td>
                   <td className="p-4 align-middle"><span className="inline-flex items-center rounded-sm border px-2 py-0.5 text-[10px] font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary/20 text-primary">INFO</span></td>
-                  <td className="p-4 align-middle text-xs">Routine synchronization completed for sector 7G.</td>
+                  <td className="p-4 align-middle text-xs min-w-[200px]">Routine synchronization completed for sector 7G.</td>
                 </tr>
                 <tr className="border-b transition-colors hover:bg-muted/50">
-                  <td className="p-4 align-middle text-xs text-muted-foreground font-mono">14:15:42.005Z</td>
+                  <td className="p-4 align-middle text-xs text-muted-foreground font-mono whitespace-nowrap">14:15:42.005Z</td>
                   <td className="p-4 align-middle font-mono text-xs">EVT-9981-D</td>
                   <td className="p-4 align-middle"><span className="inline-flex items-center rounded-sm border px-2 py-0.5 text-[10px] font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-destructive/20 text-destructive">WARN</span></td>
-                  <td className="p-4 align-middle text-xs">Latency spike detected in communication relay alpha.</td>
+                  <td className="p-4 align-middle text-xs min-w-[200px]">Latency spike detected in communication relay alpha.</td>
                 </tr>
                 <tr className="transition-colors hover:bg-muted/50">
-                  <td className="p-4 align-middle text-xs text-muted-foreground font-mono">13:58:11.753Z</td>
+                  <td className="p-4 align-middle text-xs text-muted-foreground font-mono whitespace-nowrap">13:58:11.753Z</td>
                   <td className="p-4 align-middle font-mono text-xs">EVT-9980-C</td>
                   <td className="p-4 align-middle"><span className="inline-flex items-center rounded-sm border px-2 py-0.5 text-[10px] font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80">DEBUG</span></td>
-                  <td className="p-4 align-middle text-xs">Payload inspection trace completed.</td>
+                  <td className="p-4 align-middle text-xs min-w-[200px]">Payload inspection trace completed.</td>
                 </tr>
               </tbody>
             </table>
