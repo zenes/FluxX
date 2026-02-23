@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import ExchangeRateChart from "@/components/ExchangeRateChart";
+import GoldPriceChart from "@/components/GoldPriceChart";
+
+type GoldType = 'global' | 'krx';
 
 export default function Home() {
   const [exchangeRate, setExchangeRate] = useState<number | null>(null);
@@ -10,6 +13,15 @@ export default function Home() {
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showChart, setShowChart] = useState(false);
+
+  // Gold state
+  const [goldType, setGoldType] = useState<GoldType>('global');
+  const [goldPrice, setGoldPrice] = useState<number | null>(null);
+  const [goldChange, setGoldChange] = useState<number | null>(null);
+  const [goldChangePercent, setGoldChangePercent] = useState<number | null>(null);
+  const [goldLastUpdated, setGoldLastUpdated] = useState<string | null>(null);
+  const [isGoldLoading, setIsGoldLoading] = useState(true);
+  const [showGoldChart, setShowGoldChart] = useState(false);
 
   const fetchExchangeRate = async () => {
     try {
@@ -29,11 +41,36 @@ export default function Home() {
     }
   };
 
+  const fetchGoldPrice = async () => {
+    try {
+      setIsGoldLoading(true);
+      const res = await fetch(`/api/gold-price?type=${goldType}`);
+      if (!res.ok) throw new Error('Network response was not ok');
+      const data = await res.json();
+      setGoldPrice(data.price);
+      setGoldChange(data.change);
+      setGoldChangePercent(data.changePercent);
+
+      const date = new Date(data.timestamp);
+      setGoldLastUpdated(date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    } catch (error) {
+      console.error('Error fetching gold price:', error);
+    } finally {
+      setIsGoldLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchExchangeRate();
     const intervalId = setInterval(fetchExchangeRate, 60000); // Poll every 1 minute
     return () => clearInterval(intervalId); // Cleanup on unmount
   }, []);
+
+  useEffect(() => {
+    fetchGoldPrice();
+    const intervalId = setInterval(fetchGoldPrice, 60000); // Poll every 1 minute
+    return () => clearInterval(intervalId);
+  }, [goldType]); // Refetch when type changes
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -74,12 +111,77 @@ export default function Home() {
               </span>
             </div>
           </div>
-          <div className="rounded-md border bg-card text-card-foreground shadow-sm relative overflow-hidden">
+          <div
+            className="rounded-md border bg-card text-card-foreground shadow-sm relative overflow-hidden cursor-pointer hover:bg-muted/20 transition-colors"
+            onClick={() => setShowGoldChart(!showGoldChart)}
+          >
             <div className="absolute top-0 left-0 w-1 h-full bg-destructive/80"></div>
-            <div className="p-5 flex flex-col gap-1">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Anomalies Detected</span>
-              <span className="text-3xl font-bold tracking-tight text-destructive">12</span>
-              <span className="text-xs text-muted-foreground mt-2">Requires immediate attention</span>
+            <div className="p-5 flex flex-col gap-1 h-full">
+              <div className="flex justify-between items-start">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Gold Market Price
+                  </span>
+                  <div
+                    className="flex text-[10px] bg-muted rounded-sm overflow-hidden"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      className={`px-1.5 py-0.5 ${goldType === 'krx' ? 'bg-destructive text-destructive-foreground' : 'hover:bg-muted-foreground/20'}`}
+                      onClick={() => setGoldType('krx')}
+                    >
+                      KRX(ETF)
+                    </button>
+                    <button
+                      className={`px-1.5 py-0.5 ${goldType === 'global' ? 'bg-destructive text-destructive-foreground' : 'hover:bg-muted-foreground/20'}`}
+                      onClick={() => setGoldType('global')}
+                    >
+                      GLB
+                    </button>
+                  </div>
+                </div>
+                {isGoldLoading && (
+                  <span className="flex h-3 w-3 relative">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-destructive"></span>
+                  </span>
+                )}
+              </div>
+
+              {isGoldLoading && goldPrice === null ? (
+                <div className="mt-2 text-xl font-bold tracking-tight text-muted-foreground animate-pulse">
+                  Establishing uplink...
+                </div>
+              ) : (
+                <>
+                  <span className="text-3xl font-bold tracking-tight text-foreground mt-2">
+                    {goldType === 'krx' ? '₩' : '$'}
+                    {goldPrice ? goldPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A'}
+                  </span>
+
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className={`text-xs font-medium ${goldChange && goldChange > 0
+                      ? 'text-destructive'
+                      : goldChange && goldChange < 0
+                        ? 'text-primary'
+                        : 'text-muted-foreground'
+                      }`}>
+                      {goldChange && goldChange > 0 ? '▲' : goldChange && goldChange < 0 ? '▼' : '-'}
+                      {goldChange ? Math.abs(goldChange).toFixed(2) : '0.00'}
+                      ({goldChangePercent ? (goldChangePercent >= 0 ? '+' : '') + goldChangePercent.toFixed(2) : '0.00'}%)
+                    </span>
+                    <span className="text-[10px] text-muted-foreground ml-auto uppercase opacity-70">
+                      L/U: {goldLastUpdated || 'Unknown'}
+                    </span>
+                  </div>
+                </>
+              )}
+
+              {showGoldChart && goldPrice !== null && (
+                <div onClick={(e) => e.stopPropagation()}>
+                  <GoldPriceChart currentRate={goldPrice} type={goldType} />
+                </div>
+              )}
             </div>
           </div>
           <div
