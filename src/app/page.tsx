@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import ExchangeRateChart from "@/components/ExchangeRateChart";
 import GoldPriceChart from "@/components/GoldPriceChart";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 type GoldType = 'global' | 'krx';
 
@@ -22,6 +23,29 @@ export default function Home() {
   const [goldLastUpdated, setGoldLastUpdated] = useState<string | null>(null);
   const [isGoldLoading, setIsGoldLoading] = useState(true);
   const [showGoldChart, setShowGoldChart] = useState(false);
+
+  // Drag and Drop state
+  const [cardsOrder, setCardsOrder] = useState(['nodes', 'gold', 'exchange']);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    const savedOrder = localStorage.getItem('fluxx-dashboard-cards');
+    if (savedOrder) {
+      try {
+        setCardsOrder(JSON.parse(savedOrder));
+      } catch (e) { }
+    }
+  }, []);
+
+  const onDragEnd = (result: any) => {
+    if (!result.destination) return;
+    const items = Array.from(cardsOrder);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    setCardsOrder(items);
+    localStorage.setItem('fluxx-dashboard-cards', JSON.stringify(items));
+  };
 
   const fetchExchangeRate = async () => {
     try {
@@ -72,6 +96,179 @@ export default function Home() {
     return () => clearInterval(intervalId);
   }, [goldType]); // Refetch when type changes
 
+  const renderCard = (cardId: string, provided: any, snapshot: any) => {
+    if (cardId === 'nodes') {
+      return (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          style={{ ...provided.draggableProps.style }}
+          className={`rounded-md border bg-card text-card-foreground shadow-sm relative overflow-hidden flex flex-col h-full transition-shadow ${snapshot.isDragging ? 'shadow-2xl scale-[1.02] z-50 ring-1 ring-primary' : ''}`}
+        >
+          <div className="absolute top-0 left-0 w-1 h-full bg-primary/80"></div>
+          <div className="p-5 flex flex-col gap-1 h-full">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+              <span {...provided.dragHandleProps} className="cursor-grab hover:text-foreground text-muted-foreground/50 transition-colors">⠿</span>
+              Active Nodes
+            </span>
+            <span className="text-3xl font-bold tracking-tight text-foreground">1,248</span>
+            <span className="text-xs text-primary mt-2 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+              System nominal
+            </span>
+          </div>
+        </div>
+      );
+    }
+
+    if (cardId === 'gold') {
+      return (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          style={{ ...provided.draggableProps.style }}
+          className={`rounded-md border bg-card text-card-foreground shadow-sm relative overflow-hidden cursor-pointer hover:bg-muted/20 transition-all ${snapshot.isDragging ? 'shadow-2xl scale-[1.02] z-50 ring-1 ring-destructive' : ''}`}
+          onClick={() => setShowGoldChart(!showGoldChart)}
+        >
+          <div className="absolute top-0 left-0 w-1 h-full bg-destructive/80"></div>
+          <div className="p-5 flex flex-col gap-1 h-full">
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                  <span {...provided.dragHandleProps} className="cursor-grab hover:text-foreground text-muted-foreground/50 transition-colors" onClick={(e) => e.stopPropagation()}>⠿</span>
+                  Gold Market Price
+                </span>
+                <div
+                  className="flex text-[10px] bg-muted rounded-sm overflow-hidden"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    className={`px-1.5 py-0.5 ${goldType === 'krx' ? 'bg-destructive text-destructive-foreground' : 'hover:bg-muted-foreground/20'}`}
+                    onClick={() => setGoldType('krx')}
+                  >
+                    KRX(ETF)
+                  </button>
+                  <button
+                    className={`px-1.5 py-0.5 ${goldType === 'global' ? 'bg-destructive text-destructive-foreground' : 'hover:bg-muted-foreground/20'}`}
+                    onClick={() => setGoldType('global')}
+                  >
+                    GLB
+                  </button>
+                </div>
+              </div>
+              {isGoldLoading && (
+                <span className="flex h-3 w-3 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-destructive"></span>
+                </span>
+              )}
+            </div>
+
+            {isGoldLoading && goldPrice === null ? (
+              <div className="mt-2 text-xl font-bold tracking-tight text-muted-foreground animate-pulse">
+                Establishing uplink...
+              </div>
+            ) : (
+              <>
+                <span className="text-3xl font-bold tracking-tight text-foreground mt-2">
+                  {goldType === 'krx' ? '₩' : '$'}
+                  {goldPrice ? goldPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A'}
+                </span>
+
+                <div className="flex items-center gap-2 mt-2">
+                  <span className={`text-xs font-medium ${goldChange && goldChange > 0
+                    ? 'text-destructive'
+                    : goldChange && goldChange < 0
+                      ? 'text-primary'
+                      : 'text-muted-foreground'
+                    }`}>
+                    {goldChange && goldChange > 0 ? '▲' : goldChange && goldChange < 0 ? '▼' : '-'}
+                    {goldChange ? Math.abs(goldChange).toFixed(2) : '0.00'}
+                    ({goldChangePercent ? (goldChangePercent >= 0 ? '+' : '') + goldChangePercent.toFixed(2) : '0.00'}%)
+                  </span>
+                  <span className="text-[10px] text-muted-foreground ml-auto uppercase opacity-70">
+                    L/U: {goldLastUpdated || 'Unknown'}
+                  </span>
+                </div>
+              </>
+            )}
+
+            {showGoldChart && goldPrice !== null && (
+              <div onClick={(e) => e.stopPropagation()}>
+                <GoldPriceChart currentRate={goldPrice} type={goldType} />
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    if (cardId === 'exchange') {
+      return (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          style={{ ...provided.draggableProps.style }}
+          className={`rounded-md border bg-card text-card-foreground shadow-sm relative overflow-hidden cursor-pointer hover:bg-muted/20 transition-all ${snapshot.isDragging ? 'shadow-2xl scale-[1.02] z-50 ring-1 ring-accent' : ''}`}
+          onClick={() => setShowChart(!showChart)}
+        >
+          <div className="absolute top-0 left-0 w-1 h-full bg-accent/80"></div>
+          <div className="p-5 flex flex-col gap-1 h-full">
+            <div className="flex justify-between items-start">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                <span {...provided.dragHandleProps} className="cursor-grab hover:text-foreground text-muted-foreground/50 transition-colors" onClick={(e) => e.stopPropagation()}>⠿</span>
+                USD/KRW Exchange
+                <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-sm group-hover:bg-primary/20 transition-colors ml-1">{showChart ? 'Hide Trend' : 'View Trend'}</span>
+              </span>
+              {isLoading && (
+                <span className="flex h-3 w-3 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                </span>
+              )}
+            </div>
+
+            {isLoading && exchangeRate === null ? (
+              <div className="mt-2 text-xl font-bold tracking-tight text-muted-foreground animate-pulse">
+                Establishing uplink...
+              </div>
+            ) : (
+              <>
+                <span className="text-3xl font-bold tracking-tight text-foreground mt-2">
+                  {exchangeRate ? `₩${exchangeRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A'}
+                </span>
+
+                <div className="flex items-center gap-2 mt-2">
+                  <span className={`text-xs font-medium ${rateChange && rateChange > 0
+                    ? 'text-destructive'
+                    : rateChange && rateChange < 0
+                      ? 'text-primary'
+                      : 'text-muted-foreground'
+                    }`}>
+                    {rateChange && rateChange > 0 ? '▲' : rateChange && rateChange < 0 ? '▼' : '-'}
+                    {rateChange ? Math.abs(rateChange).toFixed(2) : '0.00'}
+                    ({rateChangePercent ? (rateChangePercent >= 0 ? '+' : '') + rateChangePercent.toFixed(2) : '0.00'}%)
+                  </span>
+                  <span className="text-[10px] text-muted-foreground ml-auto uppercase opacity-70">
+                    L/U: {lastUpdated || 'Unknown'}
+                  </span>
+                </div>
+              </>
+            )}
+
+            {showChart && !isLoading && exchangeRate !== null && (
+              <div onClick={(e) => e.stopPropagation()}>
+                <ExchangeRateChart currentRate={exchangeRate} />
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-6">
@@ -99,146 +296,33 @@ export default function Home() {
           </button>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
-          <div className="rounded-md border bg-card text-card-foreground shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-1 h-full bg-primary/80"></div>
-            <div className="p-5 flex flex-col gap-1">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active Nodes</span>
-              <span className="text-3xl font-bold tracking-tight text-foreground">1,248</span>
-              <span className="text-xs text-primary mt-2 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-                System nominal
-              </span>
-            </div>
+        {!isMounted ? (
+          <div className="grid gap-6 md:grid-cols-3">
+            {/* SSR / Initial Hydration Placeholder (Empty or Skeleton) */}
+            <div className="h-[140px] rounded-md border bg-card w-full shadow-sm animate-pulse"></div>
+            <div className="h-[140px] rounded-md border bg-card w-full shadow-sm animate-pulse"></div>
+            <div className="h-[140px] rounded-md border bg-card w-full shadow-sm animate-pulse"></div>
           </div>
-          <div
-            className="rounded-md border bg-card text-card-foreground shadow-sm relative overflow-hidden cursor-pointer hover:bg-muted/20 transition-colors"
-            onClick={() => setShowGoldChart(!showGoldChart)}
-          >
-            <div className="absolute top-0 left-0 w-1 h-full bg-destructive/80"></div>
-            <div className="p-5 flex flex-col gap-1 h-full">
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Gold Market Price
-                  </span>
-                  <div
-                    className="flex text-[10px] bg-muted rounded-sm overflow-hidden"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      className={`px-1.5 py-0.5 ${goldType === 'krx' ? 'bg-destructive text-destructive-foreground' : 'hover:bg-muted-foreground/20'}`}
-                      onClick={() => setGoldType('krx')}
-                    >
-                      KRX(ETF)
-                    </button>
-                    <button
-                      className={`px-1.5 py-0.5 ${goldType === 'global' ? 'bg-destructive text-destructive-foreground' : 'hover:bg-muted-foreground/20'}`}
-                      onClick={() => setGoldType('global')}
-                    >
-                      GLB
-                    </button>
-                  </div>
-                </div>
-                {isGoldLoading && (
-                  <span className="flex h-3 w-3 relative">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-destructive"></span>
-                  </span>
-                )}
-              </div>
-
-              {isGoldLoading && goldPrice === null ? (
-                <div className="mt-2 text-xl font-bold tracking-tight text-muted-foreground animate-pulse">
-                  Establishing uplink...
-                </div>
-              ) : (
-                <>
-                  <span className="text-3xl font-bold tracking-tight text-foreground mt-2">
-                    {goldType === 'krx' ? '₩' : '$'}
-                    {goldPrice ? goldPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A'}
-                  </span>
-
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className={`text-xs font-medium ${goldChange && goldChange > 0
-                      ? 'text-destructive'
-                      : goldChange && goldChange < 0
-                        ? 'text-primary'
-                        : 'text-muted-foreground'
-                      }`}>
-                      {goldChange && goldChange > 0 ? '▲' : goldChange && goldChange < 0 ? '▼' : '-'}
-                      {goldChange ? Math.abs(goldChange).toFixed(2) : '0.00'}
-                      ({goldChangePercent ? (goldChangePercent >= 0 ? '+' : '') + goldChangePercent.toFixed(2) : '0.00'}%)
-                    </span>
-                    <span className="text-[10px] text-muted-foreground ml-auto uppercase opacity-70">
-                      L/U: {goldLastUpdated || 'Unknown'}
-                    </span>
-                  </div>
-                </>
-              )}
-
-              {showGoldChart && goldPrice !== null && (
-                <div onClick={(e) => e.stopPropagation()}>
-                  <GoldPriceChart currentRate={goldPrice} type={goldType} />
+        ) : (
+          <DragDropContext onDragEnd={onDragEnd}>
+            <Droppable droppableId="dashboard-cards" direction="horizontal">
+              {(provided) => (
+                <div
+                  className="grid gap-6 md:grid-cols-3 select-none"
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                >
+                  {cardsOrder.map((cardId, index) => (
+                    <Draggable key={cardId} draggableId={cardId} index={index}>
+                      {(provided, snapshot) => renderCard(cardId, provided, snapshot)}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
                 </div>
               )}
-            </div>
-          </div>
-          <div
-            className="rounded-md border bg-card text-card-foreground shadow-sm relative overflow-hidden cursor-pointer hover:bg-muted/20 transition-colors"
-            onClick={() => setShowChart(!showChart)}
-          >
-            <div className="absolute top-0 left-0 w-1 h-full bg-accent/80"></div>
-            <div className="p-5 flex flex-col gap-1 h-full">
-              <div className="flex justify-between items-start">
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                  USD/KRW Exchange
-                  <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-sm group-hover:bg-primary/20 transition-colors">{showChart ? 'Hide Trend' : 'View Trend'}</span>
-                </span>
-                {isLoading && (
-                  <span className="flex h-3 w-3 relative">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
-                  </span>
-                )}
-              </div>
-
-              {isLoading && exchangeRate === null ? (
-                <div className="mt-2 text-xl font-bold tracking-tight text-muted-foreground animate-pulse">
-                  Establishing uplink...
-                </div>
-              ) : (
-                <>
-                  <span className="text-3xl font-bold tracking-tight text-foreground mt-2">
-                    {exchangeRate ? `₩${exchangeRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A'}
-                  </span>
-
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className={`text-xs font-medium ${rateChange && rateChange > 0
-                      ? 'text-destructive'
-                      : rateChange && rateChange < 0
-                        ? 'text-primary'
-                        : 'text-muted-foreground'
-                      }`}>
-                      {rateChange && rateChange > 0 ? '▲' : rateChange && rateChange < 0 ? '▼' : '-'}
-                      {rateChange ? Math.abs(rateChange).toFixed(2) : '0.00'}
-                      ({rateChangePercent ? (rateChangePercent >= 0 ? '+' : '') + rateChangePercent.toFixed(2) : '0.00'}%)
-                    </span>
-                    <span className="text-[10px] text-muted-foreground ml-auto uppercase opacity-70">
-                      L/U: {lastUpdated || 'Unknown'}
-                    </span>
-                  </div>
-                </>
-              )}
-
-              {showChart && !isLoading && exchangeRate !== null && (
-                <div onClick={(e) => e.stopPropagation()}>
-                  <ExchangeRateChart currentRate={exchangeRate} />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+            </Droppable>
+          </DragDropContext>
+        )}
 
         <div className="mt-6 rounded-md border bg-card text-card-foreground shadow-sm">
           <div className="p-5 border-b">
