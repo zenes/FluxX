@@ -122,10 +122,12 @@ export default function Home() {
       const goldUsd = goldRes?.price || 2600;
       const stockPrices = stockRes?.quotes || {};
 
-      const getAmount = (type: string) => assets.find(a => a.assetType === type)?.amount || 0;
-      const goldAmount = getAmount('gold');
-      const usdAmount = getAmount('usd');
-      const krwAmount = getAmount('krw');
+      // Sum all matching assets in case there are multiple entries (e.g., across different accounts)
+      const sumAmount = (type: string) => assets.filter(a => a.assetType === type).reduce((sum, current) => sum + current.amount, 0);
+
+      const goldAmount = sumAmount('gold');
+      const usdAmount = sumAmount('usd');
+      const krwAmount = sumAmount('krw');
 
       const goldKrw = (goldAmount / 31.1034768) * goldUsd * usdKrw;
       const usdKrwVal = usdAmount * usdKrw;
@@ -135,7 +137,15 @@ export default function Home() {
         const symbol = stock.assetSymbol!;
         const priceData = stockPrices[symbol];
         const currentPrice = priceData ? priceData.price : (stock.avgPrice || 0);
-        totalStockKrw += (stock.amount * currentPrice) * usdKrw;
+        const currency = stock.currency || priceData?.currency || 'USD';
+
+        const valueInOriginalCurrency = stock.amount * currentPrice;
+
+        if (currency === 'KRW') {
+          totalStockKrw += valueInOriginalCurrency;
+        } else {
+          totalStockKrw += valueInOriginalCurrency * usdKrw;
+        }
       });
 
       setNetWorth(goldKrw + usdKrwVal + krwAmount + totalStockKrw);

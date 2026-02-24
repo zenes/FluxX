@@ -32,12 +32,12 @@ export function AppSidebar() {
         <>
             {/* Mobile Header (Visible only on sm and below) */}
             <div className="md:hidden flex h-14 items-center justify-between border-b bg-background px-4 sticky top-0 z-50">
-                <div className="flex items-center gap-2">
+                <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                     <div className="flex size-7 items-center justify-center rounded-sm bg-primary text-primary-foreground font-bold text-xs shadow-md">
                         FX
                     </div>
                     <span className="text-sm font-semibold tracking-wide uppercase">FluxX</span>
-                </div>
+                </Link>
                 <div className="flex items-center gap-2">
                     <ThemeToggle />
                     <button
@@ -83,12 +83,12 @@ export function AppSidebar() {
 
             {/* Desktop Sidebar (Visible on md and above) */}
             <aside className="hidden md:flex flex-col w-64 h-screen border-r bg-muted/20 sticky top-0 shrink-0">
-                <div className="h-16 flex items-center gap-3 px-6 border-b">
+                <Link href="/" className="h-16 flex items-center gap-3 px-6 border-b hover:bg-muted/50 transition-colors">
                     <div className="flex size-8 items-center justify-center rounded-sm bg-primary text-primary-foreground font-bold text-sm shadow-[0_0_10px_rgba(59,130,246,0.3)]">
                         <Zap size={16} />
                     </div>
                     <span className="text-sm font-bold tracking-widest text-foreground uppercase">FluxX Command</span>
-                </div>
+                </Link>
 
                 <div className="flex-1 overflow-y-auto py-6 flex flex-col gap-1 px-4">
                     <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-2">
