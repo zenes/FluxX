@@ -31,6 +31,15 @@ export type AssetItem = {
     amount: number;
     assetSymbol?: string | null;
     avgPrice?: number | null;
+    // New optional expanded data mapping for sub-entries mapping per ticker
+    entries?: {
+        id: string;
+        broker: string;
+        owner: string;
+        account: string;
+        qty: number;
+        totalCost: number;
+    }[];
 };
 
 export async function getAssets(): Promise<AssetItem[]> {
@@ -43,9 +52,13 @@ export async function getAssets(): Promise<AssetItem[]> {
         where: { userId: session.user.id },
     });
 
+    // Fetch associated stock entries
+    const allStockEntries = await prisma.stockEntry.findMany({
+        where: { userId: session.user.id }
+    });
+
     return assets.map(asset => {
         const decryptedStr = decrypt(asset.amountEncrypted);
-        // Handle failure to decrypt gracefully
         const amount = decryptedStr === 'DECRYPTION_FAILED' ? 0 : Number(decryptedStr) || 0;
 
         let avgPrice = null;
@@ -54,12 +67,29 @@ export async function getAssets(): Promise<AssetItem[]> {
             avgPrice = decryptedPriceStr === 'DECRYPTION_FAILED' ? 0 : Number(decryptedPriceStr) || 0;
         }
 
+        // Filter valid entries
+        let subEntries = undefined;
+        if (asset.assetType === 'stock' && asset.assetSymbol) {
+            const matches = allStockEntries.filter((e: any) => e.tickerSymbol === asset.assetSymbol);
+            if (matches.length > 0) {
+                subEntries = matches.map((m: any) => ({
+                    id: m.id,
+                    broker: m.brokerName,
+                    owner: m.accountOwner,
+                    account: m.accountNumber || '',
+                    qty: m.quantity,
+                    totalCost: m.totalPurchaseAmount
+                }));
+            }
+        }
+
         return {
             id: asset.id,
             assetType: asset.assetType,
             amount,
             assetSymbol: asset.assetSymbol,
-            avgPrice
+            avgPrice,
+            entries: subEntries
         };
     });
 }
@@ -140,4 +170,144 @@ export async function upsertStockAsset(ticker: string, shares: number, avgPrice:
 
     revalidatePath('/operations');
     return { success: true };
+}
+
+export async function addStockEntry(data: {
+    tickerSymbol: string;
+    brokerName: string;
+    accountOwner: string;
+    accountNumber?: string;
+    quantity: number;
+    totalPurchaseAmount: number;
+}) {
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error('Unauthorized');
+    }
+
+    try {
+        const entry = await prisma.stockEntry.create({
+            data: {
+                userId: session.user.id,
+                ...data
+            }
+        });
+
+        const allEntries = await prisma.stockEntry.findMany({
+            where: {
+                userId: session.user.id,
+                tickerSymbol: data.tickerSymbol
+            }
+        });
+
+        const totalQty = allEntries.reduce((sum: number, e: { quantity: number }) => sum + e.quantity, 0);
+        const totalCost = allEntries.reduce((sum: number, e: { totalPurchaseAmount: number }) => sum + e.totalPurchaseAmount, 0);
+        const avgPrice = totalQty > 0 ? totalCost / totalQty : 0;
+
+        const amountEncrypted = encrypt(totalQty.toString());
+        const avgPriceEncrypted = encrypt(avgPrice.toString());
+
+        const existingAsset = await prisma.asset.findFirst({
+            where: {
+                userId: session.user.id,
+                assetType: 'stock',
+                assetSymbol: data.tickerSymbol,
+            }
+        });
+
+        if (existingAsset) {
+            await prisma.asset.update({
+                where: { id: existingAsset.id },
+                data: {
+                    amountEncrypted,
+                    avgPriceEncrypted,
+                }
+            });
+        } else {
+            await prisma.asset.create({
+                data: {
+                    userId: session.user.id,
+                    assetType: 'stock',
+                    assetSymbol: data.tickerSymbol,
+                    amountEncrypted,
+                    avgPriceEncrypted,
+                }
+            });
+        }
+
+        revalidatePath('/operations');
+        return entry;
+    } catch (e) {
+        console.error('Failed to add stock entry:', e);
+        throw new Error('Failed to add stock entry');
+    }
+}
+
+async function recalculateStockAsset(userId: string, tickerSymbol: string) {
+    const allEntries = await prisma.stockEntry.findMany({
+        where: { userId, tickerSymbol }
+    });
+
+    if (allEntries.length === 0) {
+        // If no entries left, delete the master asset
+        await prisma.asset.deleteMany({
+            where: {
+                userId,
+                assetType: 'stock',
+                assetSymbol: tickerSymbol
+            }
+        });
+        return;
+    }
+
+    const totalQty = allEntries.reduce((sum: number, e: { quantity: number }) => sum + e.quantity, 0);
+    const totalCost = allEntries.reduce((sum: number, e: { totalPurchaseAmount: number }) => sum + e.totalPurchaseAmount, 0);
+    const avgPrice = totalQty > 0 ? totalCost / totalQty : 0;
+
+    const amountEncrypted = encrypt(totalQty.toString());
+    const avgPriceEncrypted = encrypt(avgPrice.toString());
+
+    await prisma.asset.updateMany({
+        where: { userId, assetType: 'stock', assetSymbol: tickerSymbol },
+        data: { amountEncrypted, avgPriceEncrypted }
+    });
+}
+
+export async function deleteStockEntry(entryId: string, tickerSymbol: string) {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error('Unauthorized');
+
+    try {
+        await prisma.stockEntry.delete({
+            where: { id: entryId, userId: session.user.id }
+        });
+        await recalculateStockAsset(session.user.id, tickerSymbol);
+        revalidatePath('/operations');
+        return { success: true };
+    } catch (e) {
+        console.error('Failed to delete stock entry:', e);
+        throw new Error('Failed to delete stock entry');
+    }
+}
+
+export async function editStockEntry(
+    entryId: string,
+    data: { brokerName: string; accountOwner: string; accountNumber?: string; quantity: number; totalPurchaseAmount: number },
+    tickerSymbol: string
+) {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error('Unauthorized');
+
+    try {
+        await prisma.stockEntry.update({
+            where: { id: entryId, userId: session.user.id },
+            data
+        });
+        await recalculateStockAsset(session.user.id, tickerSymbol);
+        revalidatePath('/operations');
+        return { success: true };
+    } catch (e) {
+        console.error('Failed to edit stock entry:', e);
+        throw new Error('Failed to edit stock entry');
+    }
 }

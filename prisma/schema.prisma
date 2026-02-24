@@ -17,8 +17,9 @@ model User {
   role          String    @default("USER") // 'USER' or 'ADMIN'
   lastLoginAt   DateTime?
   lastActiveAt  DateTime?
-  createdAt     DateTime  @default(now())
+  createdAt     DateTime      @default(now())
   assets        Asset[]
+  stockEntries  StockEntry[]
 }
 
 model Asset {
@@ -33,4 +34,27 @@ model Asset {
   updatedAt         DateTime  @updatedAt
   
   @@unique([userId, assetType, assetSymbol]) // Ensure uniqueness per user+type+symbol
+}
+
+model StockEntry {
+  id                  String    @id @default(cuid())
+  userId              String
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  brokerName          String    // e.g., 'Toss', 'Kiwoom'
+  accountOwner        String    // e.g., 'Hong Gildong'
+  accountNumber       String?   // Optional: Account identifier
+  tickerSymbol        String    // e.g., 'AAPL', 'TSLA'
+  
+  // Storing quantities and amounts as strings if using AES encryption like Asset model, 
+  // or simple Floats if encryption isn't strict for this granular level. 
+  // Given the existing `Asset` uses `amountEncrypted`, we will follow the encrypted pattern or use plain floats for easier calculation.
+  // For the sake of real-time calculations without heavy decryption overhead per row, we'll store them as Float here.
+  // If the user wants strict encryption, we can change it to String.
+  quantity            Float
+  totalPurchaseAmount Float
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  @@index([userId, tickerSymbol])
 }

@@ -347,52 +347,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="flex h-16 items-center gap-4 border-b bg-muted/40 px-4 md:px-6 sticky top-0 z-50 backdrop-blur-md">
-        <div className="flex flex-1 items-center gap-2">
-          <div className="flex size-8 items-center justify-center rounded-sm bg-primary text-primary-foreground font-bold text-sm shadow-md">
-            FX
-          </div>
-          <span className="text-xs md:text-sm font-semibold tracking-wide text-foreground uppercase truncate">FluxX Command Center</span>
-        </div>
-
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-6">
-          <div className="flex gap-4 mr-2 items-center">
-            <Link href="/" className="text-xs font-medium text-foreground transition-colors">Dashboard</Link>
-            <Link href="/operations" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">Operations</Link>
-            <Link href="#" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">Intelligence</Link>
-          </div>
-          <div className="flex items-center gap-4">
-            <ThemeToggle />
-            <AuthButton />
-          </div>
-        </nav>
-
-        {/* Mobile Navigation Toggle */}
-        <div className="flex md:hidden items-center gap-2">
-          <ThemeToggle />
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="p-2 rounded-md hover:bg-muted transition-colors"
-          >
-            {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        </div>
-
-        {/* Mobile Menu Overlay */}
-        {isMenuOpen && (
-          <div className="absolute top-16 left-0 w-full bg-card border-b shadow-xl p-4 flex flex-col gap-4 md:hidden animate-in slide-in-from-top duration-200">
-            <Link href="/" className="text-sm font-medium p-2 rounded-md hover:bg-muted" onClick={() => setIsMenuOpen(false)}>Dashboard</Link>
-            <Link href="/operations" className="text-sm font-medium p-2 rounded-md hover:bg-muted" onClick={() => setIsMenuOpen(false)}>Operations</Link>
-            <Link href="#" className="text-sm font-medium p-2 rounded-md hover:bg-muted" onClick={() => setIsMenuOpen(false)}>Intelligence</Link>
-            <div className="pt-2 border-t flex justify-between items-center">
-              <span className="text-xs text-muted-foreground">User Session</span>
-              <AuthButton />
-            </div>
-          </div>
-        )}
-      </header>
+    <div className="flex flex-col h-full bg-background">
 
       <main className="flex-1 p-4 md:p-8 bg-background">
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">

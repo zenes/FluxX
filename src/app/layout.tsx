@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { AppSidebar } from "@/components/AppSidebar";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -38,7 +39,12 @@ export default function RootLayout({
             disableTransitionOnChange
             themes={["light", "dark", "cyber"]}
           >
-            {children}
+            <div className="flex flex-col md:flex-row min-h-screen bg-background text-foreground">
+              <AppSidebar />
+              <main className="flex-1 w-full overflow-y-auto">
+                {children}
+              </main>
+            </div>
           </ThemeProvider>
         </Providers>
       </body>
