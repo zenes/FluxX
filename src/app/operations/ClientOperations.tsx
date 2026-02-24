@@ -109,7 +109,7 @@ export default function ClientOperations({ assets }: { assets: AssetItem[] }) {
         const symbol = stock.assetSymbol!;
         const priceData = stockPrices[symbol];
         const currentPrice = priceData ? priceData.price : (stock.avgPrice || 0);
-        const currency = priceData?.currency || 'USD';
+        const currency = stock.currency || priceData?.currency || 'USD';
 
         const valueInOriginalCurrency = stock.amount * currentPrice;
 
@@ -347,7 +347,7 @@ export default function ClientOperations({ assets }: { assets: AssetItem[] }) {
                             const symbol = stock.assetSymbol!;
                             const priceData = stockPrices[symbol];
                             const currentPrice = priceData ? priceData.price : (stock.avgPrice || 0);
-                            const currency = priceData?.currency || 'USD'; // Determine currency from priceData or default to USD
+                            const currency = stock.currency || priceData?.currency || 'USD'; // Prefer DB currency
 
                             const valueOriginal = stock.amount * currentPrice;
                             const valueKrw = currency === 'KRW' ? valueOriginal : valueOriginal * rates.usdKrw;

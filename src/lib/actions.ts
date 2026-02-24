@@ -31,6 +31,7 @@ export type AssetItem = {
     amount: number;
     assetSymbol?: string | null;
     avgPrice?: number | null;
+    currency?: string;
     // New optional expanded data mapping for sub-entries mapping per ticker
     entries?: {
         id: string;
@@ -42,6 +43,9 @@ export type AssetItem = {
         currency: string;
         predefinedAccountId?: string | null;
         predefinedAccountAlias?: string | null;
+        dividendPerShare?: number | null;
+        dividendFrequency?: number | null;
+        dividendMonths?: string | null;
     }[];
 };
 
@@ -73,9 +77,11 @@ export async function getAssets(): Promise<AssetItem[]> {
 
         // Filter valid entries
         let subEntries = undefined;
+        let assetCurrency = undefined;
         if (asset.assetType === 'stock' && asset.assetSymbol) {
             const matches = allStockEntries.filter((e: any) => e.tickerSymbol === asset.assetSymbol);
             if (matches.length > 0) {
+                assetCurrency = matches[0].currency;
                 subEntries = matches.map((m: any) => ({
                     id: m.id,
                     broker: m.brokerName,
@@ -85,7 +91,10 @@ export async function getAssets(): Promise<AssetItem[]> {
                     totalCost: m.totalPurchaseAmount,
                     currency: m.currency,
                     predefinedAccountId: m.predefinedAccountId,
-                    predefinedAccountAlias: m.predefinedAccount?.alias
+                    predefinedAccountAlias: m.predefinedAccount?.alias,
+                    dividendPerShare: m.dividendPerShare,
+                    dividendFrequency: m.dividendFrequency,
+                    dividendMonths: m.dividendMonths
                 }));
             }
         }
@@ -96,6 +105,7 @@ export async function getAssets(): Promise<AssetItem[]> {
             amount,
             assetSymbol: asset.assetSymbol,
             avgPrice,
+            currency: assetCurrency,
             entries: subEntries
         };
     });
@@ -147,6 +157,9 @@ export async function addStockEntry(data: {
     totalPurchaseAmount: number;
     currency?: string;
     predefinedAccountId?: string;
+    dividendPerShare?: number;
+    dividendFrequency?: number;
+    dividendMonths?: string;
 }) {
     const session = await auth();
     if (!session?.user?.id) {
@@ -159,7 +172,10 @@ export async function addStockEntry(data: {
             data: {
                 userId: session.user.id,
                 ...rest,
-                predefinedAccountId: predefinedAccountId || null
+                predefinedAccountId: predefinedAccountId || null,
+                dividendPerShare: data.dividendPerShare,
+                dividendFrequency: data.dividendFrequency,
+                dividendMonths: data.dividendMonths
             }
         });
 
@@ -320,7 +336,6 @@ async function recalculateStockAsset(userId: string, tickerSymbol: string) {
         data: { amountEncrypted, avgPriceEncrypted }
     });
 }
-
 export async function deleteStockEntry(entryId: string, tickerSymbol: string) {
     const session = await auth();
     if (!session?.user?.id) throw new Error('Unauthorized');
@@ -340,7 +355,18 @@ export async function deleteStockEntry(entryId: string, tickerSymbol: string) {
 
 export async function editStockEntry(
     entryId: string,
-    data: { brokerName: string; accountOwner: string; accountNumber?: string; quantity: number; totalPurchaseAmount: number; currency: string; predefinedAccountId?: string | null },
+    data: {
+        brokerName: string;
+        accountOwner: string;
+        accountNumber?: string;
+        quantity: number;
+        totalPurchaseAmount: number;
+        currency: string;
+        predefinedAccountId?: string | null;
+        dividendPerShare?: number;
+        dividendFrequency?: number;
+        dividendMonths?: string;
+    },
     tickerSymbol: string
 ) {
     const session = await auth();
@@ -348,11 +374,14 @@ export async function editStockEntry(
 
     try {
         const { predefinedAccountId, ...rest } = data;
-        await prisma.stockEntry.update({
+        await (prisma as any).stockEntry.update({
             where: { id: entryId, userId: session.user.id },
             data: {
                 ...rest,
-                predefinedAccountId: predefinedAccountId || null
+                predefinedAccountId: predefinedAccountId || null,
+                dividendPerShare: data.dividendPerShare,
+                dividendFrequency: data.dividendFrequency,
+                dividendMonths: data.dividendMonths
             }
         });
         await recalculateStockAsset(session.user.id, tickerSymbol);
@@ -361,5 +390,77 @@ export async function editStockEntry(
     } catch (e: any) {
         console.error('Failed to edit stock entry:', e);
         throw new Error(`Failed to edit stock entry: ${e.message || 'Unknown error'}`);
+    }
+}
+
+// Dividend Management Actions
+export async function updateDividendConfig(
+    entryId: string,
+    data: {
+        dividendPerShare?: number;
+        dividendFrequency?: number;
+        dividendMonths?: string;
+    }
+) {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error('Unauthorized');
+
+    try {
+        await prisma.stockEntry.update({
+            where: { id: entryId, userId: session.user.id },
+            data
+        });
+        revalidatePath('/dividends');
+        revalidatePath('/operations');
+        return { success: true };
+    } catch (e: any) {
+        console.error('Failed to update dividend config:', e);
+        throw new Error(`Failed to update dividend config: ${e.message || 'Unknown error'}`);
+    }
+}
+
+export async function addDividendRecord(data: {
+    tickerSymbol: string;
+    amount: number;
+    currency: string;
+    receivedAt: Date | string;
+    taxAmount?: number;
+    stockEntryId?: string;
+}) {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error('Unauthorized');
+
+    try {
+        if (!(prisma as any).dividendRecord) {
+            console.error('Prisma model "dividendRecord" is missing from the client instance. Available models:', Object.keys(prisma).filter(k => !k.startsWith('$')));
+            throw new Error('Prisma database sync issue: "dividendRecord" model not initialized in runtime. Please restart the server.');
+        }
+        const record = await (prisma as any).dividendRecord.create({
+            data: {
+                userId: session.user.id,
+                ...data,
+                receivedAt: new Date(data.receivedAt)
+            }
+        });
+        revalidatePath('/dividends');
+        return record;
+    } catch (e: any) {
+        console.error('Failed to add dividend record:', e);
+        throw new Error(`Failed to add dividend record: ${e.message || 'Unknown error'}`);
+    }
+}
+
+export async function getDividendRecords() {
+    const session = await auth();
+    if (!session?.user?.id) return [];
+
+    try {
+        return await (prisma as any).dividendRecord.findMany({
+            where: { userId: session.user.id },
+            orderBy: { receivedAt: 'desc' }
+        });
+    } catch (e) {
+        console.error('Failed to fetch dividend records:', e);
+        return [];
     }
 }

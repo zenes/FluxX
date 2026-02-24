@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Briefcase, Activity, Zap, Menu, X } from "lucide-react";
+import { LayoutDashboard, Briefcase, Activity, Zap, Menu, X, Coins } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import AuthButton from "./AuthButton";
 import { useState, useEffect } from "react";
@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
     { name: "Operations", href: "/operations", icon: Briefcase },
+    { name: "Dividends", href: "/dividends", icon: Coins },
     { name: "Intelligence", href: "#", icon: Activity },
 ];
 

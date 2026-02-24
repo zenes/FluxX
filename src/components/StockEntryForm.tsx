@@ -28,6 +28,9 @@ export default function StockEntryForm({
         totalCost: number;
         currency?: string;
         predefinedAccountId?: string | null;
+        dividendPerShare?: number | null;
+        dividendFrequency?: number | null;
+        dividendMonths?: string | null;
     };
     initialCurrency?: string;
 }) {
@@ -37,6 +40,11 @@ export default function StockEntryForm({
     const [accountNum, setAccountNum] = useState(initialData?.account || '');
     const [quantity, setQuantity] = useState(initialData?.qty.toString() || '');
     const [totalCost, setTotalCost] = useState(initialData?.totalCost.toString() || '');
+
+    // Dividend fields
+    const [dividendPerShare, setDividendPerShare] = useState(initialData?.dividendPerShare?.toString() || '');
+    const [dividendFrequency, setDividendFrequency] = useState(initialData?.dividendFrequency?.toString() || '4');
+    const [dividendMonths, setDividendMonths] = useState(initialData?.dividendMonths || '');
 
     // Heuristic for setting currency if symbol is provided but no initialData
     const getInitialCurrency = () => {
@@ -140,7 +148,10 @@ export default function StockEntryForm({
                     quantity: parseFloat(quantity),
                     totalPurchaseAmount: parseFloat(totalCost),
                     currency: finalCurrency,
-                    predefinedAccountId: selectedPresetId || null
+                    predefinedAccountId: selectedPresetId || null,
+                    dividendPerShare: dividendPerShare ? parseFloat(dividendPerShare) : undefined,
+                    dividendFrequency: dividendFrequency ? parseInt(dividendFrequency) : undefined,
+                    dividendMonths: dividendMonths || undefined
                 }, finalSymbol);
             } else {
                 await addStockEntry({
@@ -151,7 +162,10 @@ export default function StockEntryForm({
                     quantity: parseFloat(quantity),
                     totalPurchaseAmount: parseFloat(totalCost),
                     currency: finalCurrency,
-                    predefinedAccountId: selectedPresetId || undefined
+                    predefinedAccountId: selectedPresetId || undefined,
+                    dividendPerShare: dividendPerShare ? parseFloat(dividendPerShare) : undefined,
+                    dividendFrequency: dividendFrequency ? parseInt(dividendFrequency) : undefined,
+                    dividendMonths: dividendMonths || undefined
                 });
             }
             onSuccess();
@@ -326,6 +340,50 @@ export default function StockEntryForm({
                     <span className="font-bold text-foreground font-mono">
                         {currency === 'KRW' ? '₩' : '$'}{avgCost > 0 ? avgCost.toLocaleString(undefined, { minimumFractionDigits: currency === 'KRW' ? 0 : 2, maximumFractionDigits: currency === 'KRW' ? 2 : 4 }) : '0.00'} / share
                     </span>
+                </div>
+            </div>
+
+            {/* Dividend Configuration Section */}
+            <div className="flex flex-col gap-4 mt-4">
+                <h3 className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase border-b border-border/50 pb-2 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full"></span> Dividend Projection (Optional)
+                </h3>
+
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] text-muted-foreground uppercase tracking-widest pl-1">Dividend/Share</label>
+                        <input
+                            type="number"
+                            step="any"
+                            placeholder="0.00"
+                            value={dividendPerShare}
+                            onChange={e => setDividendPerShare(e.target.value)}
+                            className="w-full bg-muted/30 border border-input rounded-sm px-3 py-2.5 focus:outline-none focus:border-primary transition-colors text-xs font-bold"
+                        />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] text-muted-foreground uppercase tracking-widest pl-1">Frequency (Yearly)</label>
+                        <select
+                            value={dividendFrequency}
+                            onChange={e => setDividendFrequency(e.target.value)}
+                            className="w-full bg-muted/30 border border-input rounded-sm px-3 py-2.5 focus:outline-none focus:border-primary transition-colors text-xs font-bold"
+                        >
+                            <option value="1">Annual (1회)</option>
+                            <option value="2">Semi-Annual (2회)</option>
+                            <option value="4">Quarterly (4회)</option>
+                            <option value="12">Monthly (12회)</option>
+                        </select>
+                    </div>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] text-muted-foreground uppercase tracking-widest pl-1">Payment Months (e.g. 1, 4, 7, 10)</label>
+                    <input
+                        type="text"
+                        placeholder="1, 4, 7, 10"
+                        value={dividendMonths}
+                        onChange={e => setDividendMonths(e.target.value)}
+                        className="w-full bg-muted/30 border border-input rounded-sm px-3 py-2.5 focus:outline-none focus:border-primary transition-colors text-xs font-bold"
+                    />
                 </div>
             </div>
 

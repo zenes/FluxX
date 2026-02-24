@@ -21,6 +21,7 @@ model User {
   assets              Asset[]
   stockEntries        StockEntry[]
   predefinedAccounts  PredefinedAccount[]
+  dividendRecords     DividendRecord[]
 }
 
 model Asset {
@@ -58,9 +59,35 @@ model StockEntry {
   quantity            Float
   totalPurchaseAmount Float
 
+  // Dividend projection fields
+  dividendPerShare    Float?
+  dividendFrequency   Int?    // e.g., 1, 2, 4, 12
+  dividendMonths      String? // e.g., "1,4,7,10"
+
+  dividendRecords     DividendRecord[]
+
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
   
+  @@index([userId, tickerSymbol])
+}
+
+model DividendRecord {
+  id             String      @id @default(cuid())
+  userId         String
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tickerSymbol   String
+  amount         Float
+  currency       String
+  receivedAt     DateTime
+  taxAmount      Float?
+  
+  stockEntryId   String?
+  stockEntry     StockEntry? @relation(fields: [stockEntryId], references: [id], onDelete: SetNull)
+  
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
   @@index([userId, tickerSymbol])
 }
 
