@@ -243,6 +243,84 @@ export async function addStockEntry(data: {
     }
 }
 
+export async function getPredefinedAccounts() {
+    const session = await auth();
+    if (!session?.user?.id) return [];
+
+    try {
+        const accounts = await prisma.predefinedAccount.findMany({
+            where: { userId: session.user.id },
+            orderBy: { createdAt: 'desc' },
+        });
+        return accounts;
+    } catch (e) {
+        console.error('Failed to fetch predefined accounts:', e);
+        return [];
+    }
+}
+
+export async function addPredefinedAccount(data: {
+    alias: string;
+    broker: string;
+    accountNumber: string;
+    owner: string;
+}) {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error('Unauthorized');
+
+    try {
+        const account = await prisma.predefinedAccount.create({
+            data: {
+                userId: session.user.id,
+                ...data
+            }
+        });
+        revalidatePath('/settings');
+        return account;
+    } catch (e) {
+        console.error('Failed to add predefined account:', e);
+        throw new Error('Failed to add predefined account');
+    }
+}
+
+export async function editPredefinedAccount(id: string, data: {
+    alias: string;
+    broker: string;
+    accountNumber: string;
+    owner: string;
+}) {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error('Unauthorized');
+
+    try {
+        const account = await prisma.predefinedAccount.update({
+            where: { id, userId: session.user.id },
+            data
+        });
+        revalidatePath('/settings');
+        return account;
+    } catch (e) {
+        console.error('Failed to edit predefined account:', e);
+        throw new Error('Failed to edit predefined account');
+    }
+}
+
+export async function deletePredefinedAccount(id: string) {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error('Unauthorized');
+
+    try {
+        await prisma.predefinedAccount.delete({
+            where: { id, userId: session.user.id }
+        });
+        revalidatePath('/settings');
+        return true;
+    } catch (e) {
+        console.error('Failed to delete predefined account:', e);
+        throw new Error('Failed to delete predefined account');
+    }
+}
+
 async function recalculateStockAsset(userId: string, tickerSymbol: string) {
     const allEntries = await prisma.stockEntry.findMany({
         where: { userId, tickerSymbol }

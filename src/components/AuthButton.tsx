@@ -2,6 +2,7 @@
 
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
+import { Settings } from 'lucide-react';
 
 export default function AuthButton() {
     const { data: session, status } = useSession();
@@ -27,6 +28,15 @@ export default function AuthButton() {
                     <span className="text-[10px] uppercase tracking-wider mr-2">Logged in as:</span>
                     <strong className="text-primary font-mono">{session.user.email}</strong>
                 </span>
+
+                <Link
+                    href="/settings"
+                    className="inline-flex items-center justify-center whitespace-nowrap rounded-sm text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:bg-muted hover:text-foreground h-8 w-8 text-muted-foreground"
+                    title="Personal Settings"
+                >
+                    <Settings size={18} />
+                </Link>
+
                 <button
                     onClick={() => signOut()}
                     className="inline-flex items-center justify-center whitespace-nowrap rounded-sm text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-4 py-2"

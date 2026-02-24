@@ -1,8 +1,6 @@
-'use client';
-
-import { useState } from 'react';
-import { Building2, UserCircle2, Hash, ArrowRight } from 'lucide-react';
-import { addStockEntry, editStockEntry } from '@/lib/actions';
+import { useState, useEffect } from 'react';
+import { Building2, UserCircle2, Hash, ArrowRight, Bookmark } from 'lucide-react';
+import { addStockEntry, editStockEntry, getPredefinedAccounts } from '@/lib/actions';
 
 export default function StockEntryForm({
     symbol,
@@ -26,8 +24,26 @@ export default function StockEntryForm({
     const [accountNum, setAccountNum] = useState(initialData?.account || '');
     const [quantity, setQuantity] = useState(initialData?.qty.toString() || '');
     const [totalCost, setTotalCost] = useState(initialData?.totalCost.toString() || '');
+    const [presets, setPresets] = useState<any[]>([]);
+
+    useEffect(() => {
+        async function fetchPresets() {
+            const data = await getPredefinedAccounts();
+            setPresets(data);
+        }
+        fetchPresets();
+    }, []);
 
     const isEditing = !!initialData;
+
+    const handleSelectPreset = (presetId: string) => {
+        const selected = presets.find(p => p.id === presetId);
+        if (selected) {
+            setBroker(selected.broker);
+            setOwner(selected.owner);
+            setAccountNum(selected.accountNumber);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -67,9 +83,26 @@ export default function StockEntryForm({
         <form onSubmit={handleSubmit} className="w-full h-full flex flex-col gap-6 font-mono text-sm py-4">
             {/* Account Info Section */}
             <div className="flex flex-col gap-4">
-                <h3 className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase border-b border-border/50 pb-2 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> Account Credentials
-                </h3>
+                <div className="flex items-center justify-between border-b border-border/50 pb-2">
+                    <h3 className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> Account Credentials
+                    </h3>
+                    {!isEditing && presets.length > 0 && (
+                        <div className="flex items-center gap-2">
+                            <Bookmark size={12} className="text-primary" />
+                            <select
+                                onChange={(e) => handleSelectPreset(e.target.value)}
+                                className="bg-transparent text-[10px] text-primary font-bold focus:outline-none cursor-pointer hover:underline"
+                                defaultValue=""
+                            >
+                                <option value="" disabled>LOAD PRESET</option>
+                                {presets.map(p => (
+                                    <option key={p.id} value={p.id}>{p.alias}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+                </div>
 
                 <div className="grid gap-3">
                     <div className="relative">
