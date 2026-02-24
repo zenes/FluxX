@@ -45,6 +45,7 @@ model StockEntry {
   accountOwner        String    // e.g., 'Hong Gildong'
   accountNumber       String?   // Optional: Account identifier
   tickerSymbol        String    // e.g., 'AAPL', 'TSLA'
+  currency            String    @default("USD") // 'USD' or 'KRW'
   
   predefinedAccountId String?
   predefinedAccount   PredefinedAccount? @relation(fields: [predefinedAccountId], references: [id], onDelete: SetNull)

@@ -39,6 +39,7 @@ export type AssetItem = {
         account: string;
         qty: number;
         totalCost: number;
+        currency: string;
         predefinedAccountId?: string | null;
         predefinedAccountAlias?: string | null;
     }[];
@@ -82,6 +83,7 @@ export async function getAssets(): Promise<AssetItem[]> {
                     account: m.accountNumber || '',
                     qty: m.quantity,
                     totalCost: m.totalPurchaseAmount,
+                    currency: m.currency,
                     predefinedAccountId: m.predefinedAccountId,
                     predefinedAccountAlias: m.predefinedAccount?.alias
                 }));
@@ -143,6 +145,7 @@ export async function addStockEntry(data: {
     accountNumber?: string;
     quantity: number;
     totalPurchaseAmount: number;
+    currency?: string;
     predefinedAccountId?: string;
 }) {
     const session = await auth();
@@ -151,10 +154,12 @@ export async function addStockEntry(data: {
     }
 
     try {
+        const { predefinedAccountId, ...rest } = data;
         const entry = await prisma.stockEntry.create({
             data: {
                 userId: session.user.id,
-                ...data
+                ...rest,
+                predefinedAccountId: predefinedAccountId || null
             }
         });
 
@@ -202,9 +207,9 @@ export async function addStockEntry(data: {
 
         revalidatePath('/operations');
         return entry;
-    } catch (e) {
+    } catch (e: any) {
         console.error('Failed to add stock entry:', e);
-        throw new Error('Failed to add stock entry');
+        throw new Error(`Failed to add stock entry: ${e.message || 'Unknown error'}`);
     }
 }
 
@@ -335,22 +340,26 @@ export async function deleteStockEntry(entryId: string, tickerSymbol: string) {
 
 export async function editStockEntry(
     entryId: string,
-    data: { brokerName: string; accountOwner: string; accountNumber?: string; quantity: number; totalPurchaseAmount: number; predefinedAccountId?: string | null },
+    data: { brokerName: string; accountOwner: string; accountNumber?: string; quantity: number; totalPurchaseAmount: number; currency: string; predefinedAccountId?: string | null },
     tickerSymbol: string
 ) {
     const session = await auth();
     if (!session?.user?.id) throw new Error('Unauthorized');
 
     try {
+        const { predefinedAccountId, ...rest } = data;
         await prisma.stockEntry.update({
             where: { id: entryId, userId: session.user.id },
-            data
+            data: {
+                ...rest,
+                predefinedAccountId: predefinedAccountId || null
+            }
         });
         await recalculateStockAsset(session.user.id, tickerSymbol);
         revalidatePath('/operations');
         return { success: true };
-    } catch (e) {
+    } catch (e: any) {
         console.error('Failed to edit stock entry:', e);
-        throw new Error('Failed to edit stock entry');
+        throw new Error(`Failed to edit stock entry: ${e.message || 'Unknown error'}`);
     }
 }

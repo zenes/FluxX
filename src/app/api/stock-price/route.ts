@@ -17,7 +17,7 @@ export async function GET(request: Request) {
         const results = await yahooFinance.quote(symbols);
 
         // Convert array to a symbol-keyed dictionary for easier frontend access
-        const quotesMap: Record<string, { price: number, change: number, changePercent: number, shortName: string }> = {};
+        const quotesMap: Record<string, { price: number, change: number, changePercent: number, shortName: string, currency: string }> = {};
 
         // Make sure to handle single result (object) vs multiple results (array) uniformly
         const quotesArray = Array.isArray(results) ? results : [results];
@@ -29,6 +29,7 @@ export async function GET(request: Request) {
                     change: q.regularMarketChange || 0,
                     changePercent: q.regularMarketChangePercent || 0,
                     shortName: q.shortName || q.longName || q.symbol,
+                    currency: q.currency || 'USD',
                 };
             }
         });

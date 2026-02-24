@@ -47,7 +47,7 @@ export default function ClientOperations({ assets }: { assets: AssetItem[] }) {
     });
 
     const [globalStockSheetOpen, setGlobalStockSheetOpen] = useState(false);
-    const [stockPrices, setStockPrices] = useState<Record<string, { price: number, change: number, changePercent: number, shortName: string }>>({});
+    const [stockPrices, setStockPrices] = useState<Record<string, { price: number, change: number, changePercent: number, shortName: string, currency: string }>>({});
 
     const [rates, setRates] = useState({ usdKrw: 1400, goldUsd: 2600 });
     const [loadingRates, setLoadingRates] = useState(true);
@@ -109,8 +109,15 @@ export default function ClientOperations({ assets }: { assets: AssetItem[] }) {
         const symbol = stock.assetSymbol!;
         const priceData = stockPrices[symbol];
         const currentPrice = priceData ? priceData.price : (stock.avgPrice || 0);
-        const valueUsd = stock.amount * currentPrice;
-        totalStockKrw += valueUsd * rates.usdKrw;
+        const currency = priceData?.currency || 'USD';
+
+        const valueInOriginalCurrency = stock.amount * currentPrice;
+
+        if (currency === 'KRW') {
+            totalStockKrw += valueInOriginalCurrency;
+        } else {
+            totalStockKrw += valueInOriginalCurrency * rates.usdKrw;
+        }
     });
 
     const netWorth = goldKrw + usdKrw + krwAmount + totalStockKrw;
@@ -119,7 +126,7 @@ export default function ClientOperations({ assets }: { assets: AssetItem[] }) {
         { name: 'Gold Reserve', value: goldKrw, color: '#eab308' },
         { name: 'Foreign Currency', value: usdKrw, color: '#22c55e' },
         { name: 'Local Currency', value: krwAmount, color: '#3b82f6' },
-        { name: 'US Equities', value: totalStockKrw, color: '#8b5cf6' },
+        { name: 'Stock Assets', value: totalStockKrw, color: '#8b5cf6' },
     ].filter(item => item.value > 0);
 
     const openModal = (type: string, amount: number, label: string, unit: string) => {
@@ -142,7 +149,7 @@ export default function ClientOperations({ assets }: { assets: AssetItem[] }) {
                         className="text-xs font-bold tracking-widest text-primary bg-primary/10 border border-primary/20 px-4 py-2 rounded-sm hover:bg-primary/20 uppercase transition-colors flex items-center gap-2"
                     >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                        Add US Stock
+                        Add Global Stock
                     </button>
                 </div>
             </div>
@@ -303,13 +310,13 @@ export default function ClientOperations({ assets }: { assets: AssetItem[] }) {
                         </div>
                     </div>
 
-                    {/* US Equities Card */}
+                    {/* Global Equities Card */}
                     <div className="bg-card border border-input rounded-md p-6 flex flex-col relative group overflow-hidden shadow-sm hover:border-purple-500/30 hover:shadow-[0_0_15px_rgba(139,92,246,0.1)] transition-all">
                         <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button onClick={() => setGlobalStockSheetOpen(true)} className="text-[10px] font-bold tracking-widest text-purple-500 bg-purple-500/10 border border-purple-500/20 px-3 py-1.5 rounded-sm hover:bg-purple-500/20 uppercase transition-colors">ADD</button>
                         </div>
                         <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span> US Equities
+                            <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span> Global Equities
                         </span>
                         <span className="text-3xl font-black text-purple-500 tracking-tight mt-1">
                             ₩{totalStockKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}
@@ -329,7 +336,7 @@ export default function ClientOperations({ assets }: { assets: AssetItem[] }) {
             </div>
 
             <div className="max-w-screen-xl mx-auto mt-10">
-                <h3 className="text-xs font-bold tracking-[0.2em] uppercase text-muted-foreground mb-4">US Equities Intelligence</h3>
+                <h3 className="text-xs font-bold tracking-[0.2em] uppercase text-muted-foreground mb-4">Stock Intelligence (Global Marketplace)</h3>
                 {stocks.length === 0 ? (
                     <div className="bg-card border border-input border-dashed rounded-md p-8 flex flex-col items-center justify-center text-muted-foreground font-mono text-xs opacity-50">
                         NO EQUITY ASSETS REGISTERED
@@ -340,15 +347,18 @@ export default function ClientOperations({ assets }: { assets: AssetItem[] }) {
                             const symbol = stock.assetSymbol!;
                             const priceData = stockPrices[symbol];
                             const currentPrice = priceData ? priceData.price : (stock.avgPrice || 0);
+                            const currency = priceData?.currency || 'USD'; // Determine currency from priceData or default to USD
+
+                            const valueOriginal = stock.amount * currentPrice;
+                            const valueKrw = currency === 'KRW' ? valueOriginal : valueOriginal * rates.usdKrw;
+                            const valueUsd = currency === 'USD' ? valueOriginal : valueOriginal / rates.usdKrw;
+
                             const avgPrice = stock.avgPrice || 0;
                             const roi = avgPrice > 0 ? ((currentPrice - avgPrice) / avgPrice) * 100 : 0;
                             const isPositive = roi >= 0;
 
                             // Asian standard: Red up, Blue down
                             const roiColor = isPositive ? 'text-red-500' : 'text-blue-500';
-
-                            const valueUsd = stock.amount * currentPrice;
-                            const valueKrw = valueUsd * rates.usdKrw;
 
                             const entriesList = stock.entries || [];
 
@@ -370,11 +380,11 @@ export default function ClientOperations({ assets }: { assets: AssetItem[] }) {
                                                         {(totalStockKrw > 0 ? (valueKrw / totalStockKrw) * 100 : 0).toFixed(1)}% <span className="text-muted-foreground opacity-50 font-normal">/</span> {(netWorth > 0 ? (totalStockKrw / netWorth) * 100 : 0).toFixed(1)}%
                                                     </span>
                                                     <span className="text-lg font-black text-foreground tracking-tight">
-                                                        ${valueUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                                                        {currency === 'KRW' ? '₩' : '$'}{valueOriginal.toLocaleString(undefined, { maximumFractionDigits: currency === 'KRW' ? 0 : 2 })}
                                                     </span>
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-[10px] text-muted-foreground">Avg: ${avgPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                                                    <span className="text-[10px] text-muted-foreground">Avg: {currency === 'KRW' ? '₩' : '$'}{avgPrice.toLocaleString(undefined, { maximumFractionDigits: currency === 'KRW' ? 0 : 2 })}</span>
                                                     <span className={`text-xs font-bold ${roiColor}`}>{isPositive ? '+' : ''}{roi.toFixed(2)}%</span>
                                                 </div>
                                             </div>
@@ -413,9 +423,9 @@ export default function ClientOperations({ assets }: { assets: AssetItem[] }) {
                                                         </span>
                                                     </div>
                                                     <div className="col-span-2 text-right font-medium">{entry.qty.toLocaleString()}</div>
-                                                    <div className="col-span-2 text-right text-muted-foreground">${entry.qty > 0 ? (entry.totalCost / entry.qty).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}</div>
+                                                    <div className="col-span-2 text-right text-muted-foreground">{entry.currency === 'KRW' ? '₩' : '$'}{entry.qty > 0 ? (entry.totalCost / entry.qty).toLocaleString(undefined, { minimumFractionDigits: entry.currency === 'KRW' ? 0 : 2, maximumFractionDigits: 2 }) : '0.00'}</div>
                                                     <div className="col-span-2 flex justify-end items-center gap-3">
-                                                        <span className="text-right">${entry.totalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                        <span className="text-right">{entry.currency === 'KRW' ? '₩' : '$'}{entry.totalCost.toLocaleString(undefined, { minimumFractionDigits: entry.currency === 'KRW' ? 0 : 2, maximumFractionDigits: 2 })}</span>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); setEditingEntryId(entry.id); }}
                                                             className="text-blue-500 hover:text-blue-400 p-1 rounded-sm bg-blue-500/10 hover:bg-blue-500/20 transition-colors"
@@ -431,6 +441,24 @@ export default function ClientOperations({ assets }: { assets: AssetItem[] }) {
                                                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                                         </button>
                                                     </div>
+                                                    {editingEntryId === entry.id && (
+                                                        <div className="col-span-12 mt-4 p-4 border border-input rounded-md bg-muted/20">
+                                                            <StockEntryForm
+                                                                symbol={symbol}
+                                                                initialData={{
+                                                                    id: entry.id,
+                                                                    broker: entry.broker,
+                                                                    owner: entry.owner,
+                                                                    account: entry.account,
+                                                                    qty: entry.qty,
+                                                                    totalCost: entry.totalCost,
+                                                                    currency: entry.currency,
+                                                                    predefinedAccountId: entry.predefinedAccountId
+                                                                }}
+                                                                onSuccess={() => setEditingEntryId(null)}
+                                                            />
+                                                        </div>
+                                                    )}
                                                 </div>
                                             ))}
 
@@ -455,6 +483,7 @@ export default function ClientOperations({ assets }: { assets: AssetItem[] }) {
                                                         <div className="w-full h-full mt-24">
                                                             <StockEntryForm
                                                                 symbol={symbol}
+                                                                initialCurrency={currency} // Pass determined currency
                                                                 onSuccess={() => {
                                                                     // Close sheet logic can be handled via key or parent state later
                                                                     window.location.reload(); // Simple refresh to see new entry for now

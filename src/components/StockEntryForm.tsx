@@ -14,7 +14,8 @@ type SearchResult = {
 export default function StockEntryForm({
     symbol: initialSymbol,
     onSuccess,
-    initialData
+    initialData,
+    initialCurrency // Added optional initialCurrency prop
 }: {
     symbol?: string;
     onSuccess: () => void;
@@ -25,8 +26,10 @@ export default function StockEntryForm({
         account: string;
         qty: number;
         totalCost: number;
+        currency?: string;
         predefinedAccountId?: string | null;
-    }
+    };
+    initialCurrency?: string;
 }) {
     const [loading, setLoading] = useState(false);
     const [broker, setBroker] = useState(initialData?.broker || '');
@@ -34,6 +37,19 @@ export default function StockEntryForm({
     const [accountNum, setAccountNum] = useState(initialData?.account || '');
     const [quantity, setQuantity] = useState(initialData?.qty.toString() || '');
     const [totalCost, setTotalCost] = useState(initialData?.totalCost.toString() || '');
+
+    // Heuristic for setting currency if symbol is provided but no initialData
+    const getInitialCurrency = () => {
+        if (initialData?.currency) return initialData.currency;
+        if (initialCurrency) return initialCurrency;
+        if (initialSymbol) {
+            const isKR = initialSymbol.endsWith('.KS') || initialSymbol.endsWith('.KQ') || /^\d{6}$/.test(initialSymbol);
+            return isKR ? 'KRW' : 'USD';
+        }
+        return 'USD';
+    };
+
+    const [currency, setCurrency] = useState(getInitialCurrency());
     const [presets, setPresets] = useState<any[]>([]);
     const [selectedPresetId, setSelectedPresetId] = useState<string>(initialData?.predefinedAccountId || '');
 
@@ -92,17 +108,29 @@ export default function StockEntryForm({
         setTicker(res.symbol);
         setSelectedSymbol(res.symbol);
         setShowDropdown(false);
+        // Basic heuristic for currency, can be improved with quote call if needed
+        const isKR = res.exchange === 'KOE' || res.symbol.endsWith('.KS') || res.symbol.endsWith('.KQ');
+        setCurrency(isKR ? 'KRW' : 'USD');
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const finalSymbol = initialSymbol || selectedSymbol;
+        const finalSymbol = initialSymbol || selectedSymbol || ticker.trim();
         if (!finalSymbol) {
-            alert('Please select a valid ticker symbol');
+            alert('Please select or enter a valid ticker symbol');
+            setLoading(false);
             return;
         }
 
-        setLoading(true);
+        console.log('Submitting Stock Entry:', { finalSymbol, broker, owner, quantity, totalCost, currency });
+
+        // Ensure currency is correct for manually entered tickers like 441640.KS
+        let finalCurrency = currency;
+        if (!isEditing && !selectedSymbol) {
+            const isKR = finalSymbol.endsWith('.KS') || finalSymbol.endsWith('.KQ') || /^\d{6}$/.test(finalSymbol);
+            finalCurrency = isKR ? 'KRW' : 'USD';
+        }
+
         try {
             if (isEditing) {
                 await editStockEntry(initialData!.id, {
@@ -111,6 +139,7 @@ export default function StockEntryForm({
                     accountNumber: accountNum,
                     quantity: parseFloat(quantity),
                     totalPurchaseAmount: parseFloat(totalCost),
+                    currency: finalCurrency,
                     predefinedAccountId: selectedPresetId || null
                 }, finalSymbol);
             } else {
@@ -121,12 +150,14 @@ export default function StockEntryForm({
                     accountNumber: accountNum,
                     quantity: parseFloat(quantity),
                     totalPurchaseAmount: parseFloat(totalCost),
-                    predefinedAccountId: selectedPresetId
+                    currency: finalCurrency,
+                    predefinedAccountId: selectedPresetId || undefined
                 });
             }
             onSuccess();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to save stock entry', error);
+            alert(`Failed to save: ${error.message || 'Unknown error'}`);
         } finally {
             setLoading(false);
         }
@@ -273,9 +304,9 @@ export default function StockEntryForm({
                         />
                     </div>
                     <div className="flex flex-col gap-1.5">
-                        <label className="text-[10px] text-muted-foreground uppercase tracking-widest pl-1">Total Purchase Amount (USD)</label>
+                        <label className="text-[10px] text-muted-foreground uppercase tracking-widest pl-1">Total Purchase Amount ({currency})</label>
                         <div className="relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">$</span>
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold">{currency === 'KRW' ? '₩' : '$'}</span>
                             <input
                                 type="number"
                                 step="any"
@@ -283,7 +314,7 @@ export default function StockEntryForm({
                                 placeholder="0.00"
                                 value={totalCost}
                                 onChange={e => setTotalCost(e.target.value)}
-                                className="w-full bg-muted/30 border border-input rounded-sm pl-8 pr-4 py-2.5 focus:outline-none focus:border-primary transition-colors text-sm font-bold tracking-wider text-green-500"
+                                className={`w-full bg-muted/30 border border-input rounded-sm ${currency === 'KRW' ? 'pl-9' : 'pl-8'} pr-4 py-2.5 focus:outline-none focus:border-primary transition-colors text-sm font-bold tracking-wider text-green-500`}
                             />
                         </div>
                     </div>
@@ -293,7 +324,7 @@ export default function StockEntryForm({
                 <div className="mt-2 bg-purple-500/5 border border-purple-500/20 rounded-md p-4 flex justify-between items-center text-xs">
                     <span className="text-[10px] font-bold text-purple-500 tracking-widest uppercase">Live Avg Cost Preview</span>
                     <span className="font-bold text-foreground font-mono">
-                        ${avgCost > 0 ? avgCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : '0.00'} / share
+                        {currency === 'KRW' ? '₩' : '$'}{avgCost > 0 ? avgCost.toLocaleString(undefined, { minimumFractionDigits: currency === 'KRW' ? 0 : 2, maximumFractionDigits: currency === 'KRW' ? 2 : 4 }) : '0.00'} / share
                     </span>
                 </div>
             </div>
