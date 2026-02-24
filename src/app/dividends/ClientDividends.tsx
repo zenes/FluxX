@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import DividendRecordForm from "@/components/DividendRecordForm";
 import { DividendHistory } from "@/components/DividendHistory";
 import { getDividendRecords } from "@/lib/actions";
+import MonthlyDividendChart from "@/components/MonthlyDividendChart";
 
 export default function ClientDividends({ assets }: { assets: any[] }) {
     const [searchTerm, setSearchTerm] = useState("");
@@ -14,6 +15,9 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
     const [activeSymbol, setActiveSymbol] = useState<string | null>(null);
     const [activeCurrency, setActiveCurrency] = useState<string>("USD");
     const [sheetMode, setSheetMode] = useState<'record' | 'history'>('record');
+
+    const currentYear = new Date().getFullYear();
+    const [selectedYear, setSelectedYear] = useState<number>(currentYear);
 
     useEffect(() => {
         async function fetchRecords() {
@@ -51,18 +55,38 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
         }
     });
 
-    // Total actual received this year
-    const currentYear = new Date().getFullYear();
-    const actualThisYearKRW = dividendRecords
-        .filter(r => new Date(r.receivedAt).getFullYear() === currentYear)
-        .reduce((sum, r) => {
+    // Extract available years from records, ensuring selectedYear is at least included
+    const availableYearsSet = new Set<number>();
+    dividendRecords.forEach(r => availableYearsSet.add(new Date(r.receivedAt).getFullYear()));
+    availableYearsSet.add(currentYear); // default safe pick
+    const availableYears = Array.from(availableYearsSet).sort((a, b) => b - a);
+
+    // Calculate actual received for the SECLECTED year & monthly aggregation
+    // Initialize 12 months data
+    const monthlyData = Array.from({ length: 12 }, (_, i) => ({
+        name: `${i + 1}월`,
+        amount: 0
+    }));
+
+    let actualThisYearKRW = 0;
+
+    dividendRecords.forEach(r => {
+        const recordDate = new Date(r.receivedAt);
+        if (recordDate.getFullYear() === selectedYear) {
             const val = r.amount || 0;
-            return sum + (r.currency === "KRW" ? val : val * KRW_USD_RATE);
-        }, 0);
+            const krwVal = r.currency === "KRW" ? val : val * KRW_USD_RATE;
+
+            actualThisYearKRW += krwVal;
+
+            // Add to monthly bucket (0-indexed month)
+            const monthIndex = recordDate.getMonth();
+            monthlyData[monthIndex].amount += krwVal;
+        }
+    });
 
     const metrics = [
         { title: "Annual Total (Est.)", value: `₩${Math.round(totalAnnualEstKRW).toLocaleString()}`, change: "+12.5%", icon: TrendingUp, color: "text-primary" },
-        { title: "ACTUAL (YTD)", value: `₩${Math.round(actualThisYearKRW).toLocaleString()}`, detail: `${currentYear} Payouts`, icon: Wallet, color: "text-accent" },
+        { title: `ACTUAL (${selectedYear} YTD)`, value: `₩${Math.round(actualThisYearKRW).toLocaleString()}`, detail: `${selectedYear} Payouts`, icon: Wallet, color: "text-accent" },
         { title: "Monthly Average", value: `₩${Math.round(totalAnnualEstKRW / 12).toLocaleString()}`, detail: "Projected Avg", icon: Calendar, color: "text-purple-500" },
         { title: "Total Records", value: dividendRecords.length.toString(), detail: "Receipts Logged", icon: ArrowUpRight, color: "text-emerald-500" },
     ];
@@ -82,8 +106,20 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                         <span className="h-8 w-2 bg-primary animate-pulse"></span>
                         Dividend Intelligence
                     </h1>
-                    <p className="text-sm text-muted-foreground mt-2 font-mono uppercase tracking-widest">
+                    <p className="text-sm text-muted-foreground mt-2 font-mono uppercase tracking-widest flex items-center gap-3">
                         Passive yield monitoring and automated cash flow projection.
+                        <span className="bg-primary/20 text-primary px-2 py-0.5 rounded-sm text-xs font-bold border border-primary/30 ml-2">
+                            YEAR:
+                            <select
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                                className="bg-transparent border-none appearance-none font-bold text-primary focus:outline-none focus:ring-0 ml-1 cursor-pointer"
+                            >
+                                {availableYears.map(year => (
+                                    <option key={year} value={year} className="bg-background text-foreground">{year}</option>
+                                ))}
+                            </select>
+                        </span>
                     </p>
                 </div>
 
@@ -126,6 +162,17 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                 ))}
             </div>
 
+            {/* Monthly Dividend Chart */}
+            <div className="mb-8 p-5 bg-card border border-input rounded-md shadow-sm">
+                <div className="mb-4 flex items-center justify-between">
+                    <div>
+                        <h3 className="text-sm font-black tracking-widest text-foreground uppercase">Monthly Payouts</h3>
+                        <p className="text-[10px] text-muted-foreground uppercase font-mono mt-1">Aggregation for {selectedYear}</p>
+                    </div>
+                </div>
+                <MonthlyDividendChart data={monthlyData} />
+            </div>
+
             {/* Live Stock List */}
             <div className="flex-1 rounded-md border bg-card text-card-foreground shadow-sm overflow-hidden flex flex-col font-mono">
                 <div className="p-4 border-b bg-muted/10 flex justify-between items-center">
@@ -158,6 +205,7 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                                 filteredStocks.map((stock) => {
                                     const annual = stock.entries?.reduce((sum: number, e: any) => sum + (e.dividendPerShare || 0) * (e.dividendFrequency || 1) * (e.qty || 0), 0) || 0;
                                     const records = dividendRecords.filter(r => r.tickerSymbol === stock.assetSymbol);
+                                    const recordsForYear = records.filter(r => new Date(r.receivedAt).getFullYear() === selectedYear);
                                     const currency = stock.currency || 'USD';
 
                                     return (
@@ -172,12 +220,12 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                                                 {currency === 'KRW' ? '₩' : '$'}{annual.toLocaleString()}
                                             </td>
                                             <td className="px-6 py-4 align-middle text-right font-mono text-[10px]">
-                                                {records.length > 0 ? (
+                                                {recordsForYear.length > 0 ? (
                                                     <button
                                                         onClick={() => handleOpenSheet(stock.assetSymbol!, currency, 'history')}
                                                         className="text-emerald-500 hover:text-emerald-400 hover:underline transition-colors font-bold"
                                                     >
-                                                        {records.length} Paid
+                                                        {recordsForYear.length} Paid in {selectedYear}
                                                     </button>
                                                 ) : (
                                                     <span className="opacity-30">No Data</span>
@@ -222,7 +270,10 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                         ) : activeSymbol && (
                             <DividendHistory
                                 tickerSymbol={activeSymbol}
-                                records={dividendRecords.filter(r => r.tickerSymbol === activeSymbol)}
+                                records={dividendRecords.filter(r =>
+                                    r.tickerSymbol === activeSymbol &&
+                                    new Date(r.receivedAt).getFullYear() === selectedYear
+                                )}
                             />
                         )}
 
