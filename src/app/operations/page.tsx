@@ -1,4 +1,4 @@
-import { getAssets } from '@/lib/actions';
+import { getAssets, getPredefinedAccounts } from '@/lib/actions';
 import ClientOperations from './ClientOperations';
 import { redirect } from 'next/navigation';
 import { auth } from '@/../auth';
@@ -16,11 +16,14 @@ export default async function OperationsPage() {
         redirect('/login');
     }
 
-    const assets = await getAssets();
+    const [assets, accounts] = await Promise.all([
+        getAssets(),
+        getPredefinedAccounts()
+    ]);
 
     return (
         <div className="flex flex-col h-full bg-background border-l border-primary/20">
-            <ClientOperations assets={assets} />
+            <ClientOperations assets={assets} predefinedAccounts={accounts} />
         </div>
     );
 }

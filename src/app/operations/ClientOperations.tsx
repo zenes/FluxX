@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
@@ -25,7 +26,14 @@ import { deleteStockEntry } from '@/lib/actions';
 
 const COLORS = ['#eab308', '#22c55e', '#3b82f6']; // Gold, USD, KRW
 
-export default function ClientOperations({ assets }: { assets: AssetItem[] }) {
+export default function ClientOperations({
+    assets,
+    predefinedAccounts = []
+}: {
+    assets: AssetItem[],
+    predefinedAccounts?: any[]
+}) {
+    const accounts = predefinedAccounts; // assign prop to local variable to match previous usage
     const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
 
     const handleDeleteEntry = async (entryId: string, symbol: string) => {
@@ -552,6 +560,7 @@ export default function ClientOperations({ assets }: { assets: AssetItem[] }) {
                 currentAmount={modalState.amount}
                 label={modalState.label}
                 unit={modalState.unit}
+                predefinedAccounts={accounts}
             />
 
             <Sheet open={globalStockSheetOpen} onOpenChange={setGlobalStockSheetOpen}>

@@ -1,4 +1,5 @@
 'use server';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { signIn, auth } from '@/../auth';
 import { AuthError } from 'next-auth';
@@ -32,6 +33,7 @@ export type AssetItem = {
     assetSymbol?: string | null;
     avgPrice?: number | null;
     currency?: string;
+    predefinedAccountId?: string | null;
     // New optional expanded data mapping for sub-entries mapping per ticker
     entries?: {
         id: string;
@@ -106,12 +108,13 @@ export async function getAssets(): Promise<AssetItem[]> {
             assetSymbol: asset.assetSymbol,
             avgPrice,
             currency: assetCurrency,
+            predefinedAccountId: (asset as any).predefinedAccountId,
             entries: subEntries
         };
     });
 }
 
-export async function upsertAsset(assetType: string, amount: number) {
+export async function upsertAsset(assetType: string, amount: number, predefinedAccountId?: string) {
     const session = await auth();
     if (!session?.user?.id) {
         throw new Error('Unauthorized');
@@ -119,31 +122,34 @@ export async function upsertAsset(assetType: string, amount: number) {
 
     const amountEncrypted = encrypt(amount.toString());
 
-    // Check if asset exists for this user
-    const existingAsset = await prisma.asset.findFirst({
+    // Check if asset exists for this user + type + account combination
+    const existingAsset = await (prisma.asset as any).findFirst({
         where: {
             userId: session.user.id,
             assetType: assetType,
+            predefinedAccountId: predefinedAccountId || null
         }
     });
 
     if (existingAsset) {
-        await prisma.asset.update({
+        await (prisma.asset as any).update({
             where: { id: existingAsset.id },
             data: { amountEncrypted }
         });
     } else {
-        await prisma.asset.create({
+        await (prisma.asset as any).create({
             data: {
                 userId: session.user.id,
                 assetType,
                 amountEncrypted,
+                predefinedAccountId: predefinedAccountId || null
             }
         });
     }
 
     // Refresh the page data
     revalidatePath('/operations');
+    revalidatePath('/account');
     return { success: true };
 }
 

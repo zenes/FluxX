@@ -25,17 +25,23 @@ model User {
 }
 
 model Asset {
-  id                String    @id @default(cuid())
-  userId            String
-  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  assetType         String    // e.g., 'gold', 'usd', 'krw', 'stock'
-  assetSymbol       String?   // Ticker symbol (e.g., 'AAPL', 'TSLA') for stocks
-  amountEncrypted   String    // AES-256 encrypted balance/shares string
-  avgPriceEncrypted String?   // AES-256 encrypted average acquisition price (for stocks)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id                  String    @id @default(cuid())
+  userId              String
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assetType           String    // e.g., 'gold', 'usd', 'krw', 'stock'
+  assetSymbol         String?   // Ticker symbol (e.g., 'AAPL', 'TSLA') for stocks
+  amountEncrypted     String    // AES-256 encrypted balance/shares string
+  avgPriceEncrypted   String?   // AES-256 encrypted average acquisition price (for stocks)
   
-  @@unique([userId, assetType, assetSymbol]) // Ensure uniqueness per user+type+symbol
+  predefinedAccountId String?
+  predefinedAccount   PredefinedAccount? @relation(fields: [predefinedAccountId], references: [id], onDelete: SetNull)
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  // Ensure uniqueness per user + type + symbol + account
+  // If predefinedAccountId is null, it means it's a global/unassigned asset.
+  @@unique([userId, assetType, assetSymbol, predefinedAccountId]) 
 }
 
 model StockEntry {
@@ -101,6 +107,7 @@ model PredefinedAccount {
   owner         String    // e.g., 'Hong Gildong'
   
   stockEntries  StockEntry[]
+  assets        Asset[]
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt

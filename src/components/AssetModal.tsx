@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useState, useEffect } from 'react';
 import { upsertAsset } from '@/lib/actions';
@@ -10,7 +11,8 @@ export default function AssetModal({
     assetType,
     currentAmount,
     label,
-    unit
+    unit,
+    predefinedAccounts = [],
 }: {
     isOpen: boolean;
     onClose: () => void;
@@ -18,8 +20,10 @@ export default function AssetModal({
     currentAmount: number;
     label: string;
     unit: string;
+    predefinedAccounts?: any[];
 }) {
     const [amount, setAmount] = useState<string>(currentAmount.toString());
+    const [accountId, setAccountId] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
 
@@ -27,6 +31,7 @@ export default function AssetModal({
     useEffect(() => {
         if (isOpen) {
             setAmount(currentAmount.toString());
+            setAccountId(''); // reset account selection when opening new
             setShowConfirm(false); // Reset confirm state when opening
         }
     }, [isOpen, currentAmount]);
@@ -68,7 +73,7 @@ export default function AssetModal({
         e.preventDefault();
         setLoading(true);
         try {
-            await upsertAsset(assetType, Number(amount));
+            await upsertAsset(assetType, Number(amount), accountId || undefined);
             onClose(); // Parent component will trigger router.refresh or handle re-render through revalidatePath
         } catch (error) {
             console.error('Failed to update asset', error);
@@ -109,6 +114,27 @@ export default function AssetModal({
                             </div>
                             <p className="text-[10px] text-muted-foreground font-mono mt-1 opacity-70">
                                 * Data is secured via AES-256 encryption.
+                            </p>
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <label className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest">
+                                Assign to Account (Optional)
+                            </label>
+                            <select
+                                value={accountId}
+                                onChange={(e) => setAccountId(e.target.value)}
+                                className="w-full px-4 py-3 bg-muted/40 border border-input rounded-sm text-sm font-medium tracking-wide focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all text-foreground appearance-none cursor-pointer"
+                            >
+                                <option value="">-- No Account (Global / Unassigned) --</option>
+                                {predefinedAccounts.map(acc => (
+                                    <option key={acc.id} value={acc.id}>
+                                        {acc.alias} ({acc.broker})
+                                    </option>
+                                ))}
+                            </select>
+                            <p className="text-[10px] text-muted-foreground font-mono mt-1 opacity-70">
+                                Link this asset to a specific managed account or leave unassigned as global cash/gold.
                             </p>
                         </div>
 
