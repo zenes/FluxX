@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import AssetModal from '@/components/AssetModal';
-import StockModal from '@/components/StockModal';
 import { AssetItem } from '@/lib/actions';
 import {
     Accordion,
@@ -47,7 +46,7 @@ export default function ClientOperations({ assets }: { assets: AssetItem[] }) {
         unit: ''
     });
 
-    const [stockModalOpen, setStockModalOpen] = useState(false);
+    const [globalStockSheetOpen, setGlobalStockSheetOpen] = useState(false);
     const [stockPrices, setStockPrices] = useState<Record<string, { price: number, change: number, changePercent: number, shortName: string }>>({});
 
     const [rates, setRates] = useState({ usdKrw: 1400, goldUsd: 2600 });
@@ -139,7 +138,7 @@ export default function ClientOperations({ assets }: { assets: AssetItem[] }) {
                         SECURE PERSONAL ASSET MANAGEMENT & INTELLIGENCE
                     </p>
                     <button
-                        onClick={() => setStockModalOpen(true)}
+                        onClick={() => setGlobalStockSheetOpen(true)}
                         className="text-xs font-bold tracking-widest text-primary bg-primary/10 border border-primary/20 px-4 py-2 rounded-sm hover:bg-primary/20 uppercase transition-colors flex items-center gap-2"
                     >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
@@ -229,6 +228,16 @@ export default function ClientOperations({ assets }: { assets: AssetItem[] }) {
                                     />
                                 </PieChart>
                             </ResponsiveContainer>
+
+                            {/* Explicit Legend */}
+                            <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 px-4">
+                                {chartData.map((entry, index) => (
+                                    <div key={index} className="flex items-center gap-2">
+                                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></span>
+                                        <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase truncate">{entry.name}</span>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     ) : (
                         <div className="text-xs font-mono tracking-widest text-muted-foreground opacity-50 flex flex-col items-center justify-center h-full gap-2 min-h-[220px]">
@@ -241,7 +250,7 @@ export default function ClientOperations({ assets }: { assets: AssetItem[] }) {
 
             <div className="max-w-screen-xl mx-auto">
                 <h3 className="text-xs font-bold tracking-[0.2em] uppercase text-muted-foreground mb-4">Classified Asset Inventory</h3>
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 
                     {/* KRW */}
                     <div className="bg-card border border-input rounded-md p-6 flex flex-col relative group overflow-hidden shadow-sm hover:border-blue-500/30 hover:shadow-[0_0_15px_rgba(59,130,246,0.1)] transition-all">
@@ -294,6 +303,28 @@ export default function ClientOperations({ assets }: { assets: AssetItem[] }) {
                         </div>
                     </div>
 
+                    {/* US Equities Card */}
+                    <div className="bg-card border border-input rounded-md p-6 flex flex-col relative group overflow-hidden shadow-sm hover:border-purple-500/30 hover:shadow-[0_0_15px_rgba(139,92,246,0.1)] transition-all">
+                        <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onClick={() => setGlobalStockSheetOpen(true)} className="text-[10px] font-bold tracking-widest text-purple-500 bg-purple-500/10 border border-purple-500/20 px-3 py-1.5 rounded-sm hover:bg-purple-500/20 uppercase transition-colors">ADD</button>
+                        </div>
+                        <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span> US Equities
+                        </span>
+                        <span className="text-3xl font-black text-purple-500 tracking-tight mt-1">
+                            ₩{totalStockKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                        </span>
+                        <div className="mt-4 flex justify-between items-end">
+                            <div className="flex flex-col gap-0.5">
+                                <span className="text-[10px] font-mono text-muted-foreground opacity-70">SECURITIES TOTAL</span>
+                                <span className="text-xs font-mono font-medium text-foreground">{stocks.length} SYMBOLS</span>
+                            </div>
+                            <span className="text-xs font-bold text-purple-500 bg-purple-500/10 px-2 py-0.5 rounded-sm">
+                                {((totalStockKrw / netWorth) * 100).toFixed(1)}%
+                            </span>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -335,8 +366,8 @@ export default function ClientOperations({ assets }: { assets: AssetItem[] }) {
 
                                             <div className="flex flex-col items-end gap-1">
                                                 <div className="flex items-center gap-3">
-                                                    <span className="text-xs font-bold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-sm">
-                                                        {(totalStockKrw > 0 ? (valueKrw / totalStockKrw) * 100 : 0).toFixed(1)}% <span className="text-muted-foreground opacity-50 font-normal">/</span> {((totalStockKrw / netWorth) * 100).toFixed(1)}%
+                                                    <span className="text-xs font-bold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-sm" title="[Weight in Stock Portfolio] / [Total Equity weight in Net Worth]">
+                                                        {(totalStockKrw > 0 ? (valueKrw / totalStockKrw) * 100 : 0).toFixed(1)}% <span className="text-muted-foreground opacity-50 font-normal">/</span> {(netWorth > 0 ? (totalStockKrw / netWorth) * 100 : 0).toFixed(1)}%
                                                     </span>
                                                     <span className="text-lg font-black text-foreground tracking-tight">
                                                         ${valueUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}
@@ -372,7 +403,14 @@ export default function ClientOperations({ assets }: { assets: AssetItem[] }) {
                                                     </div>
                                                     <div className="col-span-3 flex items-center gap-2 text-muted-foreground">
                                                         <UserCircle2 size={12} />
-                                                        {entry.owner} {entry.account ? `(${entry.account})` : ''}
+                                                        <span className="truncate">
+                                                            {entry.owner} {entry.account ? `(${entry.account})` : ''}
+                                                            {entry.predefinedAccountAlias && (
+                                                                <span className="ml-2 text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm border border-primary/20">
+                                                                    {entry.predefinedAccountAlias}
+                                                                </span>
+                                                            )}
+                                                        </span>
                                                     </div>
                                                     <div className="col-span-2 text-right font-medium">{entry.qty.toLocaleString()}</div>
                                                     <div className="col-span-2 text-right text-muted-foreground">${entry.qty > 0 ? (entry.totalCost / entry.qty).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}</div>
@@ -487,10 +525,27 @@ export default function ClientOperations({ assets }: { assets: AssetItem[] }) {
                 unit={modalState.unit}
             />
 
-            <StockModal
-                isOpen={stockModalOpen}
-                onClose={() => setStockModalOpen(false)}
-            />
+            <Sheet open={globalStockSheetOpen} onOpenChange={setGlobalStockSheetOpen}>
+                <SheetContent className="sm:max-w-md border-l border-primary/20 flex flex-col items-center justify-center">
+                    <SheetHeader className="absolute top-6 left-6 text-left">
+                        <SheetTitle className="text-2xl font-black tracking-tighter uppercase text-primary flex items-center gap-2">
+                            <span className="h-5 w-1.5 bg-primary animate-pulse"></span>
+                            Unified stock Entry
+                        </SheetTitle>
+                        <SheetDescription className="font-mono text-xs mt-2 uppercase tracking-widest">
+                            Identify ticker and register broker account holdings.
+                        </SheetDescription>
+                    </SheetHeader>
+                    <div className="w-full h-full mt-24">
+                        <StockEntryForm
+                            onSuccess={() => {
+                                setGlobalStockSheetOpen(false);
+                                window.location.reload();
+                            }}
+                        />
+                    </div>
+                </SheetContent>
+            </Sheet>
         </div>
     );
 }

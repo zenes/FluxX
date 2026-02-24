@@ -39,6 +39,8 @@ export type AssetItem = {
         account: string;
         qty: number;
         totalCost: number;
+        predefinedAccountId?: string | null;
+        predefinedAccountAlias?: string | null;
     }[];
 };
 
@@ -52,9 +54,10 @@ export async function getAssets(): Promise<AssetItem[]> {
         where: { userId: session.user.id },
     });
 
-    // Fetch associated stock entries
+    // Fetch associated stock entries with their predefined accounts for aliases
     const allStockEntries = await prisma.stockEntry.findMany({
-        where: { userId: session.user.id }
+        where: { userId: session.user.id },
+        include: { predefinedAccount: true }
     });
 
     return assets.map(asset => {
@@ -78,7 +81,9 @@ export async function getAssets(): Promise<AssetItem[]> {
                     owner: m.accountOwner,
                     account: m.accountNumber || '',
                     qty: m.quantity,
-                    totalCost: m.totalPurchaseAmount
+                    totalCost: m.totalPurchaseAmount,
+                    predefinedAccountId: m.predefinedAccountId,
+                    predefinedAccountAlias: m.predefinedAccount?.alias
                 }));
             }
         }
@@ -130,47 +135,6 @@ export async function upsertAsset(assetType: string, amount: number) {
     return { success: true };
 }
 
-export async function upsertStockAsset(ticker: string, shares: number, avgPrice: number) {
-    const session = await auth();
-    if (!session?.user?.id) {
-        throw new Error('Unauthorized');
-    }
-
-    const amountEncrypted = encrypt(shares.toString());
-    const avgPriceEncrypted = encrypt(avgPrice.toString());
-
-    // Check if user already holds this specific stock ticker
-    const existingAsset = await prisma.asset.findFirst({
-        where: {
-            userId: session.user.id,
-            assetType: 'stock',
-            assetSymbol: ticker,
-        }
-    });
-
-    if (existingAsset) {
-        await prisma.asset.update({
-            where: { id: existingAsset.id },
-            data: {
-                amountEncrypted,
-                avgPriceEncrypted,
-            }
-        });
-    } else {
-        await prisma.asset.create({
-            data: {
-                userId: session.user.id,
-                assetType: 'stock',
-                assetSymbol: ticker,
-                amountEncrypted,
-                avgPriceEncrypted,
-            }
-        });
-    }
-
-    revalidatePath('/operations');
-    return { success: true };
-}
 
 export async function addStockEntry(data: {
     tickerSymbol: string;
@@ -179,6 +143,7 @@ export async function addStockEntry(data: {
     accountNumber?: string;
     quantity: number;
     totalPurchaseAmount: number;
+    predefinedAccountId?: string;
 }) {
     const session = await auth();
     if (!session?.user?.id) {
@@ -370,7 +335,7 @@ export async function deleteStockEntry(entryId: string, tickerSymbol: string) {
 
 export async function editStockEntry(
     entryId: string,
-    data: { brokerName: string; accountOwner: string; accountNumber?: string; quantity: number; totalPurchaseAmount: number },
+    data: { brokerName: string; accountOwner: string; accountNumber?: string; quantity: number; totalPurchaseAmount: number; predefinedAccountId?: string | null },
     tickerSymbol: string
 ) {
     const session = await auth();

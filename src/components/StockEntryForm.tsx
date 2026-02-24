@@ -1,13 +1,22 @@
-import { useState, useEffect } from 'react';
-import { Building2, UserCircle2, Hash, ArrowRight, Bookmark } from 'lucide-react';
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import { Building2, UserCircle2, Hash, ArrowRight, Bookmark, Search, Info } from 'lucide-react';
 import { addStockEntry, editStockEntry, getPredefinedAccounts } from '@/lib/actions';
+import { useDebounce } from 'use-debounce';
+
+type SearchResult = {
+    symbol: string;
+    shortname: string;
+    exchange: string;
+};
 
 export default function StockEntryForm({
-    symbol,
+    symbol: initialSymbol,
     onSuccess,
     initialData
 }: {
-    symbol: string;
+    symbol?: string;
     onSuccess: () => void;
     initialData?: {
         id: string;
@@ -16,6 +25,7 @@ export default function StockEntryForm({
         account: string;
         qty: number;
         totalCost: number;
+        predefinedAccountId?: string | null;
     }
 }) {
     const [loading, setLoading] = useState(false);
@@ -25,6 +35,15 @@ export default function StockEntryForm({
     const [quantity, setQuantity] = useState(initialData?.qty.toString() || '');
     const [totalCost, setTotalCost] = useState(initialData?.totalCost.toString() || '');
     const [presets, setPresets] = useState<any[]>([]);
+    const [selectedPresetId, setSelectedPresetId] = useState<string>(initialData?.predefinedAccountId || '');
+
+    // Ticker Search State for global entry
+    const [ticker, setTicker] = useState(initialSymbol || '');
+    const [debouncedTicker] = useDebounce(ticker, 500);
+    const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [selectedSymbol, setSelectedSymbol] = useState(initialSymbol || '');
 
     useEffect(() => {
         async function fetchPresets() {
@@ -34,6 +53,27 @@ export default function StockEntryForm({
         fetchPresets();
     }, []);
 
+    // Ticker Search logic
+    useEffect(() => {
+        const fetchTickers = async () => {
+            if (debouncedTicker.length < 2 || initialSymbol) return;
+
+            setIsSearching(true);
+            try {
+                const res = await fetch(`/api/ticker-search?q=${encodeURIComponent(debouncedTicker)}`);
+                const data = await res.json();
+                setSearchResults(data.results || []);
+                setShowDropdown(true);
+            } catch (err) {
+                console.error('Failed to search ticker', err);
+            } finally {
+                setIsSearching(false);
+            }
+        };
+
+        fetchTickers();
+    }, [debouncedTicker, initialSymbol]);
+
     const isEditing = !!initialData;
 
     const handleSelectPreset = (presetId: string) => {
@@ -42,11 +82,26 @@ export default function StockEntryForm({
             setBroker(selected.broker);
             setOwner(selected.owner);
             setAccountNum(selected.accountNumber);
+            setSelectedPresetId(presetId);
+        } else {
+            setSelectedPresetId('');
         }
+    };
+
+    const handleSelectTicker = (res: SearchResult) => {
+        setTicker(res.symbol);
+        setSelectedSymbol(res.symbol);
+        setShowDropdown(false);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        const finalSymbol = initialSymbol || selectedSymbol;
+        if (!finalSymbol) {
+            alert('Please select a valid ticker symbol');
+            return;
+        }
+
         setLoading(true);
         try {
             if (isEditing) {
@@ -55,16 +110,18 @@ export default function StockEntryForm({
                     accountOwner: owner,
                     accountNumber: accountNum,
                     quantity: parseFloat(quantity),
-                    totalPurchaseAmount: parseFloat(totalCost)
-                }, symbol);
+                    totalPurchaseAmount: parseFloat(totalCost),
+                    predefinedAccountId: selectedPresetId || null
+                }, finalSymbol);
             } else {
                 await addStockEntry({
-                    tickerSymbol: symbol,
+                    tickerSymbol: finalSymbol.toUpperCase(),
                     brokerName: broker,
                     accountOwner: owner,
                     accountNumber: accountNum,
                     quantity: parseFloat(quantity),
-                    totalPurchaseAmount: parseFloat(totalCost)
+                    totalPurchaseAmount: parseFloat(totalCost),
+                    predefinedAccountId: selectedPresetId
                 });
             }
             onSuccess();
@@ -81,21 +138,77 @@ export default function StockEntryForm({
 
     return (
         <form onSubmit={handleSubmit} className="w-full h-full flex flex-col gap-6 font-mono text-sm py-4">
+            {/* Ticker Section (Search or Fixed) */}
+            <div className="flex flex-col gap-4">
+                <h3 className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase flex items-center gap-2 border-b border-border/50 pb-2">
+                    <span className="w-1.5 h-1.5 bg-purple-500 rounded-full"></span> Ticker Identification
+                </h3>
+
+                {initialSymbol ? (
+                    <div className="flex items-center gap-3 px-4 py-3 bg-purple-500/5 border border-purple-500/20 rounded-sm">
+                        <span className="text-xl font-black text-purple-500 tracking-tighter">{initialSymbol}</span>
+                        <span className="text-[10px] text-muted-foreground uppercase py-0.5 px-2 bg-muted rounded-full">Active Context</span>
+                    </div>
+                ) : (
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground opacity-50" />
+                        <input
+                            type="text"
+                            required
+                            placeholder="SEARCH TICKER (e.g. AAPL, NVDA)"
+                            value={ticker}
+                            onChange={e => {
+                                setTicker(e.target.value.toUpperCase());
+                                if (selectedSymbol) setSelectedSymbol('');
+                            }}
+                            className="w-full bg-muted/30 border border-input rounded-sm pl-10 pr-10 py-2.5 focus:outline-none focus:border-primary transition-colors text-xs font-bold tracking-widest"
+                            autoComplete="off"
+                        />
+                        {isSearching && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+                        )}
+
+                        {/* Dropdown Results */}
+                        {showDropdown && searchResults.length > 0 && !selectedSymbol && (
+                            <div className="absolute top-[110%] left-0 right-0 max-h-48 overflow-y-auto bg-card border border-primary/30 rounded-sm shadow-xl z-50 flex flex-col">
+                                {searchResults.map((res) => (
+                                    <button
+                                        key={res.symbol}
+                                        type="button"
+                                        onClick={() => handleSelectTicker(res)}
+                                        className="flex flex-col text-left px-4 py-2 hover:bg-primary/20 border-b border-border/50 last:border-0 transition-colors"
+                                    >
+                                        <span className="text-sm font-bold text-primary font-mono">{res.symbol}</span>
+                                        <span className="text-[10px] text-muted-foreground truncate">{res.shortname} ({res.exchange})</span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {selectedSymbol && (
+                            <div className="mt-2 text-[10px] text-primary flex items-center gap-1.5 px-1 animation-pulse">
+                                <Info size={12} /> Target identified: <span className="font-bold">{selectedSymbol}</span>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+
             {/* Account Info Section */}
             <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between border-b border-border/50 pb-2">
                     <h3 className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase flex items-center gap-2">
                         <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> Account Credentials
                     </h3>
-                    {!isEditing && presets.length > 0 && (
+                    {presets.length > 0 && (
                         <div className="flex items-center gap-2">
                             <Bookmark size={12} className="text-primary" />
                             <select
                                 onChange={(e) => handleSelectPreset(e.target.value)}
                                 className="bg-transparent text-[10px] text-primary font-bold focus:outline-none cursor-pointer hover:underline"
-                                defaultValue=""
+                                value={selectedPresetId}
                             >
-                                <option value="" disabled>LOAD PRESET</option>
+                                <option value=""> {isEditing ? 'CHANGE PRESET' : 'LOAD PRESET'}</option>
                                 {presets.map(p => (
                                     <option key={p.id} value={p.id}>{p.alias}</option>
                                 ))}
@@ -178,7 +291,7 @@ export default function StockEntryForm({
 
                 {/* Real-time calculated preview */}
                 <div className="mt-2 bg-purple-500/5 border border-purple-500/20 rounded-md p-4 flex justify-between items-center text-xs">
-                    <span className="text-[10px] font-bold text-purple-500 tracking-widest uppercase">Live Avg CostPreview</span>
+                    <span className="text-[10px] font-bold text-purple-500 tracking-widest uppercase">Live Avg Cost Preview</span>
                     <span className="font-bold text-foreground font-mono">
                         ${avgCost > 0 ? avgCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : '0.00'} / share
                     </span>
@@ -188,10 +301,10 @@ export default function StockEntryForm({
             <div className="mt-auto pt-8">
                 <button
                     type="submit"
-                    disabled={loading || parsedQty <= 0 || parsedCost <= 0}
+                    disabled={loading || parsedQty <= 0 || parsedCost <= 0 || (!initialSymbol && !selectedSymbol)}
                     className="w-full bg-primary/20 text-primary border border-primary/50 py-3 rounded-sm font-bold uppercase tracking-widest text-xs hover:bg-primary/30 transition-all shadow-[0_0_15px_rgba(59,130,246,0.15)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                    {loading ? 'Processing...' : (isEditing ? 'Update Holding' : `Save ${symbol} Holding`)} <ArrowRight size={14} />
+                    {loading ? 'Processing...' : (isEditing ? 'Update Holding' : `Save ${initialSymbol || selectedSymbol || 'Stock'} Holding`)} <ArrowRight size={14} />
                 </button>
             </div>
         </form>

@@ -46,6 +46,9 @@ model StockEntry {
   accountNumber       String?   // Optional: Account identifier
   tickerSymbol        String    // e.g., 'AAPL', 'TSLA'
   
+  predefinedAccountId String?
+  predefinedAccount   PredefinedAccount? @relation(fields: [predefinedAccountId], references: [id], onDelete: SetNull)
+
   // Storing quantities and amounts as strings if using AES encryption like Asset model, 
   // or simple Floats if encryption isn't strict for this granular level. 
   // Given the existing `Asset` uses `amountEncrypted`, we will follow the encrypted pattern or use plain floats for easier calculation.
@@ -69,6 +72,8 @@ model PredefinedAccount {
   accountNumber String    // e.g., '123-456-***'
   owner         String    // e.g., 'Hong Gildong'
   
+  stockEntries  StockEntry[]
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
