@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Coins, TrendingUp, Calendar, ArrowUpRight, Wallet, Info, Search, Plus, History } from "lucide-react";
+import { Coins, TrendingUp, Calendar, ArrowUpRight, Wallet, Info, Search, Plus, History, ChevronLeft, ChevronRight } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import DividendRecordForm from "@/components/DividendRecordForm";
 import { DividendHistory } from "@/components/DividendHistory";
@@ -91,6 +91,10 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
         { title: "Total Records", value: dividendRecords.length.toString(), detail: "Receipts Logged", icon: ArrowUpRight, color: "text-profit" },
     ];
 
+    const handleYearChange = (delta: number) => {
+        setSelectedYear(prev => prev + delta);
+    };
+
     const handleOpenSheet = (symbol: string, currency: string, mode: 'record' | 'history' = 'record') => {
         setActiveSymbol(symbol);
         setActiveCurrency(currency);
@@ -108,18 +112,6 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                     </h1>
                     <p className="text-sm text-muted-foreground mt-2 font-mono uppercase tracking-widest flex items-center gap-3">
                         Passive yield monitoring and automated cash flow projection.
-                        <span className="bg-primary/20 text-primary px-2 py-0.5 rounded-sm text-xs font-bold border border-primary/30 ml-2">
-                            YEAR:
-                            <select
-                                value={selectedYear}
-                                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                                className="bg-transparent border-none appearance-none font-bold text-primary focus:outline-none focus:ring-0 ml-1 cursor-pointer"
-                            >
-                                {availableYears.map(year => (
-                                    <option key={year} value={year} className="bg-background text-foreground">{year}</option>
-                                ))}
-                            </select>
-                        </span>
                     </p>
                 </div>
 
@@ -168,6 +160,25 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                     <div>
                         <h3 className="text-sm font-black tracking-widest text-foreground uppercase">Monthly Payouts</h3>
                         <p className="text-[10px] text-muted-foreground uppercase font-mono mt-1">Aggregation for {selectedYear}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => handleYearChange(-1)}
+                            className="p-1.5 hover:bg-muted rounded-df border border-input transition-colors group"
+                            title="Previous Year"
+                        >
+                            <ChevronLeft size={16} className="text-muted-foreground group-hover:text-foreground" />
+                        </button>
+                        <span className="text-xs font-bold font-mono min-w-[3rem] text-center bg-muted/30 px-3 py-1 rounded-sm border border-input">
+                            {selectedYear}
+                        </span>
+                        <button
+                            onClick={() => handleYearChange(1)}
+                            className="p-1.5 hover:bg-muted rounded-df border border-input transition-colors group"
+                            title="Next Year"
+                        >
+                            <ChevronRight size={16} className="text-muted-foreground group-hover:text-foreground" />
+                        </button>
                     </div>
                 </div>
                 <MonthlyDividendChart data={monthlyData} />
