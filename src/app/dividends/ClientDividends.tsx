@@ -7,6 +7,7 @@ import DividendRecordForm from "@/components/DividendRecordForm";
 import { DividendHistory } from "@/components/DividendHistory";
 import { getDividendRecords } from "@/lib/actions";
 import MonthlyDividendChart from "@/components/MonthlyDividendChart";
+import MonthlyDividendCalendar from "@/components/MonthlyDividendCalendar";
 
 export default function ClientDividends({ assets }: { assets: any[] }) {
     const [searchTerm, setSearchTerm] = useState("");
@@ -15,6 +16,11 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
     const [activeSymbol, setActiveSymbol] = useState<string | null>(null);
     const [activeCurrency, setActiveCurrency] = useState<string>("USD");
     const [sheetMode, setSheetMode] = useState<'record' | 'history'>('record');
+
+    // Monthly Calendar Sheet state
+    const [isCalendarSheetOpen, setIsCalendarSheetOpen] = useState(false);
+    const [selectedMonthIndex, setSelectedMonthIndex] = useState<number | null>(null);
+    const [selectedMonthName, setSelectedMonthName] = useState<string>("");
 
     const currentYear = new Date().getFullYear();
     const [selectedYear, setSelectedYear] = useState<number>(currentYear);
@@ -102,6 +108,12 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
         setIsSheetOpen(true);
     };
 
+    const handleMonthClick = (index: number, name: string) => {
+        setSelectedMonthIndex(index);
+        setSelectedMonthName(name);
+        setIsCalendarSheetOpen(true);
+    };
+
     return (
         <div className="flex flex-col h-full bg-background p-4 md:p-8">
             <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -181,7 +193,10 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                         </button>
                     </div>
                 </div>
-                <MonthlyDividendChart data={monthlyData} />
+                <MonthlyDividendChart
+                    data={monthlyData}
+                    onMonthClick={handleMonthClick}
+                />
             </div>
 
             {/* Live Stock List */}
@@ -305,6 +320,31 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                             </button>
                         )}
                     </div>
+                </SheetContent>
+            </Sheet>
+
+            {/* Monthly Calendar Sheet */}
+            <Sheet open={isCalendarSheetOpen} onOpenChange={setIsCalendarSheetOpen}>
+                <SheetContent className="w-full sm:max-w-xl bg-background border-l border-primary/20 pt-12 overflow-y-auto">
+                    <SheetHeader>
+                        <SheetTitle className="text-xl font-black tracking-tighter uppercase mb-4 flex items-center gap-2">
+                            <Calendar className="text-primary" size={20} />
+                            {selectedYear} {selectedMonthName} Dividend Report
+                        </SheetTitle>
+                    </SheetHeader>
+
+                    {selectedMonthIndex !== null && (
+                        <div className="mt-8">
+                            <MonthlyDividendCalendar
+                                year={selectedYear}
+                                monthIndex={selectedMonthIndex}
+                                records={dividendRecords.filter(r => {
+                                    const d = new Date(r.receivedAt);
+                                    return d.getFullYear() === selectedYear && d.getMonth() === selectedMonthIndex;
+                                })}
+                            />
+                        </div>
+                    )}
                 </SheetContent>
             </Sheet>
 

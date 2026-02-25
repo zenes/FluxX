@@ -5,9 +5,10 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 interface MonthlyDividendChartProps {
     data: { name: string; amount: number }[];
+    onMonthClick?: (monthIndex: number, monthName: string) => void;
 }
 
-export default function MonthlyDividendChart({ data }: MonthlyDividendChartProps) {
+export default function MonthlyDividendChart({ data, onMonthClick }: MonthlyDividendChartProps) {
     // 찾기 쉬운 최대값을 기준으로 강조 표시를 하거나 색상을 지정할 수 있습니다.
     const maxAmount = useMemo(() => {
         return Math.max(...data.map(d => d.amount), 0);
@@ -68,7 +69,8 @@ export default function MonthlyDividendChart({ data }: MonthlyDividendChartProps
                             <Cell
                                 key={`cell-${index}`}
                                 fill={entry.amount === maxAmount && maxAmount > 0 ? 'hsl(var(--primary))' : 'hsl(var(--primary)/0.4)'}
-                                className="transition-all duration-300 hover:opacity-80"
+                                className="transition-all duration-300 hover:opacity-80 cursor-pointer"
+                                onClick={() => onMonthClick?.(index, entry.name)}
                             />
                         ))}
                     </Bar>
