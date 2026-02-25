@@ -1,75 +1,70 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { motion, useMotionValue, useTransform, useAnimation } from "framer-motion";
 import { TAB_ITEMS } from "./AppSidebar";
 
-const SWIPE_THRESHOLD = 50;
+const SWIPE_THRESHOLD = 100;
 
 export default function SwipeNavigationHandler({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
+    const x = useMotionValue(0);
+    const opacity = useTransform(x, [-200, 0, 200], [0.5, 1, 0.5]);
+    const controls = useAnimation();
 
-    const [startX, setStartX] = useState<number | null>(null);
-    const [isDragging, setIsDragging] = useState(false);
+    const currentIndex = TAB_ITEMS.findIndex(item => item.href === pathname);
+    const isNavigationEnabled = currentIndex !== -1 || pathname === "/";
 
-    const handleStart = (clientX: number) => {
-        setStartX(clientX);
-        setIsDragging(true);
-    };
+    const handleDragEnd = async (event: any, info: any) => {
+        const offset = info.offset.x;
+        const velocity = info.velocity.x;
 
-    const handleEnd = (clientX: number) => {
-        if (!startX || !isDragging) return;
-
-        const distance = startX - clientX;
-        const isLeftSwipe = distance > SWIPE_THRESHOLD;
-        const isRightSwipe = distance < -SWIPE_THRESHOLD;
-
-        setIsDragging(false);
-        setStartX(null);
-
-        // Find current index
-        const currentIndex = TAB_ITEMS.findIndex(item => item.href === pathname);
-
-        if (currentIndex === -1 && pathname !== "/") return;
-
-        if (isLeftSwipe) {
-            // Swipe Left -> Next Tab
-            const nextIndex = currentIndex + 1;
-            if (nextIndex < TAB_ITEMS.length) {
-                router.push(TAB_ITEMS[nextIndex].href);
+        if (Math.abs(offset) > SWIPE_THRESHOLD || Math.abs(velocity) > 500) {
+            if (offset < 0) {
+                // Drag Left -> Next
+                const nextIndex = currentIndex + 1;
+                if (nextIndex < TAB_ITEMS.length) {
+                    await controls.start({ x: -window.innerWidth, opacity: 0 });
+                    router.push(TAB_ITEMS[nextIndex].href);
+                    // Reset position for new page (though layout key should handle it)
+                    x.set(0);
+                    controls.set({ x: 0, opacity: 1 });
+                } else {
+                    controls.start({ x: 0 });
+                }
+            } else {
+                // Drag Right -> Prev
+                const prevIndex = currentIndex - 1;
+                if (prevIndex >= 0) {
+                    await controls.start({ x: window.innerWidth, opacity: 0 });
+                    router.push(TAB_ITEMS[prevIndex].href);
+                    x.set(0);
+                    controls.set({ x: 0, opacity: 1 });
+                } else {
+                    controls.start({ x: 0 });
+                }
             }
-        } else if (isRightSwipe) {
-            // Swipe Right -> Previous Tab
-            const prevIndex = currentIndex - 1;
-            if (prevIndex >= 0) {
-                router.push(TAB_ITEMS[prevIndex].href);
-            }
+        } else {
+            controls.start({ x: 0 });
         }
     };
 
-    // Touch Handlers
-    const onTouchStart = (e: React.TouchEvent) => handleStart(e.targetTouches[0].clientX);
-    const onTouchEnd = (e: React.TouchEvent) => handleEnd(e.changedTouches[0].clientX);
-
-    // Mouse Handlers
-    const onMouseDown = (e: React.MouseEvent) => handleStart(e.clientX);
-    const onMouseUp = (e: React.MouseEvent) => handleEnd(e.clientX);
-    const onMouseLeave = () => {
-        setIsDragging(false);
-        setStartX(null);
-    };
+    if (!isNavigationEnabled) return <>{children}</>;
 
     return (
-        <div
-            className="flex-1 w-full h-full md:touch-auto touch-pan-y"
-            onTouchStart={onTouchStart}
-            onTouchEnd={onTouchEnd}
-            onMouseDown={onMouseDown}
-            onMouseUp={onMouseUp}
-            onMouseLeave={onMouseLeave}
+        <motion.div
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.8}
+            onDragEnd={handleDragEnd}
+            style={{ x, opacity }}
+            animate={controls}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="flex-1 w-full h-full cursor-grab active:cursor-grabbing overflow-hidden"
         >
             {children}
-        </div>
+        </motion.div>
     );
 }
