@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { TAB_ITEMS } from "./AppSidebar";
 
@@ -9,33 +9,29 @@ const SWIPE_THRESHOLD = 50;
 export default function SwipeNavigationHandler({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
-    const [touchStart, setTouchStart] = useState<number | null>(null);
-    const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
-    const onTouchStart = (e: React.TouchEvent) => {
-        setTouchEnd(null);
-        setTouchStart(e.targetTouches[0].clientX);
+    const [startX, setStartX] = useState<number | null>(null);
+    const [isDragging, setIsDragging] = useState(false);
+
+    const handleStart = (clientX: number) => {
+        setStartX(clientX);
+        setIsDragging(true);
     };
 
-    const onTouchMove = (e: React.TouchEvent) => {
-        setTouchEnd(e.targetTouches[0].clientX);
-    };
+    const handleEnd = (clientX: number) => {
+        if (!startX || !isDragging) return;
 
-    const onTouchEnd = () => {
-        if (!touchStart || !touchEnd) return;
-
-        const distance = touchStart - touchEnd;
+        const distance = startX - clientX;
         const isLeftSwipe = distance > SWIPE_THRESHOLD;
         const isRightSwipe = distance < -SWIPE_THRESHOLD;
+
+        setIsDragging(false);
+        setStartX(null);
 
         // Find current index
         const currentIndex = TAB_ITEMS.findIndex(item => item.href === pathname);
 
-        // If not in a swipeable tab, don't do anything
-        if (currentIndex === -1 && pathname !== "/") {
-            // Check if we are in one of the sub-tabs but the URL might be slightly different or Intelligencre #
-            return;
-        }
+        if (currentIndex === -1 && pathname !== "/") return;
 
         if (isLeftSwipe) {
             // Swipe Left -> Next Tab
@@ -48,20 +44,30 @@ export default function SwipeNavigationHandler({ children }: { children: React.R
             const prevIndex = currentIndex - 1;
             if (prevIndex >= 0) {
                 router.push(TAB_ITEMS[prevIndex].href);
-            } else if (currentIndex === 0) {
-                // If at first tab, maybe go to dashboard or just stay
-                // router.push("/");
             }
         }
     };
 
-    // Only enable on mobile
+    // Touch Handlers
+    const onTouchStart = (e: React.TouchEvent) => handleStart(e.targetTouches[0].clientX);
+    const onTouchEnd = (e: React.TouchEvent) => handleEnd(e.changedTouches[0].clientX);
+
+    // Mouse Handlers
+    const onMouseDown = (e: React.MouseEvent) => handleStart(e.clientX);
+    const onMouseUp = (e: React.MouseEvent) => handleEnd(e.clientX);
+    const onMouseLeave = () => {
+        setIsDragging(false);
+        setStartX(null);
+    };
+
     return (
         <div
             className="flex-1 w-full h-full md:touch-auto touch-pan-y"
             onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
+            onMouseDown={onMouseDown}
+            onMouseUp={onMouseUp}
+            onMouseLeave={onMouseLeave}
         >
             {children}
         </div>
