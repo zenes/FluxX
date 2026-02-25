@@ -90,6 +90,11 @@ export const en = {
         back_to_history: "Back to History",
         dividend_report: "{{year}} {{month}} Dividend Report",
         note: "Note: Dividend yield data is being cross-referenced with your holdings. Manual records are prioritized for YTD calculations.",
+        historical_trend_title: "Historical Dividend Trend",
+        historical_trend_desc: "Dividend growth over time",
+        period_1y: "1Y",
+        period_2y: "2Y",
+        period_max: "Max",
     },
 
     // Accounts

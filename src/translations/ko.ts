@@ -90,6 +90,11 @@ export const ko = {
         back_to_history: "내역으로 돌아가기",
         dividend_report: "{{year}}년 {{month}} 배당 보고서",
         note: "참고: 배당 수익률 데이터는 보유 주식과 교차 검증됩니다. 수동 입력 기록은 연 누계(YTD) 계산 시 우선 반영됩니다.",
+        historical_trend_title: "배당 성장 추이",
+        historical_trend_desc: "기간별 배당금 누적 흐름",
+        period_1y: "1년",
+        period_2y: "2년",
+        period_max: "최대",
     },
 
     // Accounts

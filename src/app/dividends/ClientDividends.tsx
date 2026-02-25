@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Coins, TrendingUp, Calendar, ArrowUpRight, Wallet, Info, Search, Plus, History, ChevronLeft, ChevronRight } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import DividendRecordForm from "@/components/DividendRecordForm";
@@ -9,6 +9,9 @@ import { getDividendRecords } from "@/lib/actions";
 import MonthlyDividendChart from "@/components/MonthlyDividendChart";
 import MonthlyDividendCalendar from "@/components/MonthlyDividendCalendar";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { cn } from "@/lib/utils";
+
+const KRW_USD_RATE = 1350; // Heuristic for now, ideally fetch real rate
 
 export default function ClientDividends({ assets }: { assets: any[] }) {
     const { t, language } = useLanguage();
@@ -35,6 +38,71 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
         fetchRecords();
     }, []);
 
+    const [yearSpan, setYearSpan] = useState(1);
+
+    // Calculate maxYearSpan based on available records
+    const maxYearSpan = useMemo(() => {
+        if (!dividendRecords || dividendRecords.length === 0) return 1;
+        const firstRecordYear = dividendRecords.reduce((earliest, r) => {
+            const y = new Date(r.receivedAt).getFullYear();
+            return y < earliest ? y : earliest;
+        }, currentYear);
+        return Math.max(1, selectedYear - firstRecordYear + 1);
+    }, [dividendRecords, selectedYear, currentYear]);
+
+    // Ensure yearSpan doesn't exceed maxYearSpan when selectedYear changes
+    useEffect(() => {
+        if (yearSpan > maxYearSpan) {
+            setYearSpan(maxYearSpan);
+        }
+    }, [maxYearSpan, yearSpan]);
+
+    const chartData = useMemo(() => {
+        const dataMap = new Map<string, number>();
+        const months = [];
+        const monthNamesShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        const startYear = selectedYear - yearSpan + 1;
+        for (let y = startYear; y <= selectedYear; y++) {
+            for (let m = 0; m < 12; m++) {
+                const label = yearSpan === 1 ? monthNamesShort[m] : `${monthNamesShort[m]} '${y.toString().slice(-2)}`;
+                const key = `${y}-${String(m).padStart(2, '0')}`;
+                months.push({ key, label });
+                dataMap.set(key, 0);
+            }
+        }
+
+        dividendRecords.forEach(r => {
+            const date = new Date(r.receivedAt);
+            const y = date.getFullYear();
+            const m = date.getMonth();
+            if (y >= startYear && y <= selectedYear) {
+                const key = `${y}-${String(m).padStart(2, '0')}`;
+                const val = r.amount || 0;
+                const krwVal = r.currency === "KRW" ? val : val * KRW_USD_RATE;
+                const currentVal = dataMap.get(key) || 0;
+                dataMap.set(key, currentVal + krwVal);
+            }
+        });
+
+        return months.map(m => ({
+            name: m.label,
+            amount: dataMap.get(m.key) || 0,
+            originalKey: m.key
+        }));
+    }, [dividendRecords, selectedYear, yearSpan]);
+
+    const handleChartMonthClick = (index: number) => {
+        const item = chartData[index];
+        if (item && item.originalKey) {
+            const [y, m] = item.originalKey.split('-');
+            setSelectedYear(parseInt(y, 10));
+            setSelectedMonthIndex(parseInt(m, 10));
+            setSelectedMonthName(item.name.split(' ')[0]);
+            setIsCalendarSheetOpen(true);
+        }
+    };
+
     // Filter only stock assets
     const stocks = assets.filter(a => a.assetType === 'stock' && a.assetSymbol);
 
@@ -44,7 +112,6 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
 
     // Calculate Projections
     let totalAnnualEstKRW = 0;
-    const KRW_USD_RATE = 1350; // Heuristic for now, ideally fetch real rate
 
     filteredStocks.forEach(stock => {
         if (stock.entries) {
@@ -69,14 +136,7 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
     availableYearsSet.add(currentYear); // default safe pick
     const availableYears = Array.from(availableYearsSet).sort((a, b) => b - a);
 
-    // Calculate actual received for the SECLECTED year & monthly aggregation
-    // Initialize 12 months data
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const monthlyData = Array.from({ length: 12 }, (_, i) => ({
-        name: monthNames[i],
-        amount: 0
-    }));
-
+    // Calculate actual received for the SECLECTED year
     let actualThisYearKRW = 0;
 
     dividendRecords.forEach(r => {
@@ -84,14 +144,10 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
         if (recordDate.getFullYear() === selectedYear) {
             const val = r.amount || 0;
             const krwVal = r.currency === "KRW" ? val : val * KRW_USD_RATE;
-
             actualThisYearKRW += krwVal;
-
-            // Add to monthly bucket (0-indexed month)
-            const monthIndex = recordDate.getMonth();
-            monthlyData[monthIndex].amount += krwVal;
         }
     });
+
 
     const metrics = [
         { title: t('divs.annual_total_est'), prefix: "₩", value: Math.round(totalAnnualEstKRW).toLocaleString(), change: "+12.5%", icon: TrendingUp, color: "text-primary" },
@@ -174,38 +230,86 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                 ))}
             </div>
 
-            {/* Monthly Dividend Chart */}
-            <div className="mb-8 p-5 bg-card border border-input rounded-md shadow-sm">
-                <div className="mb-4 flex items-center justify-between">
+            {/* Unified Dividend Chart */}
+            <div className="mb-8 p-5 bg-card border border-input rounded-md shadow-sm overflow-hidden flex flex-col">
+                <div className="mb-4 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
                     <div>
                         <h3 className="text-sm font-bold tracking-widest text-foreground">{t('divs.monthly_payouts_title')}</h3>
-                        <p className="text-[10px] text-muted-foreground tracking-wider mt-1 opacity-60">{t('divs.aggregation_for', { year: selectedYear })}</p>
+                        <p className="text-[10px] text-muted-foreground tracking-wider mt-1 opacity-60">
+                            {yearSpan === 1
+                                ? t('divs.aggregation_for', { year: selectedYear })
+                                : `${selectedYear - yearSpan + 1} - ${selectedYear} Aggregation`}
+                        </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => handleYearChange(-1)}
-                            className="p-1.5 hover:bg-muted rounded-df border border-input transition-colors group"
-                            title="Previous Year"
-                        >
-                            <ChevronLeft size={16} className="text-muted-foreground group-hover:text-foreground" />
-                        </button>
-                        <span className="text-xs font-bold min-w-[3rem] text-center bg-muted/30 px-3 py-1 rounded-sm border border-input">
-                            {selectedYear}
-                        </span>
-                        <button
-                            onClick={() => handleYearChange(1)}
-                            className="p-1.5 hover:bg-muted rounded-df border border-input transition-colors group"
-                            title="Next Year"
-                        >
-                            <ChevronRight size={16} className="text-muted-foreground group-hover:text-foreground" />
-                        </button>
+                    <div className="flex flex-wrap items-center gap-4">
+                        {/* Span Control */}
+                        <div className="flex items-center gap-1.5 p-1 bg-muted/30 rounded-md border border-input">
+                            <button
+                                onClick={() => setYearSpan(Math.max(1, yearSpan - 1))}
+                                className="px-3 py-1 hover:bg-background rounded-sm transition-colors text-muted-foreground hover:text-foreground border border-transparent hover:border-input"
+                                title="Decrease year span"
+                            >
+                                -
+                            </button>
+                            <span className="text-[10px] font-bold tracking-widest w-8 text-center">{yearSpan}Y</span>
+                            <button
+                                onClick={() => setYearSpan(Math.min(maxYearSpan, yearSpan + 1))}
+                                disabled={yearSpan >= maxYearSpan}
+                                className="px-3 py-1 hover:bg-background rounded-sm transition-colors text-muted-foreground hover:text-foreground border border-transparent hover:border-input disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:border-transparent"
+                                title="Increase year span"
+                            >
+                                +
+                            </button>
+                            <div className="w-[1px] h-4 bg-border mx-1"></div>
+                            <button
+                                onClick={() => setYearSpan(maxYearSpan)}
+                                className={cn(
+                                    "px-3 py-1 text-[10px] font-bold tracking-widest rounded-sm transition-colors border",
+                                    yearSpan === maxYearSpan
+                                        ? "bg-background text-foreground shadow-sm ring-1 ring-border border-input"
+                                        : "text-muted-foreground hover:bg-background hover:text-foreground border-transparent hover:border-input"
+                                )}
+                            >
+                                {t('divs.period_max')}
+                            </button>
+                        </div>
+
+                        {/* Selected Year Control */}
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => handleYearChange(-1)}
+                                className="p-1.5 hover:bg-muted rounded-md border border-input transition-colors group"
+                                title="Previous Year"
+                            >
+                                <ChevronLeft size={16} className="text-muted-foreground group-hover:text-foreground" />
+                            </button>
+                            <span className="text-xs font-bold min-w-[3rem] text-center bg-muted/30 px-3 py-1 flex items-center justify-center h-[30px] rounded-md border border-input">
+                                {selectedYear}
+                            </span>
+                            <button
+                                onClick={() => handleYearChange(1)}
+                                disabled={selectedYear >= currentYear}
+                                className="p-1.5 hover:bg-muted rounded-md border border-input transition-colors group disabled:opacity-50"
+                                title="Next Year"
+                            >
+                                <ChevronRight size={16} className="text-muted-foreground group-hover:text-foreground" />
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <MonthlyDividendChart
-                    data={monthlyData}
-                    onMonthClick={handleMonthClick}
-                />
+
+                {chartData.length > 0 ? (
+                    <MonthlyDividendChart
+                        data={chartData}
+                        onMonthClick={handleChartMonthClick}
+                    />
+                ) : (
+                    <div className="w-full h-[300px] flex items-center justify-center text-muted-foreground opacity-50 text-xs font-mono uppercase tracking-widest border border-dashed rounded-md bg-muted/5">
+                        {t('divs.no_data')}
+                    </div>
+                )}
             </div>
+
 
             {/* Live Stock List */}
             <div className="flex-1 rounded-md border bg-card text-card-foreground shadow-sm overflow-hidden flex flex-col">
