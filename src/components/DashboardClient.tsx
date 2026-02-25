@@ -181,20 +181,6 @@ export default function DashboardClient({ initialAssets, initialExchange, initia
         return () => clearInterval(intervalId);
     }, [assets]);
 
-    useEffect(() => {
-        fetchGoldPrice();
-        const intervalId = setInterval(fetchGoldPrice, 60000);
-        return () => clearInterval(intervalId);
-    }, [goldType]);
-
-    return (
-        <div
-            ref={provided.innerRef}
-            {...provided.draggableProps}
-            style={{ ...provided.draggableProps.style }}
-            className={`rounded-md border bg-card text-card-foreground shadow-sm relative overflow-hidden flex flex-col h-full cursor-pointer hover:bg-muted/20 transition-all ${snapshot.isDragging ? 'shadow-2xl scale-[1.02] z-50 ring-1 ring-primary' : ''}`}
-            onClick={() => router.push('/operations')}
-        >
             <div className="absolute top-0 left-0 w-1 h-full bg-primary/80"></div>
             <div className="p-5 flex flex-col gap-1 h-full">
                 <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
@@ -215,7 +201,7 @@ export default function DashboardClient({ initialAssets, initialExchange, initia
                     Live Sync
                 </span>
             </div>
-        </div>
+        </div >
     );
 }
 
