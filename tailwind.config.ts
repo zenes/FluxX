@@ -60,6 +60,7 @@ const config: Config = {
 			},
 			fontFamily: {
 				sans: ["var(--font-outfit)", "sans-serif"],
+				mono: ["var(--font-jetbrains-mono)", "monospace"],
 			},
 		}
 	},

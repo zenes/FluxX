@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Outfit } from "next/font/google";
+import { Outfit, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -10,6 +10,12 @@ const outfit = Outfit({
   variable: "--font-outfit",
   display: "swap",
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-jetbrains-mono",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -25,7 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${outfit.variable} font-sans antialiased`}
+        className={`${outfit.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
         <Providers>
           <ThemeProvider
