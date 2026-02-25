@@ -22,6 +22,7 @@ model User {
   stockEntries        StockEntry[]
   predefinedAccounts  PredefinedAccount[]
   dividendRecords     DividendRecord[]
+  memos               Memo[]
 }
 
 model Asset {
@@ -111,6 +112,16 @@ model PredefinedAccount {
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model Memo {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   String
+  createdAt DateTime @default(now())
 
   @@index([userId])
 }

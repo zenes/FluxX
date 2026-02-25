@@ -1,4 +1,4 @@
-import { getAssets } from "@/lib/actions";
+import { getAssets, getMemos } from "@/lib/actions";
 import DashboardClient from "@/components/DashboardClient";
 import yahooFinanceDefault from 'yahoo-finance2';
 
@@ -38,9 +38,10 @@ async function getInitialMarketData() {
 }
 
 export default async function Home() {
-  const [assets, marketData] = await Promise.all([
+  const [assets, marketData, memos] = await Promise.all([
     getAssets(),
-    getInitialMarketData()
+    getInitialMarketData(),
+    getMemos()
   ]);
 
   return (
@@ -49,6 +50,7 @@ export default async function Home() {
         initialAssets={assets}
         initialExchange={marketData.exchange}
         initialGold={marketData.gold}
+        initialMemos={memos}
       />
     </div>
   );

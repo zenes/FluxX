@@ -470,3 +470,39 @@ export async function getDividendRecords() {
         return [];
     }
 }
+
+// Memo Management Actions
+export async function addMemo(content: string) {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error('Unauthorized');
+
+    try {
+        const memo = await (prisma as any).memo.create({
+            data: {
+                userId: session.user.id,
+                content
+            }
+        });
+        revalidatePath('/account');
+        revalidatePath('/');
+        return JSON.parse(JSON.stringify(memo));
+    } catch (e: any) {
+        console.error('Failed to add memo:', e);
+        throw new Error(`Failed to add memo: ${e.message || 'Unknown error'}`);
+    }
+}
+
+export async function getMemos() {
+    const session = await auth();
+    if (!session?.user?.id) return [];
+
+    try {
+        return await (prisma as any).memo.findMany({
+            where: { userId: session.user.id },
+            orderBy: { createdAt: 'desc' }
+        });
+    } catch (e) {
+        console.error('Failed to fetch memos:', e);
+        return [];
+    }
+}
