@@ -23,6 +23,7 @@ import { Plus, Building2, UserCircle2, Hash } from 'lucide-react';
 
 import StockEntryForm from '@/components/StockEntryForm';
 import { deleteStockEntry } from '@/lib/actions';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))'];
 
@@ -33,6 +34,7 @@ export default function ClientOperations({
     assets: AssetItem[],
     predefinedAccounts?: any[]
 }) {
+    const { t } = useLanguage();
     const accounts = predefinedAccounts; // assign prop to local variable to match previous usage
     const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
 
@@ -150,14 +152,14 @@ export default function ClientOperations({
                 </h1>
                 <div className="flex justify-between items-center mt-2 pl-5">
                     <p className="text-xs text-muted-foreground opacity-60">
-                        secure personal asset management & intelligence
+                        {t('ops.subtitle')}
                     </p>
                     <button
                         onClick={() => setGlobalStockSheetOpen(true)}
                         className="text-xs font-bold tracking-widest text-primary bg-primary/10 border border-primary/20 px-4 py-2 rounded-sm hover:bg-primary/20 uppercase transition-colors flex items-center gap-2"
                     >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                        Add Global Stock
+                        {t('ops.add_global_stock')}
                     </button>
                 </div>
             </div>
@@ -169,7 +171,7 @@ export default function ClientOperations({
                         <svg className="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
                     </div>
 
-                    <h2 className="text-[10px] font-bold tracking-wider text-muted-foreground mb-4 opacity-70">Total net worth (estimated krw)</h2>
+                    <h2 className="text-[10px] font-bold tracking-wider text-muted-foreground mb-4 opacity-70">{t('ops.net_worth')}</h2>
                     <div className="flex items-baseline gap-2">
                         <span className="text-4xl md:text-6xl font-bold tracking-tighter text-foreground">
                             <span className="text-2xl md:text-3xl font-medium text-muted-foreground/50 mr-1 italic">₩</span>
@@ -179,16 +181,16 @@ export default function ClientOperations({
 
                     <div className="mt-8 pt-6 border-t border-border flex flex-wrap gap-8 text-[10px] tracking-wider uppercase">
                         <div>
-                            <span className="text-muted-foreground block mb-1">live usd/krw</span>
+                            <span className="text-muted-foreground block mb-1">{t('ops.live_usd_krw')}</span>
                             <span className="text-primary font-bold">{loadingRates ? '---' : `₩${rates.usdKrw.toLocaleString()}`}</span>
                         </div>
                         <div>
-                            <span className="text-muted-foreground block mb-1">live gold/oz</span>
+                            <span className="text-muted-foreground block mb-1">{t('ops.live_gold_oz')}</span>
                             <span className="text-foreground font-bold">{loadingRates ? '---' : `$${rates.goldUsd.toLocaleString()}`}</span>
                         </div>
                         <div className="ml-auto flex items-end">
                             <span className="text-muted-foreground opacity-40 flex items-center gap-1 font-medium">
-                                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse"></span> secure sync
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse"></span> {t('ops.secure_sync')}
                             </span>
                         </div>
                     </div>
@@ -196,7 +198,7 @@ export default function ClientOperations({
 
                 {/* Visual Chart Card */}
                 <div className="bg-card border border-input shadow-lg rounded-lg p-6 flex flex-col items-center justify-center min-h-[350px]">
-                    <h3 className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground w-full text-center uppercase mb-6">Asset Distribution</h3>
+                    <h3 className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground w-full text-center uppercase mb-6">{t('ops.asset_distribution')}</h3>
                     {chartData.length > 0 ? (
                         <div className="w-full h-full flex-1 w-full min-h-[280px]">
                             {/* Chart Area */}
@@ -258,27 +260,27 @@ export default function ClientOperations({
                     ) : (
                         <div className="text-xs tracking-wider text-muted-foreground opacity-50 flex flex-col items-center justify-center h-full gap-2 min-h-[220px]">
                             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4M12 20V4" /></svg>
-                            No asset data
+                            {t('ops.no_asset_data')}
                         </div>
                     )}
                 </div>
             </div>
 
             <div className="max-w-screen-xl mx-auto">
-                <h3 className="text-[10px] font-bold tracking-wider text-muted-foreground mb-4 opacity-70">Classified asset inventory</h3>
+                <h3 className="text-[10px] font-bold tracking-wider text-muted-foreground mb-4 opacity-70">{t('ops.inventory_title')}</h3>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 
                     {/* KRW */}
                     <div className="bg-card border border-input rounded-md p-6 flex flex-col relative group overflow-hidden shadow-sm hover:border-foreground/30 hover:shadow-md transition-all">
                         <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => openModal('krw', krwAmount, 'Local Currency', 'KRW')} className="text-[10px] font-bold tracking-widest text-foreground bg-muted border border-border px-3 py-1.5 rounded-sm hover:bg-muted/80 uppercase transition-colors">EDIT</button>
+                            <button onClick={() => openModal('krw', krwAmount, 'Local Currency', 'KRW')} className="text-[10px] font-bold tracking-widest text-foreground bg-muted border border-border px-3 py-1.5 rounded-sm hover:bg-muted/80 uppercase transition-colors">{t('ops.edit')}</button>
                         </div>
                         <span className="text-[10px] font-bold text-muted-foreground tracking-wider mb-2 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-chart-3"></span> Local currency
+                            <span className="w-1.5 h-1.5 rounded-full bg-chart-3"></span> {t('ops.local_currency')}
                         </span>
                         <span className="text-3xl font-bold text-foreground tracking-tighter mt-1">₩{krwAmount.toLocaleString()}</span>
                         <div className="flex justify-between items-end mt-4">
-                            <span className="text-[10px] text-muted-foreground opacity-60">Liquidity reserve</span>
+                            <span className="text-[10px] text-muted-foreground opacity-60">{t('ops.liquidity_reserve')}</span>
                             <span className="text-xs font-bold text-foreground bg-muted px-2 py-0.5 rounded-sm">{((krwAmount / netWorth) * 100).toFixed(1)}%</span>
                         </div>
                     </div>
@@ -286,15 +288,15 @@ export default function ClientOperations({
                     {/* USD */}
                     <div className="bg-card border border-input rounded-md p-6 flex flex-col relative group overflow-hidden shadow-sm hover:border-foreground/30 hover:shadow-md transition-all">
                         <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => openModal('usd', usdAmount, 'Foreign Currency', 'USD')} className="text-[10px] font-bold tracking-widest text-foreground bg-muted border border-border px-3 py-1.5 rounded-sm hover:bg-muted/80 uppercase transition-colors">EDIT</button>
+                            <button onClick={() => openModal('usd', usdAmount, 'Foreign Currency', 'USD')} className="text-[10px] font-bold tracking-widest text-foreground bg-muted border border-border px-3 py-1.5 rounded-sm hover:bg-muted/80 uppercase transition-colors">{t('ops.edit')}</button>
                         </div>
                         <span className="text-[10px] font-bold text-muted-foreground tracking-wider mb-2 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-chart-2"></span> Foreign currency
+                            <span className="w-1.5 h-1.5 rounded-full bg-chart-2"></span> {t('ops.foreign_currency')}
                         </span>
                         <span className="text-3xl font-bold text-foreground tracking-tighter mt-1">${usdAmount.toLocaleString()}</span>
                         <div className="mt-4 flex justify-between items-end">
                             <div className="flex flex-col gap-0.5">
-                                <span className="text-[10px] text-muted-foreground opacity-60">est value (krw)</span>
+                                <span className="text-[10px] text-muted-foreground opacity-60">{t('ops.est_value_krw')}</span>
                                 <span className="text-xs font-medium text-foreground">₩{usdKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                             </div>
                             <span className="text-xs font-bold text-foreground bg-muted px-2 py-0.5 rounded-sm">{((usdKrw / netWorth) * 100).toFixed(1)}%</span>
@@ -304,15 +306,15 @@ export default function ClientOperations({
                     {/* Gold */}
                     <div className="bg-card border border-input rounded-md p-6 flex flex-col relative group overflow-hidden shadow-sm hover:border-foreground/30 hover:shadow-md transition-all">
                         <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => openModal('gold', goldAmount, 'Gold Reserve', 'g')} className="text-[10px] font-bold tracking-widest text-foreground bg-muted border border-border px-3 py-1.5 rounded-sm hover:bg-muted/80 uppercase transition-colors">EDIT</button>
+                            <button onClick={() => openModal('gold', goldAmount, 'Gold Reserve', 'g')} className="text-[10px] font-bold tracking-widest text-foreground bg-muted border border-border px-3 py-1.5 rounded-sm hover:bg-muted/80 uppercase transition-colors">{t('ops.edit')}</button>
                         </div>
                         <span className="text-[10px] font-bold text-muted-foreground tracking-wider mb-2 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-chart-1"></span> Gold reserve
+                            <span className="w-1.5 h-1.5 rounded-full bg-chart-1"></span> {t('ops.gold_reserve')}
                         </span>
                         <span className="text-3xl font-bold text-foreground tracking-tighter mt-1">{goldAmount.toLocaleString()} <span className="text-xl">g</span></span>
                         <div className="mt-4 flex justify-between items-end">
                             <div className="flex flex-col gap-0.5">
-                                <span className="text-[10px] text-muted-foreground opacity-60">est value (krw)</span>
+                                <span className="text-[10px] text-muted-foreground opacity-60">{t('ops.est_value_krw')}</span>
                                 <span className="text-xs font-medium text-foreground">₩{goldKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                             </div>
                             <span className="text-xs font-bold text-foreground bg-muted px-2 py-0.5 rounded-sm">{((goldKrw / netWorth) * 100).toFixed(1)}%</span>
@@ -322,18 +324,18 @@ export default function ClientOperations({
                     {/* Global Equities Card */}
                     <div className="bg-card border border-input rounded-md p-6 flex flex-col relative group overflow-hidden shadow-sm hover:border-foreground/30 hover:shadow-md transition-all">
                         <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => setGlobalStockSheetOpen(true)} className="text-[10px] font-bold tracking-widest text-foreground bg-muted border border-border px-3 py-1.5 rounded-sm hover:bg-muted/80 uppercase transition-colors">ADD</button>
+                            <button onClick={() => setGlobalStockSheetOpen(true)} className="text-[10px] font-bold tracking-widest text-foreground bg-muted border border-border px-3 py-1.5 rounded-sm hover:bg-muted/80 uppercase transition-colors">{t('ops.add')}</button>
                         </div>
                         <span className="text-[10px] font-bold text-muted-foreground tracking-wider mb-2 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-chart-4"></span> Global equities
+                            <span className="w-1.5 h-1.5 rounded-full bg-chart-4"></span> {t('ops.global_equities')}
                         </span>
                         <span className="text-3xl font-bold text-foreground tracking-tighter mt-1">
                             ₩{totalStockKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </span>
                         <div className="mt-4 flex justify-between items-end">
                             <div className="flex flex-col gap-0.5">
-                                <span className="text-[10px] text-muted-foreground opacity-60">Securities total</span>
-                                <span className="text-xs font-medium text-foreground">{stocks.length} symbols</span>
+                                <span className="text-[10px] text-muted-foreground opacity-60">{t('ops.securities_total')}</span>
+                                <span className="text-xs font-medium text-foreground">{stocks.length} {t('ops.symbols')}</span>
                             </div>
                             <span className="text-xs font-bold text-foreground bg-muted px-2 py-0.5 rounded-sm">
                                 {((totalStockKrw / netWorth) * 100).toFixed(1)}%
@@ -345,10 +347,10 @@ export default function ClientOperations({
             </div>
 
             <div className="max-w-screen-xl mx-auto mt-10">
-                <h3 className="text-[10px] font-bold tracking-wider text-muted-foreground mb-4 opacity-70">Stock intelligence (global marketplace)</h3>
+                <h3 className="text-[10px] font-bold tracking-wider text-muted-foreground mb-4 opacity-70">{t('ops.intelligence_title')}</h3>
                 {stocks.length === 0 ? (
                     <div className="bg-card border border-input border-dashed rounded-md p-8 flex flex-col items-center justify-center text-muted-foreground font-mono text-xs opacity-50">
-                        NO EQUITY ASSETS REGISTERED
+                        {t('ops.no_equity_assets')}
                     </div>
                 ) : (
                     <Accordion type="multiple" className="w-full max-w-4xl">
@@ -378,14 +380,14 @@ export default function ClientOperations({
                                             <div className="flex flex-col">
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-xl font-bold text-foreground tracking-tighter">{symbol}</span>
-                                                    <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-sm border border-border">{stock.amount.toLocaleString(undefined, { maximumFractionDigits: 4 })} shares</span>
+                                                    <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-sm border border-border">{stock.amount.toLocaleString(undefined, { maximumFractionDigits: 4 })} {t('ops.shares')}</span>
                                                 </div>
                                                 <span className="text-[10px] text-muted-foreground truncate max-w-[200px] mt-1">{priceData?.shortName || 'US Equity'}</span>
                                             </div>
 
                                             <div className="flex flex-col items-end gap-1">
                                                 <div className="flex items-center gap-3">
-                                                    <span className="text-xs font-bold text-foreground bg-muted px-2 py-0.5 rounded-sm" title="[Weight in Stock Portfolio] / [Total Equity weight in Net Worth]">
+                                                    <span className="text-xs font-bold text-foreground bg-muted px-2 py-0.5 rounded-sm" title={t('ops.weight_tooltip')}>
                                                         {(totalStockKrw > 0 ? (valueKrw / totalStockKrw) * 100 : 0).toFixed(1)}% <span className="text-muted-foreground opacity-50 font-normal">/</span> {(netWorth > 0 ? (totalStockKrw / netWorth) * 100 : 0).toFixed(1)}%
                                                     </span>
                                                     <span className="text-lg font-bold text-foreground tracking-tighter">
@@ -393,7 +395,7 @@ export default function ClientOperations({
                                                     </span>
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-[10px] text-muted-foreground">Avg: {currency === 'KRW' ? '₩' : '$'}{avgPrice.toLocaleString(undefined, { maximumFractionDigits: currency === 'KRW' ? 0 : 2 })}</span>
+                                                    <span className="text-[10px] text-muted-foreground">{t('ops.avg_price')} {currency === 'KRW' ? '₩' : '$'}{avgPrice.toLocaleString(undefined, { maximumFractionDigits: currency === 'KRW' ? 0 : 2 })}</span>
                                                     <span className={`text-xs font-bold ${roiColor}`}>{isPositive ? '+' : ''}{roi.toFixed(2)}%</span>
                                                 </div>
                                             </div>
@@ -402,16 +404,16 @@ export default function ClientOperations({
                                     <AccordionContent className="pt-2 pb-6 border-t border-border/50">
                                         <div className="flex flex-col gap-3">
                                             <div className="grid grid-cols-12 text-[10px] font-bold text-muted-foreground tracking-wider px-4 py-2 bg-muted/30 rounded-t-sm">
-                                                <div className="col-span-3">Broker</div>
-                                                <div className="col-span-3">Owner</div>
-                                                <div className="col-span-2 text-right">Shares</div>
-                                                <div className="col-span-2 text-right">Avg Cost</div>
-                                                <div className="col-span-2 text-right pr-14">Total Cost</div>
+                                                <div className="col-span-3">{t('ops.broker')}</div>
+                                                <div className="col-span-3">{t('ops.owner')}</div>
+                                                <div className="col-span-2 text-right">{t('ops.shares_col')}</div>
+                                                <div className="col-span-2 text-right">{t('ops.avg_cost_col')}</div>
+                                                <div className="col-span-2 text-right pr-14">{t('ops.total_cost_col')}</div>
                                             </div>
 
                                             {entriesList.length === 0 && (
                                                 <div className="text-center py-6 text-muted-foreground text-xs font-mono opacity-50">
-                                                    No broker accounts registered.
+                                                    {t('ops.no_broker_accounts')}
                                                 </div>
                                             )}
                                             {entriesList.map((entry, idx) => (
@@ -475,17 +477,17 @@ export default function ClientOperations({
                                                 <Sheet>
                                                     <SheetTrigger asChild>
                                                         <button className="text-xs font-bold tracking-widest text-primary bg-primary/5 border border-primary/20 px-4 py-2 rounded-sm hover:bg-primary/20 uppercase transition-colors flex items-center gap-2">
-                                                            <Plus size={14} /> Add Account for {symbol}
+                                                            <Plus size={14} /> {t('ops.add_account_for')} {symbol}
                                                         </button>
                                                     </SheetTrigger>
                                                     <SheetContent className="sm:max-w-md border-l border-primary/20 flex flex-col items-center justify-center">
                                                         <SheetHeader className="absolute top-6 left-6 text-left">
                                                             <SheetTitle className="text-2xl font-black tracking-tighter uppercase text-primary flex items-center gap-2">
                                                                 <span className="h-5 w-1.5 bg-primary animate-pulse"></span>
-                                                                Add {symbol} Entry
+                                                                {t('ops.add_entry')}
                                                             </SheetTitle>
                                                             <SheetDescription className="font-mono text-xs mt-2 uppercase tracking-widest">
-                                                                Securely register new broker account holdings for {symbol}.
+                                                                {t('ops.add_entry_desc')} {symbol}.
                                                             </SheetDescription>
                                                         </SheetHeader>
 
@@ -534,10 +536,10 @@ export default function ClientOperations({
                                 <SheetHeader className="absolute top-6 left-6 text-left">
                                     <SheetTitle className="text-2xl font-black tracking-tighter uppercase text-primary flex items-center gap-2">
                                         <span className="h-5 w-1.5 bg-primary animate-pulse"></span>
-                                        Edit {foundEntryContext.symbol} Entry
+                                        {t('ops.edit_entry_title')} - {foundEntryContext.symbol}
                                     </SheetTitle>
                                     <SheetDescription className="font-mono text-xs mt-2 uppercase tracking-widest">
-                                        Update existing broker account holding records.
+                                        {t('ops.edit_entry_desc')}
                                     </SheetDescription>
                                 </SheetHeader>
                                 <div className="w-full h-full mt-24">
@@ -571,10 +573,10 @@ export default function ClientOperations({
                     <SheetHeader className="absolute top-6 left-6 text-left">
                         <SheetTitle className="text-2xl font-black tracking-tighter uppercase text-primary flex items-center gap-2">
                             <span className="h-5 w-1.5 bg-primary animate-pulse"></span>
-                            Unified stock Entry
+                            {t('ops.unified_stock_entry')}
                         </SheetTitle>
                         <SheetDescription className="font-mono text-xs mt-2 uppercase tracking-widest">
-                            Identify ticker and register broker account holdings.
+                            {t('ops.unified_stock_entry_desc')}
                         </SheetDescription>
                     </SheetHeader>
                     <div className="w-full h-full mt-24">

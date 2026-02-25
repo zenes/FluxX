@@ -4,9 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, Briefcase, Activity, Zap, Menu, X, Coins, Landmark } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
+import { LanguageToggle } from "./LanguageToggle";
 import AuthButton from "./AuthButton";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const NAV_ITEMS = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -25,6 +27,7 @@ const TAB_ITEMS = [
 export function MobileTabs() {
     const pathname = usePathname();
     const [isMounted, setIsMounted] = useState(false);
+    const { t } = useLanguage();
 
     useEffect(() => {
         setIsMounted(true);
@@ -45,7 +48,7 @@ export function MobileTabs() {
                             isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
                         )}
                     >
-                        {item.name}
+                        {t(`nav.${item.name.toLowerCase()}`)}
                         {isActive && (
                             <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary" />
                         )}
@@ -60,6 +63,7 @@ export function AppSidebar() {
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
+    const { t } = useLanguage();
 
     // Prevent hydration errors
     useEffect(() => {
@@ -78,7 +82,8 @@ export function AppSidebar() {
                     </div>
                     <span className="text-sm font-semibold tracking-wide uppercase">FluxX</span>
                 </Link>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                    <LanguageToggle />
                     <ThemeToggle />
                     <button
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -108,7 +113,7 @@ export function AppSidebar() {
                                     )}
                                 >
                                     <Icon size={18} />
-                                    {item.name}
+                                    {t(`nav.${item.name.toLowerCase()}`)}
                                 </Link>
                             );
                         })}
@@ -152,7 +157,7 @@ export function AppSidebar() {
                                         "transition-colors",
                                         isActive ? "text-primary" : "group-hover:text-foreground"
                                     )} />
-                                    {item.name}
+                                    {t(`nav.${item.name.toLowerCase()}`)}
                                 </Link>
                             );
                         })}
@@ -160,8 +165,8 @@ export function AppSidebar() {
                 </div>
 
                 <div className="p-4 border-t bg-background/50 flex flex-col gap-3">
-                    <div className="flex items-center justify-between px-2">
-                        <span className="text-xs font-medium text-muted-foreground uppercase">Theme</span>
+                    <div className="flex items-center gap-1 mt-1 justify-between px-1">
+                        <LanguageToggle />
                         <ThemeToggle />
                     </div>
                     <div className="flex px-2 w-full">

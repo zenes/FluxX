@@ -4,6 +4,8 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Landmark, Wallet, Layers, TrendingUp, AlertCircle, PieChart, Coins } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+
 import { cn } from "@/lib/utils";
 import { AssetItem } from "@/lib/actions";
 
@@ -21,6 +23,8 @@ interface Props {
 }
 
 export default function ClientAccountDashboard({ accounts, assets }: Props) {
+    const { t } = useLanguage();
+
     // Determine the active tab: either an account ID or 'global' for unassigned assets
     const [activeTab, setActiveTab] = useState<string>(accounts.length > 0 ? accounts[0].id : "global");
 
@@ -105,7 +109,7 @@ export default function ClientAccountDashboard({ accounts, assets }: Props) {
             {/* Sidebar / Tabs */}
             <div className="w-full lg:w-64 shrink-0 flex flex-col gap-2">
                 <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">
-                    Portfolios View
+                    {t('accounts.portfolios_view')}
                 </div>
 
                 <button
@@ -119,8 +123,8 @@ export default function ClientAccountDashboard({ accounts, assets }: Props) {
                 >
                     <Layers className={cn("size-5", activeTab === "global" ? "text-primary" : "text-muted-foreground/70")} />
                     <div className="flex flex-col">
-                        <span className="text-sm font-semibold">Overall Assets</span>
-                        <span className="text-[10px] sm:text-xs opacity-70">Cash, Gold & Misc</span>
+                        <span className="text-sm font-semibold">{t('accounts.overall_assets')}</span>
+                        <span className="text-[10px] sm:text-xs opacity-70">{t('accounts.cash_gold_misc')}</span>
                     </div>
                 </button>
 
@@ -128,7 +132,7 @@ export default function ClientAccountDashboard({ accounts, assets }: Props) {
 
                 {accounts.length === 0 && (
                     <div className="text-xs text-muted-foreground italic px-2 py-4 text-center border border-dashed rounded-lg bg-muted/30">
-                        No accounts registered yet.
+                        {t('accounts.no_accounts_registered_yet')}
                     </div>
                 )}
 
@@ -159,7 +163,7 @@ export default function ClientAccountDashboard({ accounts, assets }: Props) {
                     <Card className="bg-card/40 backdrop-blur border-border/50 shadow-sm hover:shadow-md transition-shadow">
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between space-y-0 pb-2">
-                                <p className="text-sm font-medium text-muted-foreground">Est. Total Value (USD)</p>
+                                <p className="text-sm font-medium text-muted-foreground">{t('accounts.est_total_value_usd')}</p>
                                 <Wallet className="h-4 w-4 text-profit" />
                             </div>
                             <div className="flex items-baseline gap-2">
@@ -174,7 +178,7 @@ export default function ClientAccountDashboard({ accounts, assets }: Props) {
                     <Card className="bg-card/40 backdrop-blur border-border/50 shadow-sm hover:shadow-md transition-shadow">
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between space-y-0 pb-2">
-                                <p className="text-sm font-medium text-muted-foreground">Est. Total Value (KRW)</p>
+                                <p className="text-sm font-medium text-muted-foreground">{t('accounts.est_total_value_krw')}</p>
                                 <Coins className="h-4 w-4 text-muted-foreground" />
                             </div>
                             <div className="flex items-baseline gap-2">
@@ -193,7 +197,7 @@ export default function ClientAccountDashboard({ accounts, assets }: Props) {
                                     <PieChart className="size-6 text-primary" />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-muted-foreground">Assets in View</p>
+                                    <p className="text-sm font-medium text-muted-foreground">{t('accounts.assets_in_view')}</p>
                                     <p className="text-2xl font-bold">{viewData.items.length}</p>
                                 </div>
                             </div>
@@ -206,10 +210,10 @@ export default function ClientAccountDashboard({ accounts, assets }: Props) {
                     <CardHeader className="border-b bg-muted/20 pb-4">
                         <CardTitle className="text-lg flex items-center gap-2">
                             <TrendingUp className="size-5 text-primary" />
-                            {activeTab === "global" ? "Global Holdings" : "Account Holdings"}
+                            {activeTab === "global" ? t('accounts.global_holdings') : t('accounts.account_holdings')}
                         </CardTitle>
                         <CardDescription>
-                            List of assets currently tracked under this view.
+                            {t('accounts.list_of_assets')}
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="p-0">
@@ -218,11 +222,11 @@ export default function ClientAccountDashboard({ accounts, assets }: Props) {
                                 <div className="size-12 bg-muted rounded-full flex items-center justify-center mb-4">
                                     <AlertCircle className="size-6 text-muted-foreground" />
                                 </div>
-                                <h3 className="text-lg font-medium">No assets found</h3>
+                                <h3 className="text-lg font-medium">{t('accounts.no_assets_found')}</h3>
                                 <p className="text-sm text-muted-foreground mt-1 max-w-sm">
                                     {activeTab === "global"
-                                        ? "There are no overall assets or cash holdings tracked here yet."
-                                        : "This account currently holds no registered assets."}
+                                        ? t('accounts.no_assets_global')
+                                        : t('accounts.no_assets_account')}
                                 </p>
                             </div>
                         ) : (
@@ -230,9 +234,9 @@ export default function ClientAccountDashboard({ accounts, assets }: Props) {
                                 <table className="w-full text-sm text-left">
                                     <thead className="text-xs text-muted-foreground uppercase bg-muted/10 border-b">
                                         <tr>
-                                            <th className="px-6 py-4 font-semibold">Asset / Symbol</th>
-                                            <th className="px-6 py-4 font-semibold text-right">Quantity / Amount</th>
-                                            <th className="px-6 py-4 font-semibold text-right">Cost Value</th>
+                                            <th className="px-6 py-4 font-semibold">{t('accounts.asset_symbol')}</th>
+                                            <th className="px-6 py-4 font-semibold text-right">{t('accounts.quantity_amount')}</th>
+                                            <th className="px-6 py-4 font-semibold text-right">{t('accounts.cost_value')}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border/50">

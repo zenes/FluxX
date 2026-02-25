@@ -8,8 +8,10 @@ import { DividendHistory } from "@/components/DividendHistory";
 import { getDividendRecords } from "@/lib/actions";
 import MonthlyDividendChart from "@/components/MonthlyDividendChart";
 import MonthlyDividendCalendar from "@/components/MonthlyDividendCalendar";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ClientDividends({ assets }: { assets: any[] }) {
+    const { t, language } = useLanguage();
     const [searchTerm, setSearchTerm] = useState("");
     const [dividendRecords, setDividendRecords] = useState<any[]>([]);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -92,10 +94,10 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
     });
 
     const metrics = [
-        { title: "Annual total (est.)", prefix: "₩", value: Math.round(totalAnnualEstKRW).toLocaleString(), change: "+12.5%", icon: TrendingUp, color: "text-primary" },
-        { title: `Actual (${selectedYear} ytd)`, prefix: "₩", value: Math.round(actualThisYearKRW).toLocaleString(), detail: `${selectedYear} payouts`, icon: Wallet, color: "text-accent" },
-        { title: "Monthly average", prefix: "₩", value: Math.round(totalAnnualEstKRW / 12).toLocaleString(), detail: "Projected avg", icon: Calendar, color: "text-muted-foreground" },
-        { title: "Total records", value: dividendRecords.length.toString(), detail: "Receipts logged", icon: ArrowUpRight, color: "text-profit" },
+        { title: t('divs.annual_total_est'), prefix: "₩", value: Math.round(totalAnnualEstKRW).toLocaleString(), change: "+12.5%", icon: TrendingUp, color: "text-primary" },
+        { title: t('divs.actual_ytd', { year: selectedYear }), prefix: "₩", value: Math.round(actualThisYearKRW).toLocaleString(), detail: t('divs.payouts', { year: selectedYear }), icon: Wallet, color: "text-accent" },
+        { title: t('divs.monthly_average'), prefix: "₩", value: Math.round(totalAnnualEstKRW / 12).toLocaleString(), detail: t('divs.projected_avg'), icon: Calendar, color: "text-muted-foreground" },
+        { title: t('divs.total_records'), value: dividendRecords.length.toString(), detail: t('divs.receipts_logged'), icon: ArrowUpRight, color: "text-profit" },
     ];
 
     const handleYearChange = (delta: number) => {
@@ -121,10 +123,10 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                 <div>
                     <h1 className="text-2xl font-semibold text-foreground flex items-center gap-3">
                         <span className="h-6 w-1 bg-primary"></span>
-                        dividend
+                        {t('divs.title')}
                     </h1>
                     <p className="text-xs text-muted-foreground mt-1 opacity-60">
-                        passive yield monitoring and automated cash flow projection.
+                        {t('divs.subtitle')}
                     </p>
                 </div>
 
@@ -132,7 +134,7 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
                     <input
                         type="text"
-                        placeholder="SEARCH TICKER..."
+                        placeholder={t('divs.search_placeholder')}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full bg-muted/20 border border-input rounded-sm py-2 pl-9 pr-4 text-[10px] font-bold tracking-wider focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all"
@@ -176,8 +178,8 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
             <div className="mb-8 p-5 bg-card border border-input rounded-md shadow-sm">
                 <div className="mb-4 flex items-center justify-between">
                     <div>
-                        <h3 className="text-sm font-bold tracking-widest text-foreground">Monthly payouts</h3>
-                        <p className="text-[10px] text-muted-foreground tracking-wider mt-1 opacity-60">Aggregation for {selectedYear}</p>
+                        <h3 className="text-sm font-bold tracking-widest text-foreground">{t('divs.monthly_payouts_title')}</h3>
+                        <p className="text-[10px] text-muted-foreground tracking-wider mt-1 opacity-60">{t('divs.aggregation_for', { year: selectedYear })}</p>
                     </div>
                     <div className="flex items-center gap-2">
                         <button
@@ -210,27 +212,27 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                 <div className="p-4 border-b bg-muted/10 flex justify-between items-center">
                     <h3 className="text-xs font-bold tracking-wider flex items-center gap-2">
                         <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
-                        Active equity holdings
+                        {t('divs.active_equity_holdings')}
                     </h3>
-                    <span className="text-[10px] text-muted-foreground tracking-wider opacity-60">{filteredStocks.length} assets logged</span>
+                    <span className="text-[10px] text-muted-foreground tracking-wider opacity-60">{t('divs.assets_logged', { count: filteredStocks.length })}</span>
                 </div>
 
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="border-b bg-muted/5 transition-colors hover:bg-muted/50">
-                                <th className="h-10 px-6 text-left align-middle font-bold text-muted-foreground uppercase text-[10px] tracking-widest">Symbol</th>
-                                <th className="h-10 px-6 text-right align-middle font-bold text-muted-foreground uppercase text-[10px] tracking-widest">Quantity</th>
-                                <th className="h-10 px-6 text-right align-middle font-bold text-muted-foreground uppercase text-[10px] tracking-widest">Est. Annual</th>
-                                <th className="h-10 px-6 text-right align-middle font-bold text-muted-foreground uppercase text-[10px] tracking-widest">History</th>
-                                <th className="h-10 px-6 text-center align-middle font-bold text-muted-foreground uppercase text-[10px] tracking-widest">Actions</th>
+                                <th className="h-10 px-6 text-left align-middle font-bold text-muted-foreground uppercase text-[10px] tracking-widest">{t('divs.table_symbol')}</th>
+                                <th className="h-10 px-6 text-right align-middle font-bold text-muted-foreground uppercase text-[10px] tracking-widest">{t('divs.table_quantity')}</th>
+                                <th className="h-10 px-6 text-right align-middle font-bold text-muted-foreground uppercase text-[10px] tracking-widest">{t('divs.table_est_annual')}</th>
+                                <th className="h-10 px-6 text-right align-middle font-bold text-muted-foreground uppercase text-[10px] tracking-widest">{t('divs.table_history')}</th>
+                                <th className="h-10 px-6 text-center align-middle font-bold text-muted-foreground uppercase text-[10px] tracking-widest">{t('divs.table_actions')}</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filteredStocks.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="p-12 text-center text-muted-foreground font-mono text-xs uppercase opacity-50">
-                                        No matching stock assets detected in the perimeter.
+                                        {t('divs.no_matching_assets')}
                                     </td>
                                 </tr>
                             ) : (
@@ -257,10 +259,10 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                                                         onClick={() => handleOpenSheet(stock.assetSymbol!, currency, 'history')}
                                                         className="text-profit hover:opacity-80 hover:underline transition-colors font-bold"
                                                     >
-                                                        {recordsForYear.length} Paid in {selectedYear}
+                                                        {recordsForYear.length} {t('divs.paid_in', { year: selectedYear })}
                                                     </button>
                                                 ) : (
-                                                    <span className="opacity-30">No Data</span>
+                                                    <span className="opacity-30">{t('divs.no_data')}</span>
                                                 )}
                                             </td>
                                             <td className="px-6 py-4 align-middle text-center">
@@ -268,7 +270,7 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                                                     onClick={() => handleOpenSheet(stock.assetSymbol!, currency, 'record')}
                                                     className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-primary hover:bg-primary/20 rounded-sm text-[10px] font-bold tracking-widest transition-all uppercase border border-primary/20"
                                                 >
-                                                    <Plus size={10} /> Record
+                                                    <Plus size={10} /> {t('divs.record')}
                                                 </button>
                                             </td>
                                         </tr>
@@ -285,7 +287,7 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                     <SheetHeader>
                         <SheetTitle className="text-xl font-black tracking-tighter uppercase mb-4 flex items-center gap-2">
                             {sheetMode === 'record' ? <Plus size={20} className="text-primary" /> : <History size={20} className="text-primary" />}
-                            {sheetMode === 'record' ? 'Dividend Receipt Entry' : `${activeSymbol} Payment History`}
+                            {sheetMode === 'record' ? t('divs.dividend_receipt_entry') : t('divs.payment_history', { symbol: activeSymbol || '' })}
                         </SheetTitle>
                     </SheetHeader>
 
@@ -314,7 +316,7 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                                 onClick={() => setSheetMode('record')}
                                 className="w-full mt-8 py-3 bg-primary/10 text-primary hover:bg-primary/20 rounded-sm text-[10px] font-bold tracking-[0.2em] uppercase border border-primary/20 transition-all flex items-center justify-center gap-2"
                             >
-                                <Plus size={12} /> Add New Record
+                                <Plus size={12} /> {t('divs.add_new_record')}
                             </button>
                         )}
                         {sheetMode === 'record' && (
@@ -322,7 +324,7 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                                 onClick={() => setSheetMode('history')}
                                 className="w-full mt-6 py-2 text-muted-foreground hover:text-foreground text-[8px] font-bold tracking-[0.2em] uppercase transition-all flex items-center justify-center gap-2"
                             >
-                                <History size={10} /> Back to History
+                                <History size={10} /> {t('divs.back_to_history')}
                             </button>
                         )}
                     </div>
@@ -335,7 +337,7 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                     <SheetHeader>
                         <SheetTitle className="text-xl font-black tracking-tighter uppercase mb-4 flex items-center gap-2">
                             <Calendar className="text-primary" size={20} />
-                            {selectedYear} {selectedMonthName} Dividend Report
+                            {t('divs.dividend_report', { year: selectedYear, month: selectedMonthName })}
                         </SheetTitle>
                     </SheetHeader>
 
@@ -357,7 +359,7 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
             <div className="mt-6 flex items-center gap-2 p-3 rounded-md bg-primary/5 border border-primary/10">
                 <Info size={14} className="text-primary shrink-0" />
                 <p className="text-[10px] text-muted-foreground uppercase tracking-widest leading-relaxed">
-                    Note: Dividend yield data is being cross-referenced with your holdings. Manual records are prioritized for YTD calculations.
+                    {t('divs.note')}
                 </p>
             </div>
         </div>
