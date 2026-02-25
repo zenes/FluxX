@@ -9,15 +9,15 @@ interface MonthlyDividendChartProps {
 }
 
 export default function MonthlyDividendChart({ data, onMonthClick }: MonthlyDividendChartProps) {
-    // 찾기 쉬운 최대값을 기준으로 강조 표시를 하거나 색상을 지정할 수 있습니다.
+    // Find the maximum amount to highlight the highest payout bar.
     const maxAmount = useMemo(() => {
         return Math.max(...data.map(d => d.amount), 0);
     }, [data]);
 
     const formatYAxis = (tickItem: number) => {
         if (tickItem === 0) return '0';
-        if (tickItem >= 10000) {
-            return `₩${(tickItem / 10000).toLocaleString(undefined, { maximumFractionDigits: 1 })}만`;
+        if (tickItem >= 1000) {
+            return `₩${(tickItem / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })}k`;
         }
         return `₩${tickItem.toLocaleString()}`;
     };

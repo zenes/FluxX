@@ -69,8 +69,9 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
 
     // Calculate actual received for the SECLECTED year & monthly aggregation
     // Initialize 12 months data
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const monthlyData = Array.from({ length: 12 }, (_, i) => ({
-        name: `${i + 1}월`,
+        name: monthNames[i],
         amount: 0
     }));
 
