@@ -4,6 +4,7 @@ import "./globals.css";
 import Providers from "@/components/Providers";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AppSidebar } from "@/components/AppSidebar";
+import SwipeNavigationHandler from "@/components/SwipeNavigationHandler";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -41,8 +42,10 @@ export default function RootLayout({
           >
             <div className="flex flex-col md:flex-row min-h-screen bg-background text-foreground">
               <AppSidebar />
-              <main className="flex-1 w-full overflow-y-auto">
-                {children}
+              <main className="flex-1 w-full overflow-y-auto overflow-x-hidden">
+                <SwipeNavigationHandler>
+                  {children}
+                </SwipeNavigationHandler>
               </main>
             </div>
           </ThemeProvider>
