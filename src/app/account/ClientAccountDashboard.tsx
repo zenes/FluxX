@@ -163,8 +163,9 @@ export default function ClientAccountDashboard({ accounts, assets }: Props) {
                                 <Wallet className="h-4 w-4 text-profit" />
                             </div>
                             <div className="flex items-baseline gap-2">
-                                <h2 className="text-3xl font-bold tracking-tight text-foreground">
-                                    ${viewData.totalValueUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                <h2 className="text-4xl md:text-5xl font-bold tracking-tighter text-foreground mt-2">
+                                    <span className="text-xl md:text-2xl font-medium text-muted-foreground/50 mr-1">$</span>
+                                    {viewData.totalValueUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </h2>
                             </div>
                         </CardContent>
@@ -177,8 +178,9 @@ export default function ClientAccountDashboard({ accounts, assets }: Props) {
                                 <Coins className="h-4 w-4 text-muted-foreground" />
                             </div>
                             <div className="flex items-baseline gap-2">
-                                <h2 className="text-3xl font-bold tracking-tight text-foreground">
-                                    ₩{viewData.totalValueKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                <h2 className="text-4xl md:text-5xl font-bold tracking-tighter text-foreground mt-2">
+                                    <span className="text-xl md:text-2xl font-medium text-muted-foreground/50 mr-1">₩</span>
+                                    {viewData.totalValueKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                 </h2>
                             </div>
                         </CardContent>

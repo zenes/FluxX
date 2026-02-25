@@ -41,7 +41,7 @@ export function MobileTabs() {
                         key={item.href}
                         href={item.href}
                         className={cn(
-                            "flex-1 flex items-center justify-center px-3 text-[10px] font-black uppercase tracking-widest transition-all relative min-w-[100px]",
+                            "flex-1 flex items-center justify-center px-3 text-[10px] font-bold uppercase tracking-widest transition-all relative min-w-[100px]",
                             isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
                         )}
                     >

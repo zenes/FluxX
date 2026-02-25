@@ -17,7 +17,7 @@ export default async function SettingsPage() {
         <div className="flex-1 space-y-8 p-8 pt-6">
             <div className="flex items-center justify-between space-y-2">
                 <div>
-                    <h2 className="text-3xl font-black tracking-tight text-primary">Personal Settings</h2>
+                    <h2 className="text-3xl font-bold tracking-tighter text-primary">Personal Settings</h2>
                     <p className="text-muted-foreground font-mono text-sm mt-1 uppercase tracking-widest">
                         Manage your preferences, accounts, and data.
                     </p>

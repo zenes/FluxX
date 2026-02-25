@@ -50,7 +50,7 @@ export default function ExchangeRateChart({ currentRate }: ChartProps) {
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
             return (
-                <div className="bg-card border border-border p-3 rounded-none shadow-sm text-xs" style={{ fontFamily: 'var(--font-outfit)' }}>
+                <div className="bg-card border border-border p-3 rounded-none shadow-sm text-xs" style={{ fontFamily: 'var(--font-inter)' }}>
                     <p className="text-muted-foreground mb-1">{formatDate(label)}</p>
                     <p className="text-foreground font-bold">
                         <span className="text-primary mr-2">KRW</span>
@@ -142,7 +142,7 @@ export default function ExchangeRateChart({ currentRate }: ChartProps) {
                                 fontSize={10}
                                 tickMargin={10}
                                 minTickGap={30}
-                                style={{ fontFamily: 'var(--font-outfit)' }}
+                                style={{ fontFamily: 'var(--font-inter)' }}
                             />
                             <YAxis
                                 domain={[minVal, maxVal]}
@@ -151,7 +151,7 @@ export default function ExchangeRateChart({ currentRate }: ChartProps) {
                                 tickFormatter={(val) => val.toFixed(0)}
                                 axisLine={false}
                                 tickLine={false}
-                                style={{ fontFamily: 'var(--font-outfit)' }}
+                                style={{ fontFamily: 'var(--font-inter)' }}
                             />
                             <Tooltip content={<CustomTooltip />} />
                             {currentRate && (

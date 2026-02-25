@@ -92,9 +92,9 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
     });
 
     const metrics = [
-        { title: "Annual Total (Est.)", value: `₩${Math.round(totalAnnualEstKRW).toLocaleString()}`, change: "+12.5%", icon: TrendingUp, color: "text-primary" },
-        { title: `ACTUAL (${selectedYear} YTD)`, value: `₩${Math.round(actualThisYearKRW).toLocaleString()}`, detail: `${selectedYear} Payouts`, icon: Wallet, color: "text-accent" },
-        { title: "Monthly Average", value: `₩${Math.round(totalAnnualEstKRW / 12).toLocaleString()}`, detail: "Projected Avg", icon: Calendar, color: "text-muted-foreground" },
+        { title: "Annual Total (Est.)", prefix: "₩", value: Math.round(totalAnnualEstKRW).toLocaleString(), change: "+12.5%", icon: TrendingUp, color: "text-primary" },
+        { title: `ACTUAL (${selectedYear} YTD)`, prefix: "₩", value: Math.round(actualThisYearKRW).toLocaleString(), detail: `${selectedYear} Payouts`, icon: Wallet, color: "text-accent" },
+        { title: "Monthly Average", prefix: "₩", value: Math.round(totalAnnualEstKRW / 12).toLocaleString(), detail: "Projected Avg", icon: Calendar, color: "text-muted-foreground" },
         { title: "Total Records", value: dividendRecords.length.toString(), detail: "Receipts Logged", icon: ArrowUpRight, color: "text-profit" },
     ];
 
@@ -117,9 +117,9 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
 
     return (
         <div className="flex flex-col h-full bg-background p-4 md:p-8">
-            <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black tracking-tighter uppercase text-foreground flex items-center gap-3">
+                    <h1 className="text-3xl font-bold tracking-tighter uppercase text-foreground flex items-center gap-3">
                         <span className="h-8 w-2 bg-primary animate-pulse"></span>
                         Dividend Intelligence
                     </h1>
@@ -149,7 +149,12 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                             <m.icon size={16} className={`${m.color} opacity-70`} />
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-2xl font-black tracking-tighter text-foreground">{m.value}</span>
+                            <span className="text-3xl md:text-5xl font-bold tracking-tighter text-foreground">
+                                {m.prefix && (
+                                    <span className="text-xl md:text-2xl font-medium text-muted-foreground/50 mr-1">{m.prefix}</span>
+                                )}
+                                {m.value}
+                            </span>
                             <div className="flex items-center gap-1.5 mt-1">
                                 {m.change && i === 0 ? (
                                     <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-sm">
@@ -171,7 +176,7 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
             <div className="mb-8 p-5 bg-card border border-input rounded-md shadow-sm">
                 <div className="mb-4 flex items-center justify-between">
                     <div>
-                        <h3 className="text-sm font-black tracking-widest text-foreground uppercase">Monthly Payouts</h3>
+                        <h3 className="text-sm font-bold tracking-widest text-foreground uppercase">Monthly Payouts</h3>
                         <p className="text-[10px] text-muted-foreground uppercase font-mono mt-1">Aggregation for {selectedYear}</p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -238,7 +243,7 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                                     return (
                                         <tr key={stock.id} className="border-b last:border-0 transition-colors hover:bg-muted/20 group">
                                             <td className="px-6 py-4 align-middle">
-                                                <span className="text-sm font-black text-primary tracking-tight group-hover:text-foreground transition-colors">{stock.assetSymbol}</span>
+                                                <span className="text-sm font-bold text-primary tracking-tight group-hover:text-foreground transition-colors">{stock.assetSymbol}</span>
                                             </td>
                                             <td className="px-6 py-4 align-middle text-right font-mono text-xs font-bold">
                                                 {stock.amount.toLocaleString()}
@@ -307,7 +312,7 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                         {sheetMode === 'history' && (
                             <button
                                 onClick={() => setSheetMode('record')}
-                                className="w-full mt-8 py-3 bg-primary/10 text-primary hover:bg-primary/20 rounded-sm text-[10px] font-black tracking-[0.2em] uppercase border border-primary/20 transition-all flex items-center justify-center gap-2"
+                                className="w-full mt-8 py-3 bg-primary/10 text-primary hover:bg-primary/20 rounded-sm text-[10px] font-bold tracking-[0.2em] uppercase border border-primary/20 transition-all flex items-center justify-center gap-2"
                             >
                                 <Plus size={12} /> Add New Record
                             </button>
@@ -315,7 +320,7 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                         {sheetMode === 'record' && (
                             <button
                                 onClick={() => setSheetMode('history')}
-                                className="w-full mt-6 py-2 text-muted-foreground hover:text-foreground text-[8px] font-black tracking-[0.2em] uppercase transition-all flex items-center justify-center gap-2"
+                                className="w-full mt-6 py-2 text-muted-foreground hover:text-foreground text-[8px] font-bold tracking-[0.2em] uppercase transition-all flex items-center justify-center gap-2"
                             >
                                 <History size={10} /> Back to History
                             </button>

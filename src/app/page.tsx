@@ -194,7 +194,7 @@ export default function Home() {
               {isNetWorthLoading && netWorth === null ? (
                 <span className="flex h-10 w-32 items-center bg-muted/50 rounded-sm animate-pulse"></span>
               ) : (
-                <span className="text-xl md:text-3xl font-bold tracking-tight text-foreground">
+                <span className="text-2xl md:text-3xl font-bold tracking-tighter text-foreground">
                   ₩{(netWorth || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                 </span>
               )}
@@ -257,7 +257,7 @@ export default function Home() {
               </div>
             ) : (
               <>
-                <span className="text-xl md:text-3xl font-bold tracking-tight text-foreground mt-2">
+                <span className="text-2xl md:text-3xl font-bold tracking-tighter text-foreground mt-2">
                   {goldType === 'krx' ? '₩' : '$'}
                   {goldPrice ? goldPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A'}
                 </span>
@@ -321,7 +321,7 @@ export default function Home() {
               </div>
             ) : (
               <>
-                <span className="text-xl md:text-3xl font-bold tracking-tight text-foreground mt-2">
+                <span className="text-2xl md:text-3xl font-bold tracking-tighter text-foreground mt-2">
                   {exchangeRate ? `₩${exchangeRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A'}
                 </span>
 
@@ -365,9 +365,6 @@ export default function Home() {
             <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
             <p className="text-sm text-muted-foreground mt-1">Global system status.</p>
           </div>
-          <button className="inline-flex items-center justify-center whitespace-nowrap rounded-sm text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 shadow-[0_0_10px_rgba(59,130,246,0.3)] w-full sm:w-auto">
-            Deploy Unit
-          </button>
         </div>
 
         {!isMounted ? (

@@ -142,10 +142,10 @@ export default function ClientOperations({
     };
 
     return (
-        <div className="flex-1 p-6 md:p-8 xl:p-12 h-full overflow-y-auto w-full bg-background">
+        <div className="flex-1 p-4 md:p-8 h-full overflow-y-auto w-full bg-background">
             <div className="mb-10 max-w-screen-xl mx-auto">
-                <h1 className="text-3xl font-bold tracking-tighter uppercase text-primary flex items-center gap-3">
-                    <span className="h-6 w-2 bg-primary animate-pulse"></span>
+                <h1 className="text-3xl font-bold tracking-tighter uppercase text-foreground flex items-center gap-3">
+                    <span className="h-8 w-2 bg-primary animate-pulse"></span>
                     Operations Portfolio
                 </h1>
                 <div className="flex justify-between items-center mt-2 pl-5">
@@ -171,8 +171,9 @@ export default function ClientOperations({
 
                     <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-4">Total Net Worth (Estimated KRW)</h2>
                     <div className="flex items-baseline gap-2">
-                        <span className="text-5xl md:text-6xl font-black tracking-tighter text-foreground font-mono">
-                            ₩{netWorth.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                        <span className="text-4xl md:text-6xl font-bold tracking-tighter text-foreground font-mono">
+                            <span className="text-2xl md:text-3xl font-medium text-muted-foreground/50 mr-1">₩</span>
+                            {netWorth.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </span>
                     </div>
 
@@ -275,7 +276,7 @@ export default function ClientOperations({
                         <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-chart-3"></span> Local Currency
                         </span>
-                        <span className="text-3xl font-black text-foreground tracking-tight mt-1">₩{krwAmount.toLocaleString()}</span>
+                        <span className="text-3xl font-bold text-foreground tracking-tighter mt-1">₩{krwAmount.toLocaleString()}</span>
                         <div className="flex justify-between items-end mt-4">
                             <span className="text-[10px] font-mono text-muted-foreground opacity-70">LIQUIDITY RESERVE</span>
                             <span className="text-xs font-bold text-foreground bg-muted px-2 py-0.5 rounded-sm">{((krwAmount / netWorth) * 100).toFixed(1)}%</span>
@@ -290,7 +291,7 @@ export default function ClientOperations({
                         <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-chart-2"></span> Foreign Currency
                         </span>
-                        <span className="text-3xl font-black text-foreground tracking-tight mt-1">${usdAmount.toLocaleString()}</span>
+                        <span className="text-3xl font-bold text-foreground tracking-tighter mt-1">${usdAmount.toLocaleString()}</span>
                         <div className="mt-4 flex justify-between items-end">
                             <div className="flex flex-col gap-0.5">
                                 <span className="text-[10px] font-mono text-muted-foreground opacity-70">EST VALUE (KRW)</span>
@@ -308,7 +309,7 @@ export default function ClientOperations({
                         <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-chart-1"></span> Gold Reserve
                         </span>
-                        <span className="text-3xl font-black text-foreground tracking-tight mt-1">{goldAmount.toLocaleString()} <span className="text-xl">g</span></span>
+                        <span className="text-3xl font-bold text-foreground tracking-tighter mt-1">{goldAmount.toLocaleString()} <span className="text-xl">g</span></span>
                         <div className="mt-4 flex justify-between items-end">
                             <div className="flex flex-col gap-0.5">
                                 <span className="text-[10px] font-mono text-muted-foreground opacity-70">EST VALUE (KRW)</span>
@@ -326,7 +327,7 @@ export default function ClientOperations({
                         <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-chart-4"></span> Global Equities
                         </span>
-                        <span className="text-3xl font-black text-foreground tracking-tight mt-1">
+                        <span className="text-3xl font-bold text-foreground tracking-tighter mt-1">
                             ₩{totalStockKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </span>
                         <div className="mt-4 flex justify-between items-end">
@@ -376,7 +377,7 @@ export default function ClientOperations({
                                         <div className="flex justify-between items-center w-full pr-4 text-left">
                                             <div className="flex flex-col">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-xl font-black text-foreground tracking-tight">{symbol}</span>
+                                                    <span className="text-xl font-bold text-foreground tracking-tighter">{symbol}</span>
                                                     <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-sm border border-border">{stock.amount.toLocaleString(undefined, { maximumFractionDigits: 4 })} shares</span>
                                                 </div>
                                                 <span className="text-[10px] text-muted-foreground truncate max-w-[200px] mt-1">{priceData?.shortName || 'US Equity'}</span>
@@ -387,7 +388,7 @@ export default function ClientOperations({
                                                     <span className="text-xs font-bold text-foreground bg-muted px-2 py-0.5 rounded-sm" title="[Weight in Stock Portfolio] / [Total Equity weight in Net Worth]">
                                                         {(totalStockKrw > 0 ? (valueKrw / totalStockKrw) * 100 : 0).toFixed(1)}% <span className="text-muted-foreground opacity-50 font-normal">/</span> {(netWorth > 0 ? (totalStockKrw / netWorth) * 100 : 0).toFixed(1)}%
                                                     </span>
-                                                    <span className="text-lg font-black text-foreground tracking-tight">
+                                                    <span className="text-lg font-bold text-foreground tracking-tighter">
                                                         {currency === 'KRW' ? '₩' : '$'}{valueOriginal.toLocaleString(undefined, { maximumFractionDigits: currency === 'KRW' ? 0 : 2 })}
                                                     </span>
                                                 </div>
@@ -511,47 +512,49 @@ export default function ClientOperations({
             </div>
 
             {/* Edit Stock Entry Sheet */}
-            {editingEntryId && (() => {
-                // Find the entry details across all assets
-                let foundEntryContext = null;
-                for (const asset of assets) {
-                    if (asset.entries) {
-                        const entry = asset.entries.find(e => e.id === editingEntryId);
-                        if (entry) {
-                            foundEntryContext = { entry, symbol: asset.assetSymbol! };
-                            break;
+            {
+                editingEntryId && (() => {
+                    // Find the entry details across all assets
+                    let foundEntryContext = null;
+                    for (const asset of assets) {
+                        if (asset.entries) {
+                            const entry = asset.entries.find(e => e.id === editingEntryId);
+                            if (entry) {
+                                foundEntryContext = { entry, symbol: asset.assetSymbol! };
+                                break;
+                            }
                         }
                     }
-                }
 
-                if (!foundEntryContext) return null;
+                    if (!foundEntryContext) return null;
 
-                return (
-                    <Sheet open={!!editingEntryId} onOpenChange={(open) => !open && setEditingEntryId(null)}>
-                        <SheetContent className="sm:max-w-md border-l border-primary/20 flex flex-col items-center justify-center">
-                            <SheetHeader className="absolute top-6 left-6 text-left">
-                                <SheetTitle className="text-2xl font-black tracking-tighter uppercase text-primary flex items-center gap-2">
-                                    <span className="h-5 w-1.5 bg-primary animate-pulse"></span>
-                                    Edit {foundEntryContext.symbol} Entry
-                                </SheetTitle>
-                                <SheetDescription className="font-mono text-xs mt-2 uppercase tracking-widest">
-                                    Update existing broker account holding records.
-                                </SheetDescription>
-                            </SheetHeader>
-                            <div className="w-full h-full mt-24">
-                                <StockEntryForm
-                                    symbol={foundEntryContext.symbol}
-                                    onSuccess={() => {
-                                        setEditingEntryId(null);
-                                        window.location.reload();
-                                    }}
-                                    initialData={foundEntryContext.entry}
-                                />
-                            </div>
-                        </SheetContent>
-                    </Sheet>
-                );
-            })()}
+                    return (
+                        <Sheet open={!!editingEntryId} onOpenChange={(open) => !open && setEditingEntryId(null)}>
+                            <SheetContent className="sm:max-w-md border-l border-primary/20 flex flex-col items-center justify-center">
+                                <SheetHeader className="absolute top-6 left-6 text-left">
+                                    <SheetTitle className="text-2xl font-black tracking-tighter uppercase text-primary flex items-center gap-2">
+                                        <span className="h-5 w-1.5 bg-primary animate-pulse"></span>
+                                        Edit {foundEntryContext.symbol} Entry
+                                    </SheetTitle>
+                                    <SheetDescription className="font-mono text-xs mt-2 uppercase tracking-widest">
+                                        Update existing broker account holding records.
+                                    </SheetDescription>
+                                </SheetHeader>
+                                <div className="w-full h-full mt-24">
+                                    <StockEntryForm
+                                        symbol={foundEntryContext.symbol}
+                                        onSuccess={() => {
+                                            setEditingEntryId(null);
+                                            window.location.reload();
+                                        }}
+                                        initialData={foundEntryContext.entry}
+                                    />
+                                </div>
+                            </SheetContent>
+                        </Sheet>
+                    );
+                })()
+            }
 
             <AssetModal
                 isOpen={modalState.isOpen}
@@ -584,6 +587,6 @@ export default function ClientOperations({
                     </div>
                 </SheetContent>
             </Sheet>
-        </div>
+        </div >
     );
 }

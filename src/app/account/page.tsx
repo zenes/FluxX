@@ -21,13 +21,16 @@ export default async function AccountPage() {
 
     return (
         <div className="flex-1 w-full bg-background overflow-hidden flex flex-col h-[calc(100vh-3.5rem)] md:h-screen">
-            <header className="flex h-16 shrink-0 items-center justify-between border-b px-6 bg-card/50 backdrop-blur-md">
-                <div className="flex items-center gap-3">
-                    <h1 className="text-xl font-bold tracking-tight">Account Portfolios</h1>
+            <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 w-full">
+                <div className="mb-10 max-w-5xl mx-auto">
+                    <h1 className="text-3xl font-bold tracking-tighter uppercase text-foreground flex items-center gap-3">
+                        <span className="h-8 w-2 bg-primary animate-pulse"></span>
+                        Account Portfolios
+                    </h1>
+                    <p className="text-sm font-mono text-muted-foreground mt-2 pl-5 uppercase tracking-widest opacity-70">
+                        Consolidated multi-account asset tracking and management.
+                    </p>
                 </div>
-            </header>
-
-            <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
                 <ClientAccountDashboard accounts={accounts} assets={assets} />
             </main>
         </div>

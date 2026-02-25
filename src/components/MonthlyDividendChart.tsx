@@ -53,13 +53,13 @@ export default function MonthlyDividendChart({ data, onMonthClick }: MonthlyDivi
                         dataKey="name"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontWeight: 'bold', fontFamily: 'var(--font-outfit)' }}
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontWeight: 'bold', fontFamily: 'var(--font-inter)' }}
                         dy={10}
                     />
                     <YAxis
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontFamily: 'var(--font-outfit)' }}
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontFamily: 'var(--font-inter)' }}
                         tickFormatter={formatYAxis}
                         dx={-10}
                     />

@@ -49,7 +49,7 @@ export default function GoldPriceChart({ currentRate, type }: ChartProps) {
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
             return (
-                <div className="bg-background border border-border p-3 rounded-md shadow-md text-xs" style={{ fontFamily: 'var(--font-outfit)' }}>
+                <div className="bg-background border border-border p-3 rounded-md shadow-md text-xs" style={{ fontFamily: 'var(--font-inter)' }}>
                     <p className="text-muted-foreground mb-1">{formatDate(label)}</p>
                     <p className="text-foreground font-bold">
                         <span className="text-destructive mr-2">{type === 'global' ? 'USD' : 'KRW'}</span>
@@ -101,7 +101,7 @@ export default function GoldPriceChart({ currentRate, type }: ChartProps) {
                                 fontSize={10}
                                 tickMargin={10}
                                 minTickGap={30}
-                                style={{ fontFamily: 'var(--font-outfit)' }}
+                                style={{ fontFamily: 'var(--font-inter)' }}
                             />
                             <YAxis
                                 domain={[minVal, maxVal]}
@@ -110,7 +110,7 @@ export default function GoldPriceChart({ currentRate, type }: ChartProps) {
                                 tickFormatter={(val) => type === 'krx' ? (val / 1000).toFixed(0) + 'k' : val.toFixed(0)}
                                 axisLine={false}
                                 tickLine={false}
-                                style={{ fontFamily: 'var(--font-outfit)' }}
+                                style={{ fontFamily: 'var(--font-inter)' }}
                             />
                             <Tooltip content={<CustomTooltip />} />
                             {currentRate && (
