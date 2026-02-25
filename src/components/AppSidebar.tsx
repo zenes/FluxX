@@ -16,6 +16,12 @@ const NAV_ITEMS = [
     { name: "Intelligence", href: "#", icon: Activity },
 ];
 
+const TAB_ITEMS = [
+    { name: "Operations", href: "/operations" },
+    { name: "Accounts", href: "/account" },
+    { name: "Dividends", href: "/dividends" },
+];
+
 export function AppSidebar() {
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -48,6 +54,30 @@ export function AppSidebar() {
                     </button>
                 </div>
             </div>
+
+            {/* Mobile Tab Navigation (Visible on non-dashboard pages) */}
+            {!isMobileMenuOpen && pathname !== "/" && (
+                <div className="md:hidden flex h-10 border-b bg-muted/20 sticky top-14 z-40 overflow-x-auto no-scrollbar">
+                    {TAB_ITEMS.map((item) => {
+                        const isActive = pathname === item.href;
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                className={cn(
+                                    "flex-1 flex items-center justify-center px-3 text-[10px] font-black uppercase tracking-widest transition-all relative min-w-[100px]",
+                                    isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                                )}
+                            >
+                                {item.name}
+                                {isActive && (
+                                    <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary" />
+                                )}
+                            </Link>
+                        );
+                    })}
+                </div>
+            )}
 
             {/* Mobile Sliding Menu */}
             {isMobileMenuOpen && (
