@@ -87,8 +87,8 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
     const metrics = [
         { title: "Annual Total (Est.)", value: `₩${Math.round(totalAnnualEstKRW).toLocaleString()}`, change: "+12.5%", icon: TrendingUp, color: "text-primary" },
         { title: `ACTUAL (${selectedYear} YTD)`, value: `₩${Math.round(actualThisYearKRW).toLocaleString()}`, detail: `${selectedYear} Payouts`, icon: Wallet, color: "text-accent" },
-        { title: "Monthly Average", value: `₩${Math.round(totalAnnualEstKRW / 12).toLocaleString()}`, detail: "Projected Avg", icon: Calendar, color: "text-purple-500" },
-        { title: "Total Records", value: dividendRecords.length.toString(), detail: "Receipts Logged", icon: ArrowUpRight, color: "text-emerald-500" },
+        { title: "Monthly Average", value: `₩${Math.round(totalAnnualEstKRW / 12).toLocaleString()}`, detail: "Projected Avg", icon: Calendar, color: "text-muted-foreground" },
+        { title: "Total Records", value: dividendRecords.length.toString(), detail: "Receipts Logged", icon: ArrowUpRight, color: "text-profit" },
     ];
 
     const handleOpenSheet = (symbol: string, currency: string, mode: 'record' | 'history' = 'record') => {
@@ -216,14 +216,14 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                                             <td className="px-6 py-4 align-middle text-right font-mono text-xs font-bold">
                                                 {stock.amount.toLocaleString()}
                                             </td>
-                                            <td className="px-6 py-4 align-middle text-right font-mono text-xs text-yellow-500 font-bold">
+                                            <td className="px-6 py-4 align-middle text-right font-mono text-xs font-bold">
                                                 {currency === 'KRW' ? '₩' : '$'}{annual.toLocaleString()}
                                             </td>
                                             <td className="px-6 py-4 align-middle text-right font-mono text-[10px]">
                                                 {recordsForYear.length > 0 ? (
                                                     <button
                                                         onClick={() => handleOpenSheet(stock.assetSymbol!, currency, 'history')}
-                                                        className="text-emerald-500 hover:text-emerald-400 hover:underline transition-colors font-bold"
+                                                        className="text-profit hover:opacity-80 hover:underline transition-colors font-bold"
                                                     >
                                                         {recordsForYear.length} Paid in {selectedYear}
                                                     </button>

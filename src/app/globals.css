@@ -77,13 +77,17 @@
   }
 
   .cyber {
-    --background: 222 47% 11%; /* Mid-tone navy #0b1120 */
-    --foreground: 180 100% 50%; /* Cyan #00ffff */
-    --card: 222 47% 15%; /* Slightly lighter navy */
+    --background: 222 47% 11%;
+    /* Mid-tone navy #0b1120 */
+    --foreground: 180 100% 50%;
+    /* Cyan #00ffff */
+    --card: 222 47% 15%;
+    /* Slightly lighter navy */
     --card-foreground: 180 100% 50%;
     --popover: 222 47% 15%;
     --popover-foreground: 180 100% 50%;
-    --primary: 300 100% 50%; /* Magenta #ff00ff */
+    --primary: 300 100% 50%;
+    /* Magenta #ff00ff */
     --primary-foreground: 180 100% 50%;
     --secondary: 222 47% 20%;
     --secondary-foreground: 300 100% 50%;
@@ -102,6 +106,41 @@
     --chart-4: 280 100% 60%;
     --chart-5: 340 100% 50%;
     --radius: 0.25rem;
+  }
+
+  .paper {
+    --background: 0 0% 96%;
+    /* Warm off-white paper */
+    --foreground: 0 0% 10%;
+    /* Deep charcoal text */
+    --card: 0 0% 98%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 98%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 0 0% 10%;
+    /* Black primary */
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 90%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 0 0% 92%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 0 0% 90%;
+    --accent-foreground: 0 0% 10%;
+    --destructive: 0 0% 30%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 85%;
+    --input: 0 0% 85%;
+    --ring: 0 0% 10%;
+    --chart-1: 0 0% 10%;
+    --chart-2: 0 0% 30%;
+    --chart-3: 0 0% 50%;
+    --chart-4: 0 0% 70%;
+    --chart-5: 0 0% 85%;
+    /* Grayscale depth for profit/loss */
+    --profit: 0 0% 15%;
+    --loss: 0 0% 55%;
+    --radius: 0rem;
+    /* Sharp paper edges */
   }
 }
 

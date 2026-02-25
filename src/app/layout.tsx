@@ -37,7 +37,7 @@ export default function RootLayout({
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
-            themes={["light", "dark", "cyber"]}
+            themes={["light", "dark", "paper", "cyber"]}
           >
             <div className="flex flex-col md:flex-row min-h-screen bg-background text-foreground">
               <AppSidebar />

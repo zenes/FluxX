@@ -98,7 +98,7 @@ export default function DividendRecordForm({ tickerSymbol, currency, onSuccess, 
                 <button
                     type="submit"
                     disabled={loading || !amount}
-                    className="w-full bg-primary/20 text-primary border border-primary/50 py-3 rounded-sm font-bold uppercase tracking-widest text-xs hover:bg-primary/30 transition-all shadow-[0_0_15px_rgba(59,130,246,0.15)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-primary text-primary-foreground py-3 rounded-sm font-bold uppercase tracking-widest text-xs hover:opacity-90 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {loading ? 'Processing...' : 'Record Receipt'}
                 </button>

@@ -160,7 +160,7 @@ export default function ClientAccountDashboard({ accounts, assets }: Props) {
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between space-y-0 pb-2">
                                 <p className="text-sm font-medium text-muted-foreground">Est. Total Value (USD)</p>
-                                <Wallet className="h-4 w-4 text-emerald-500" />
+                                <Wallet className="h-4 w-4 text-profit" />
                             </div>
                             <div className="flex items-baseline gap-2">
                                 <h2 className="text-3xl font-bold tracking-tight text-foreground">
@@ -174,7 +174,7 @@ export default function ClientAccountDashboard({ accounts, assets }: Props) {
                         <CardContent className="p-6">
                             <div className="flex items-center justify-between space-y-0 pb-2">
                                 <p className="text-sm font-medium text-muted-foreground">Est. Total Value (KRW)</p>
-                                <Coins className="h-4 w-4 text-blue-500" />
+                                <Coins className="h-4 w-4 text-muted-foreground" />
                             </div>
                             <div className="flex items-baseline gap-2">
                                 <h2 className="text-3xl font-bold tracking-tight text-foreground">
@@ -240,9 +240,9 @@ export default function ClientAccountDashboard({ accounts, assets }: Props) {
                                                     <div className="flex items-center gap-3">
                                                         <div className={cn(
                                                             "size-8 rounded-full flex items-center justify-center font-bold text-xs uppercase",
-                                                            item.type === 'stock' ? "bg-indigo-500/10 text-indigo-500" :
-                                                                item.type === 'gold' ? "bg-amber-500/10 text-amber-500" :
-                                                                    "bg-emerald-500/10 text-emerald-500"
+                                                            item.type === 'stock' ? "bg-chart-1/10 text-chart-1" :
+                                                                item.type === 'gold' ? "bg-chart-2/10 text-chart-2" :
+                                                                    "bg-chart-3/10 text-chart-3"
                                                         )}>
                                                             {item.type === 'stock' ? 'ST' : item.type === 'gold' ? 'AU' : '$'}
                                                         </div>

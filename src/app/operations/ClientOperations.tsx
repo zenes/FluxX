@@ -24,7 +24,7 @@ import { Plus, Building2, UserCircle2, Hash } from 'lucide-react';
 import StockEntryForm from '@/components/StockEntryForm';
 import { deleteStockEntry } from '@/lib/actions';
 
-const COLORS = ['#eab308', '#22c55e', '#3b82f6']; // Gold, USD, KRW
+const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))'];
 
 export default function ClientOperations({
     assets,
@@ -131,10 +131,10 @@ export default function ClientOperations({
     const netWorth = goldKrw + usdKrw + krwAmount + totalStockKrw;
 
     const chartData = [
-        { name: 'Gold Reserve', value: goldKrw, color: '#eab308' },
-        { name: 'Foreign Currency', value: usdKrw, color: '#22c55e' },
-        { name: 'Local Currency', value: krwAmount, color: '#3b82f6' },
-        { name: 'Stock Assets', value: totalStockKrw, color: '#8b5cf6' },
+        { name: 'Gold Reserve', value: goldKrw, color: 'hsl(var(--chart-1))' },
+        { name: 'Foreign Currency', value: usdKrw, color: 'hsl(var(--chart-2))' },
+        { name: 'Local Currency', value: krwAmount, color: 'hsl(var(--chart-3))' },
+        { name: 'Stock Assets', value: totalStockKrw, color: 'hsl(var(--chart-4))' },
     ].filter(item => item.value > 0);
 
     const openModal = (type: string, amount: number, label: string, unit: string) => {
@@ -183,7 +183,7 @@ export default function ClientOperations({
                         </div>
                         <div>
                             <span className="text-muted-foreground block mb-1">Live Gold/oz</span>
-                            <span className="text-yellow-500 font-bold">{loadingRates ? '---' : `$${rates.goldUsd.toLocaleString()}`}</span>
+                            <span className="text-foreground font-bold">{loadingRates ? '---' : `$${rates.goldUsd.toLocaleString()}`}</span>
                         </div>
                         <div className="ml-auto flex items-end">
                             <span className="text-muted-foreground opacity-50 flex items-center gap-1">
@@ -238,8 +238,8 @@ export default function ClientOperations({
                                     </Pie>
                                     <RechartsTooltip
                                         formatter={(value: any) => `₩${Number(value).toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
-                                        contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '6px', fontFamily: 'monospace', fontSize: '12px' }}
-                                        itemStyle={{ color: '#f8fafc' }}
+                                        contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '0', fontFamily: 'monospace', fontSize: '12px' }}
+                                        itemStyle={{ color: 'hsl(var(--foreground))' }}
                                     />
                                 </PieChart>
                             </ResponsiveContainer>
@@ -268,65 +268,65 @@ export default function ClientOperations({
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 
                     {/* KRW */}
-                    <div className="bg-card border border-input rounded-md p-6 flex flex-col relative group overflow-hidden shadow-sm hover:border-blue-500/30 hover:shadow-[0_0_15px_rgba(59,130,246,0.1)] transition-all">
+                    <div className="bg-card border border-input rounded-md p-6 flex flex-col relative group overflow-hidden shadow-sm hover:border-foreground/30 hover:shadow-md transition-all">
                         <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => openModal('krw', krwAmount, 'Local Currency', 'KRW')} className="text-[10px] font-bold tracking-widest text-blue-500 bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-sm hover:bg-blue-500/20 uppercase transition-colors">EDIT</button>
+                            <button onClick={() => openModal('krw', krwAmount, 'Local Currency', 'KRW')} className="text-[10px] font-bold tracking-widest text-foreground bg-muted border border-border px-3 py-1.5 rounded-sm hover:bg-muted/80 uppercase transition-colors">EDIT</button>
                         </div>
                         <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Local Currency
+                            <span className="w-1.5 h-1.5 rounded-full bg-chart-3"></span> Local Currency
                         </span>
-                        <span className="text-3xl font-black text-blue-500 tracking-tight mt-1">₩{krwAmount.toLocaleString()}</span>
+                        <span className="text-3xl font-black text-foreground tracking-tight mt-1">₩{krwAmount.toLocaleString()}</span>
                         <div className="flex justify-between items-end mt-4">
                             <span className="text-[10px] font-mono text-muted-foreground opacity-70">LIQUIDITY RESERVE</span>
-                            <span className="text-xs font-bold text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded-sm">{((krwAmount / netWorth) * 100).toFixed(1)}%</span>
+                            <span className="text-xs font-bold text-foreground bg-muted px-2 py-0.5 rounded-sm">{((krwAmount / netWorth) * 100).toFixed(1)}%</span>
                         </div>
                     </div>
 
                     {/* USD */}
-                    <div className="bg-card border border-input rounded-md p-6 flex flex-col relative group overflow-hidden shadow-sm hover:border-green-500/30 hover:shadow-[0_0_15px_rgba(34,197,94,0.1)] transition-all">
+                    <div className="bg-card border border-input rounded-md p-6 flex flex-col relative group overflow-hidden shadow-sm hover:border-foreground/30 hover:shadow-md transition-all">
                         <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => openModal('usd', usdAmount, 'Foreign Currency', 'USD')} className="text-[10px] font-bold tracking-widest text-green-500 bg-green-500/10 border border-green-500/20 px-3 py-1.5 rounded-sm hover:bg-green-500/20 uppercase transition-colors">EDIT</button>
+                            <button onClick={() => openModal('usd', usdAmount, 'Foreign Currency', 'USD')} className="text-[10px] font-bold tracking-widest text-foreground bg-muted border border-border px-3 py-1.5 rounded-sm hover:bg-muted/80 uppercase transition-colors">EDIT</button>
                         </div>
                         <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Foreign Currency
+                            <span className="w-1.5 h-1.5 rounded-full bg-chart-2"></span> Foreign Currency
                         </span>
-                        <span className="text-3xl font-black text-green-500 tracking-tight mt-1">${usdAmount.toLocaleString()}</span>
+                        <span className="text-3xl font-black text-foreground tracking-tight mt-1">${usdAmount.toLocaleString()}</span>
                         <div className="mt-4 flex justify-between items-end">
                             <div className="flex flex-col gap-0.5">
                                 <span className="text-[10px] font-mono text-muted-foreground opacity-70">EST VALUE (KRW)</span>
                                 <span className="text-xs font-mono font-medium text-foreground">₩{usdKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                             </div>
-                            <span className="text-xs font-bold text-green-500 bg-green-500/10 px-2 py-0.5 rounded-sm">{((usdKrw / netWorth) * 100).toFixed(1)}%</span>
+                            <span className="text-xs font-bold text-foreground bg-muted px-2 py-0.5 rounded-sm">{((usdKrw / netWorth) * 100).toFixed(1)}%</span>
                         </div>
                     </div>
 
                     {/* Gold */}
-                    <div className="bg-card border border-input rounded-md p-6 flex flex-col relative group overflow-hidden shadow-sm hover:border-yellow-500/30 hover:shadow-[0_0_15px_rgba(234,179,8,0.1)] transition-all">
+                    <div className="bg-card border border-input rounded-md p-6 flex flex-col relative group overflow-hidden shadow-sm hover:border-foreground/30 hover:shadow-md transition-all">
                         <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => openModal('gold', goldAmount, 'Gold Reserve', 'g')} className="text-[10px] font-bold tracking-widest text-yellow-500 bg-yellow-500/10 border border-yellow-500/20 px-3 py-1.5 rounded-sm hover:bg-yellow-500/20 uppercase transition-colors">EDIT</button>
+                            <button onClick={() => openModal('gold', goldAmount, 'Gold Reserve', 'g')} className="text-[10px] font-bold tracking-widest text-foreground bg-muted border border-border px-3 py-1.5 rounded-sm hover:bg-muted/80 uppercase transition-colors">EDIT</button>
                         </div>
                         <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-yellow-500"></span> Gold Reserve
+                            <span className="w-1.5 h-1.5 rounded-full bg-chart-1"></span> Gold Reserve
                         </span>
-                        <span className="text-3xl font-black text-yellow-500 tracking-tight mt-1">{goldAmount.toLocaleString()} <span className="text-xl">g</span></span>
+                        <span className="text-3xl font-black text-foreground tracking-tight mt-1">{goldAmount.toLocaleString()} <span className="text-xl">g</span></span>
                         <div className="mt-4 flex justify-between items-end">
                             <div className="flex flex-col gap-0.5">
                                 <span className="text-[10px] font-mono text-muted-foreground opacity-70">EST VALUE (KRW)</span>
                                 <span className="text-xs font-mono font-medium text-foreground">₩{goldKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                             </div>
-                            <span className="text-xs font-bold text-yellow-500 bg-yellow-500/10 px-2 py-0.5 rounded-sm">{((goldKrw / netWorth) * 100).toFixed(1)}%</span>
+                            <span className="text-xs font-bold text-foreground bg-muted px-2 py-0.5 rounded-sm">{((goldKrw / netWorth) * 100).toFixed(1)}%</span>
                         </div>
                     </div>
 
                     {/* Global Equities Card */}
-                    <div className="bg-card border border-input rounded-md p-6 flex flex-col relative group overflow-hidden shadow-sm hover:border-purple-500/30 hover:shadow-[0_0_15px_rgba(139,92,246,0.1)] transition-all">
+                    <div className="bg-card border border-input rounded-md p-6 flex flex-col relative group overflow-hidden shadow-sm hover:border-foreground/30 hover:shadow-md transition-all">
                         <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => setGlobalStockSheetOpen(true)} className="text-[10px] font-bold tracking-widest text-purple-500 bg-purple-500/10 border border-purple-500/20 px-3 py-1.5 rounded-sm hover:bg-purple-500/20 uppercase transition-colors">ADD</button>
+                            <button onClick={() => setGlobalStockSheetOpen(true)} className="text-[10px] font-bold tracking-widest text-foreground bg-muted border border-border px-3 py-1.5 rounded-sm hover:bg-muted/80 uppercase transition-colors">ADD</button>
                         </div>
                         <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span> Global Equities
+                            <span className="w-1.5 h-1.5 rounded-full bg-chart-4"></span> Global Equities
                         </span>
-                        <span className="text-3xl font-black text-purple-500 tracking-tight mt-1">
+                        <span className="text-3xl font-black text-foreground tracking-tight mt-1">
                             ₩{totalStockKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </span>
                         <div className="mt-4 flex justify-between items-end">
@@ -334,7 +334,7 @@ export default function ClientOperations({
                                 <span className="text-[10px] font-mono text-muted-foreground opacity-70">SECURITIES TOTAL</span>
                                 <span className="text-xs font-mono font-medium text-foreground">{stocks.length} SYMBOLS</span>
                             </div>
-                            <span className="text-xs font-bold text-purple-500 bg-purple-500/10 px-2 py-0.5 rounded-sm">
+                            <span className="text-xs font-bold text-foreground bg-muted px-2 py-0.5 rounded-sm">
                                 {((totalStockKrw / netWorth) * 100).toFixed(1)}%
                             </span>
                         </div>
@@ -365,8 +365,8 @@ export default function ClientOperations({
                             const roi = avgPrice > 0 ? ((currentPrice - avgPrice) / avgPrice) * 100 : 0;
                             const isPositive = roi >= 0;
 
-                            // Asian standard: Red up, Blue down
-                            const roiColor = isPositive ? 'text-red-500' : 'text-blue-500';
+                            // Grayscale semantic colors
+                            const roiColor = isPositive ? 'text-profit' : 'text-loss';
 
                             const entriesList = stock.entries || [];
 
@@ -376,15 +376,15 @@ export default function ClientOperations({
                                         <div className="flex justify-between items-center w-full pr-4 text-left">
                                             <div className="flex flex-col">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-xl font-black text-purple-500 tracking-tight">{symbol}</span>
-                                                    <span className="text-[10px] bg-purple-500/10 text-purple-500 px-2 py-0.5 rounded-sm border border-purple-500/20">{stock.amount.toLocaleString(undefined, { maximumFractionDigits: 4 })} shares</span>
+                                                    <span className="text-xl font-black text-foreground tracking-tight">{symbol}</span>
+                                                    <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-sm border border-border">{stock.amount.toLocaleString(undefined, { maximumFractionDigits: 4 })} shares</span>
                                                 </div>
                                                 <span className="text-[10px] text-muted-foreground truncate max-w-[200px] mt-1">{priceData?.shortName || 'US Equity'}</span>
                                             </div>
 
                                             <div className="flex flex-col items-end gap-1">
                                                 <div className="flex items-center gap-3">
-                                                    <span className="text-xs font-bold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-sm" title="[Weight in Stock Portfolio] / [Total Equity weight in Net Worth]">
+                                                    <span className="text-xs font-bold text-foreground bg-muted px-2 py-0.5 rounded-sm" title="[Weight in Stock Portfolio] / [Total Equity weight in Net Worth]">
                                                         {(totalStockKrw > 0 ? (valueKrw / totalStockKrw) * 100 : 0).toFixed(1)}% <span className="text-muted-foreground opacity-50 font-normal">/</span> {(netWorth > 0 ? (totalStockKrw / netWorth) * 100 : 0).toFixed(1)}%
                                                     </span>
                                                     <span className="text-lg font-black text-foreground tracking-tight">

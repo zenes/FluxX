@@ -50,7 +50,7 @@ export default function ExchangeRateChart({ currentRate }: ChartProps) {
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
             return (
-                <div className="bg-background border border-border p-3 rounded-md shadow-md text-xs">
+                <div className="bg-card border border-border p-3 rounded-none shadow-sm text-xs">
                     <p className="text-muted-foreground mb-1">{formatDate(label)}</p>
                     <p className="text-foreground font-bold">
                         <span className="text-primary mr-2">KRW</span>

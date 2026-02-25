@@ -66,7 +66,7 @@ export function DividendHistory({ records, tickerSymbol }: DividendHistoryProps)
                                         {format(receivedDate, 'MMM dd, yyyy')}
                                     </span>
                                     <div className="flex items-center gap-1.5">
-                                        <span className="text-xs font-mono font-black text-emerald-500">
+                                        <span className="text-xs font-mono font-black text-profit">
                                             {currencySymbol}{netAmount.toLocaleString()}
                                         </span>
                                     </div>
@@ -78,7 +78,7 @@ export function DividendHistory({ records, tickerSymbol }: DividendHistoryProps)
                                             <Percent size={8} />
                                             <span className="text-[8px] font-black uppercase tracking-wider">Withholding Tax</span>
                                         </div>
-                                        <div className="text-[10px] font-mono font-bold text-red-500/80">
+                                        <div className="text-[10px] font-mono font-bold text-loss">
                                             {currencySymbol}{taxAmount.toLocaleString()} ({taxRate.toFixed(1)}%)
                                         </div>
                                     </div>
