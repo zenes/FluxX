@@ -73,7 +73,7 @@ export default function GoldPriceChart({ currentRate, type }: ChartProps) {
                         <button
                             key={r}
                             onClick={() => setRange(r as RangeType)}
-                            className={`text-[10px] px-2 py-1 rounded-sm border transition-colors ${range === r ? 'bg-destructive text-destructive-foreground border-destructive' : 'bg-transparent text-muted-foreground border-border hover:bg-muted'}`}
+                            className={`text-[10px] px-2 py-1 rounded-sm border transition-colors ${range === r ? 'bg-primary text-primary-foreground border-primary' : 'bg-transparent text-muted-foreground border-border hover:bg-muted'}`}
                         >
                             {r.toUpperCase()}
                         </button>
@@ -84,7 +84,7 @@ export default function GoldPriceChart({ currentRate, type }: ChartProps) {
             <div className="h-[200px] w-full relative">
                 {loading ? (
                     <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
-                        <Loader2 className="h-6 w-6 animate-spin text-destructive" />
+                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
                     </div>
                 ) : data.length === 0 ? (
                     <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">
@@ -119,10 +119,10 @@ export default function GoldPriceChart({ currentRate, type }: ChartProps) {
                             <Line
                                 type="monotone"
                                 dataKey="close"
-                                stroke="hsl(var(--destructive))"
+                                stroke="hsl(var(--primary))"
                                 strokeWidth={2}
                                 dot={false}
-                                activeDot={{ r: 4, fill: "hsl(var(--background))", stroke: "hsl(var(--destructive))", strokeWidth: 2 }}
+                                activeDot={{ r: 4, fill: "hsl(var(--background))", stroke: "hsl(var(--primary))", strokeWidth: 2 }}
                                 animationDuration={1000}
                             />
                         </LineChart>

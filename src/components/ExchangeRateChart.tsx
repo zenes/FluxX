@@ -155,7 +155,7 @@ export default function ExchangeRateChart({ currentRate }: ChartProps) {
                             />
                             <Tooltip content={<CustomTooltip />} />
                             {currentRate && (
-                                <ReferenceLine y={currentRate} stroke="hsl(var(--destructive))" strokeDasharray="3 3" opacity={0.5} />
+                                <ReferenceLine y={currentRate} stroke="hsl(var(--accent))" strokeDasharray="3 3" opacity={0.5} />
                             )}
                             <Line
                                 type="monotone"

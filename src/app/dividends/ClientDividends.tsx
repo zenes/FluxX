@@ -92,10 +92,10 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
     });
 
     const metrics = [
-        { title: "Annual Total (Est.)", prefix: "₩", value: Math.round(totalAnnualEstKRW).toLocaleString(), change: "+12.5%", icon: TrendingUp, color: "text-primary" },
-        { title: `ACTUAL (${selectedYear} YTD)`, prefix: "₩", value: Math.round(actualThisYearKRW).toLocaleString(), detail: `${selectedYear} Payouts`, icon: Wallet, color: "text-accent" },
-        { title: "Monthly Average", prefix: "₩", value: Math.round(totalAnnualEstKRW / 12).toLocaleString(), detail: "Projected Avg", icon: Calendar, color: "text-muted-foreground" },
-        { title: "Total Records", value: dividendRecords.length.toString(), detail: "Receipts Logged", icon: ArrowUpRight, color: "text-profit" },
+        { title: "Annual total (est.)", prefix: "₩", value: Math.round(totalAnnualEstKRW).toLocaleString(), change: "+12.5%", icon: TrendingUp, color: "text-primary" },
+        { title: `Actual (${selectedYear} ytd)`, prefix: "₩", value: Math.round(actualThisYearKRW).toLocaleString(), detail: `${selectedYear} payouts`, icon: Wallet, color: "text-accent" },
+        { title: "Monthly average", prefix: "₩", value: Math.round(totalAnnualEstKRW / 12).toLocaleString(), detail: "Projected avg", icon: Calendar, color: "text-muted-foreground" },
+        { title: "Total records", value: dividendRecords.length.toString(), detail: "Receipts logged", icon: ArrowUpRight, color: "text-profit" },
     ];
 
     const handleYearChange = (delta: number) => {
@@ -119,12 +119,12 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
         <div className="flex flex-col h-full bg-background p-4 md:p-8">
             <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tighter uppercase text-foreground flex items-center gap-3">
-                        <span className="h-8 w-2 bg-primary animate-pulse"></span>
-                        Dividend Intelligence
+                    <h1 className="text-2xl font-semibold text-foreground flex items-center gap-3">
+                        <span className="h-6 w-1 bg-primary"></span>
+                        dividend
                     </h1>
-                    <p className="text-sm text-muted-foreground mt-2 font-mono uppercase tracking-widest flex items-center gap-3">
-                        Passive yield monitoring and automated cash flow projection.
+                    <p className="text-xs text-muted-foreground mt-1 opacity-60">
+                        passive yield monitoring and automated cash flow projection.
                     </p>
                 </div>
 
@@ -135,7 +135,7 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                         placeholder="SEARCH TICKER..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-muted/20 border border-input rounded-sm py-2 pl-9 pr-4 text-[10px] font-bold tracking-widest focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all uppercase"
+                        className="w-full bg-muted/20 border border-input rounded-sm py-2 pl-9 pr-4 text-[10px] font-bold tracking-wider focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all"
                     />
                 </div>
             </div>
@@ -145,7 +145,7 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                 {metrics.map((m, i) => (
                     <div key={i} className="bg-card border border-input rounded-md p-5 shadow-sm relative overflow-hidden group hover:border-primary/50 transition-all">
                         <div className="flex justify-between items-start mb-4">
-                            <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">{m.title}</span>
+                            <span className="text-[10px] font-bold tracking-wider text-muted-foreground">{m.title}</span>
                             <m.icon size={16} className={`${m.color} opacity-70`} />
                         </div>
                         <div className="flex flex-col">
@@ -161,7 +161,7 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                                         {m.change}
                                     </span>
                                 ) : (
-                                    <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-tighter">
+                                    <span className="text-[10px] text-muted-foreground tracking-wider opacity-60">
                                         {m.detail}
                                     </span>
                                 )}
@@ -176,8 +176,8 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
             <div className="mb-8 p-5 bg-card border border-input rounded-md shadow-sm">
                 <div className="mb-4 flex items-center justify-between">
                     <div>
-                        <h3 className="text-sm font-bold tracking-widest text-foreground uppercase">Monthly Payouts</h3>
-                        <p className="text-[10px] text-muted-foreground uppercase font-mono mt-1">Aggregation for {selectedYear}</p>
+                        <h3 className="text-sm font-bold tracking-widest text-foreground">Monthly payouts</h3>
+                        <p className="text-[10px] text-muted-foreground tracking-wider mt-1 opacity-60">Aggregation for {selectedYear}</p>
                     </div>
                     <div className="flex items-center gap-2">
                         <button
@@ -187,7 +187,7 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                         >
                             <ChevronLeft size={16} className="text-muted-foreground group-hover:text-foreground" />
                         </button>
-                        <span className="text-xs font-bold font-mono min-w-[3rem] text-center bg-muted/30 px-3 py-1 rounded-sm border border-input">
+                        <span className="text-xs font-bold min-w-[3rem] text-center bg-muted/30 px-3 py-1 rounded-sm border border-input">
                             {selectedYear}
                         </span>
                         <button
@@ -206,13 +206,13 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
             </div>
 
             {/* Live Stock List */}
-            <div className="flex-1 rounded-md border bg-card text-card-foreground shadow-sm overflow-hidden flex flex-col font-mono">
+            <div className="flex-1 rounded-md border bg-card text-card-foreground shadow-sm overflow-hidden flex flex-col">
                 <div className="p-4 border-b bg-muted/10 flex justify-between items-center">
-                    <h3 className="text-xs font-bold tracking-[0.2em] uppercase flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
-                        Active Equity Holdings
+                    <h3 className="text-xs font-bold tracking-wider flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
+                        Active equity holdings
                     </h3>
-                    <span className="text-[10px] font-mono text-muted-foreground">{filteredStocks.length} ASSETS LOGGED</span>
+                    <span className="text-[10px] text-muted-foreground tracking-wider opacity-60">{filteredStocks.length} assets logged</span>
                 </div>
 
                 <div className="overflow-x-auto">

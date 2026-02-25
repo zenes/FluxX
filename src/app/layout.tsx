@@ -1,22 +1,10 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { GeistSans } from 'geist/font/sans';
+import { GeistMono } from 'geist/font/mono';
 import "./globals.css";
 import Providers from "@/components/Providers";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AppSidebar, MobileTabs } from "@/components/AppSidebar";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-jetbrains-mono",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -29,9 +17,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}
+        className="font-sans antialiased"
       >
         <Providers>
           <ThemeProvider
@@ -39,7 +27,7 @@ export default function RootLayout({
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
-            themes={["light", "dark", "paper", "cyber"]}
+            themes={["light", "dark", "paper", "cyber", "nature"]}
           >
             <div className="flex flex-col md:flex-row min-h-screen bg-background text-foreground">
               <AppSidebar />

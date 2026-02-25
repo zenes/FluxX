@@ -44,7 +44,7 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    --radius: 0.25rem;
+    --radius: 0.75rem;
   }
 
   .dark {
@@ -73,7 +73,7 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    --radius: 0.25rem;
+    --radius: 0.75rem;
   }
 
   .cyber {
@@ -105,7 +105,7 @@
     --chart-3: 160 100% 50%;
     --chart-4: 280 100% 60%;
     --chart-5: 340 100% 50%;
-    --radius: 0.25rem;
+    --radius: 0.75rem;
   }
 
   .paper {
@@ -139,9 +139,65 @@
     /* Grayscale depth for profit/loss */
     --profit: 0 0% 15%;
     --loss: 0 0% 55%;
-    --radius: 0rem;
-    /* Sharp paper edges */
+    --radius: 0.75rem;
+    /* Updated from sharp to rounded paper */
   }
+
+  .nature {
+    --background: 34 29% 96%;
+    /* #F8F5F1 */
+    --foreground: 160 25% 15%;
+    /* Deep sage #212c28 */
+    --card: 0 0% 100%;
+    /* #FFFFFF */
+    --card-foreground: 160 25% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 160 25% 15%;
+    --primary: 164 19% 44%;
+    /* #5B8679 */
+    --primary-foreground: 34 29% 98%;
+    --secondary: 44 52% 77%;
+    /* #E3D4A8 */
+    --secondary-foreground: 160 25% 25%;
+    --muted: 34 20% 92%;
+    --muted-foreground: 160 15% 45%;
+    --accent: 153 17% 65%;
+    /* #94B8A3 */
+    --accent-foreground: 160 25% 25%;
+    --destructive: 19 82% 74%;
+    /* #F4AE87 - Peach for critical but soft */
+    --destructive-foreground: 0 0% 100%;
+    --border: 164 15% 85%;
+    --input: 164 15% 85%;
+    --ring: 164 19% 44%;
+    --chart-1: 164 19% 44%;
+    /* #5B8679 */
+    --chart-2: 44 52% 77%;
+    /* #E3D4A8 */
+    --chart-3: 19 82% 74%;
+    /* #F4AE87 */
+    --chart-4: 238 23% 44%;
+    /* #57598B */
+    --chart-5: 153 17% 65%;
+    /* #94B8A3 */
+    --radius: 0.75rem;
+    /* Soft, rounded corners */
+  }
+}
+
+/* Global font inheritance enforcement */
+body {
+  font-family: var(--font-geist-sans), sans-serif;
+}
+
+/* Ensure mono is used where explicitly requested */
+.font-mono,
+[class*='font-mono'],
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--font-geist-mono), monospace;
 }
 
 @layer base {

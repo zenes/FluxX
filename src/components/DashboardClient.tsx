@@ -222,10 +222,10 @@ export default function DashboardClient({ initialAssets, initialExchange, initia
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     style={{ ...provided.draggableProps.style }}
-                    className={`rounded-md border bg-card text-card-foreground shadow-sm relative overflow-hidden cursor-pointer hover:bg-muted/20 transition-all ${snapshot.isDragging ? 'shadow-2xl scale-[1.02] z-50 ring-1 ring-destructive' : ''}`}
+                    className={`rounded-md border bg-card text-card-foreground shadow-sm relative overflow-hidden cursor-pointer hover:bg-muted/20 transition-all ${snapshot.isDragging ? 'shadow-2xl scale-[1.02] z-50 ring-1 ring-primary' : ''}`}
                     onClick={() => setShowGoldChart(!showGoldChart)}
                 >
-                    <div className="absolute top-0 left-0 w-1 h-full bg-destructive/80"></div>
+                    <div className="absolute top-0 left-0 w-1 h-full bg-primary/80"></div>
                     <div className="p-5 flex flex-col gap-1 h-full">
                         <div className="flex justify-between items-start">
                             <div className="flex items-center gap-2 flex-wrap">
@@ -238,13 +238,13 @@ export default function DashboardClient({ initialAssets, initialExchange, initia
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     <button
-                                        className={`px-1.5 py-0.5 ${goldType === 'krx' ? 'bg-destructive text-destructive-foreground' : 'hover:bg-muted-foreground/20'}`}
+                                        className={`px-1.5 py-0.5 ${goldType === 'krx' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted-foreground/20'}`}
                                         onClick={() => setGoldType('krx')}
                                     >
                                         KRX
                                     </button>
                                     <button
-                                        className={`px-1.5 py-0.5 ${goldType === 'global' ? 'bg-destructive text-destructive-foreground' : 'hover:bg-muted-foreground/20'}`}
+                                        className={`px-1.5 py-0.5 ${goldType === 'global' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted-foreground/20'}`}
                                         onClick={() => setGoldType('global')}
                                     >
                                         GLB
@@ -253,8 +253,8 @@ export default function DashboardClient({ initialAssets, initialExchange, initia
                             </div>
                             {isGoldLoading && (
                                 <span className="flex h-3 w-3 relative">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-destructive"></span>
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
                                 </span>
                             )}
                         </div>
@@ -272,9 +272,9 @@ export default function DashboardClient({ initialAssets, initialExchange, initia
 
                                 <div className="flex items-center gap-2 mt-2 flex-wrap">
                                     <span className={`text-xs font-medium ${goldChange && goldChange > 0
-                                        ? 'text-destructive'
+                                        ? 'text-primary'
                                         : goldChange && goldChange < 0
-                                            ? 'text-primary'
+                                            ? 'text-destructive'
                                             : 'text-muted-foreground'
                                         }`}>
                                         {goldChange && goldChange > 0 ? '▲' : goldChange && goldChange < 0 ? '▼' : '-'}
@@ -313,7 +313,7 @@ export default function DashboardClient({ initialAssets, initialExchange, initia
                             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                                 <span {...provided.dragHandleProps} className="cursor-grab hover:text-foreground text-muted-foreground/50 transition-colors" onClick={(e) => e.stopPropagation()}>⠿</span>
                                 USD/KRW
-                                <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-sm group-hover:bg-primary/20 transition-colors ml-1 hidden sm:inline-block">{showChart ? 'Hide' : 'Trend'}</span>
+                                <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-sm group-hover:bg-primary/20 transition-colors ml-1 hidden sm:inline-block">{showChart ? 'hide' : 'trend'}</span>
                             </span>
                             {isLoading && (
                                 <span className="flex h-3 w-3 relative">
@@ -335,9 +335,9 @@ export default function DashboardClient({ initialAssets, initialExchange, initia
 
                                 <div className="flex items-center gap-2 mt-2 flex-wrap">
                                     <span className={`text-xs font-medium ${rateChange && rateChange > 0
-                                        ? 'text-destructive'
+                                        ? 'text-primary'
                                         : rateChange && rateChange < 0
-                                            ? 'text-primary'
+                                            ? 'text-destructive'
                                             : 'text-muted-foreground'
                                         }`}>
                                         {rateChange && rateChange > 0 ? '▲' : rateChange && rateChange < 0 ? '▼' : '-'}
@@ -368,8 +368,8 @@ export default function DashboardClient({ initialAssets, initialExchange, initia
         <main className="flex-1 p-4 md:p-8 bg-background">
             <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
-                    <p className="text-sm text-muted-foreground mt-1">Global system status.</p>
+                    <h1 className="text-2xl font-semibold tracking-tight">overview</h1>
+                    <p className="text-sm text-muted-foreground mt-1">global system status.</p>
                 </div>
             </div>
 
@@ -424,7 +424,7 @@ export default function DashboardClient({ initialAssets, initialExchange, initia
                             <tr className="border-b transition-colors hover:bg-muted/50">
                                 <td className="p-4 align-middle text-xs text-muted-foreground font-mono whitespace-nowrap">14:15:42.005Z</td>
                                 <td className="p-4 align-middle font-mono text-xs">EVT-9981-D</td>
-                                <td className="p-4 align-middle"><span className="inline-flex items-center rounded-sm border px-2 py-0.5 text-[10px] font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-destructive/20 text-destructive">WARN</span></td>
+                                <td className="p-4 align-middle"><span className="inline-flex items-center rounded-sm border px-2 py-0.5 text-[10px] font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary/20 text-primary">WARN</span></td>
                                 <td className="p-4 align-middle text-xs min-w-[200px]">Latency spike detected in communication relay alpha.</td>
                             </tr>
                             <tr className="transition-colors hover:bg-muted/50">

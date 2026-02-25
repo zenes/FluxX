@@ -144,13 +144,13 @@ export default function ClientOperations({
     return (
         <div className="flex-1 p-4 md:p-8 h-full overflow-y-auto w-full bg-background">
             <div className="mb-10 max-w-screen-xl mx-auto">
-                <h1 className="text-3xl font-bold tracking-tighter uppercase text-foreground flex items-center gap-3">
-                    <span className="h-8 w-2 bg-primary animate-pulse"></span>
-                    Operations Portfolio
+                <h1 className="text-2xl font-semibold text-foreground flex items-center gap-3">
+                    <span className="h-6 w-1 bg-primary"></span>
+                    operations
                 </h1>
                 <div className="flex justify-between items-center mt-2 pl-5">
-                    <p className="text-sm font-mono text-muted-foreground opacity-70">
-                        SECURE PERSONAL ASSET MANAGEMENT & INTELLIGENCE
+                    <p className="text-xs text-muted-foreground opacity-60">
+                        secure personal asset management & intelligence
                     </p>
                     <button
                         onClick={() => setGlobalStockSheetOpen(true)}
@@ -169,26 +169,26 @@ export default function ClientOperations({
                         <svg className="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
                     </div>
 
-                    <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-4">Total Net Worth (Estimated KRW)</h2>
+                    <h2 className="text-[10px] font-bold tracking-wider text-muted-foreground mb-4 opacity-70">Total net worth (estimated krw)</h2>
                     <div className="flex items-baseline gap-2">
-                        <span className="text-4xl md:text-6xl font-bold tracking-tighter text-foreground font-mono">
-                            <span className="text-2xl md:text-3xl font-medium text-muted-foreground/50 mr-1">₩</span>
+                        <span className="text-4xl md:text-6xl font-bold tracking-tighter text-foreground">
+                            <span className="text-2xl md:text-3xl font-medium text-muted-foreground/50 mr-1 italic">₩</span>
                             {netWorth.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </span>
                     </div>
 
-                    <div className="mt-8 pt-6 border-t border-border flex flex-wrap gap-8 text-[11px] font-mono tracking-widest uppercase">
+                    <div className="mt-8 pt-6 border-t border-border flex flex-wrap gap-8 text-[10px] tracking-wider uppercase">
                         <div>
-                            <span className="text-muted-foreground block mb-1">Live USD/KRW</span>
+                            <span className="text-muted-foreground block mb-1">live usd/krw</span>
                             <span className="text-primary font-bold">{loadingRates ? '---' : `₩${rates.usdKrw.toLocaleString()}`}</span>
                         </div>
                         <div>
-                            <span className="text-muted-foreground block mb-1">Live Gold/oz</span>
+                            <span className="text-muted-foreground block mb-1">live gold/oz</span>
                             <span className="text-foreground font-bold">{loadingRates ? '---' : `$${rates.goldUsd.toLocaleString()}`}</span>
                         </div>
                         <div className="ml-auto flex items-end">
-                            <span className="text-muted-foreground opacity-50 flex items-center gap-1">
-                                <span className="h-2 w-2 rounded-full bg-green-500"></span> SECURE SYNC
+                            <span className="text-muted-foreground opacity-40 flex items-center gap-1 font-medium">
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse"></span> secure sync
                             </span>
                         </div>
                     </div>
@@ -226,7 +226,7 @@ export default function ClientOperations({
                                                     fill={fill}
                                                     textAnchor={x > cx ? 'start' : 'end'}
                                                     dominantBaseline="central"
-                                                    className="font-mono text-[11px] font-bold tracking-widest"
+                                                    className="text-[11px] font-bold tracking-wider"
                                                 >
                                                     {(percent * 100).toFixed(1)}%
                                                 </text>
@@ -250,22 +250,22 @@ export default function ClientOperations({
                                 {chartData.map((entry, index) => (
                                     <div key={index} className="flex items-center gap-2">
                                         <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></span>
-                                        <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase truncate">{entry.name}</span>
+                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider truncate">{entry.name}</span>
                                     </div>
                                 ))}
                             </div>
                         </div>
                     ) : (
-                        <div className="text-xs font-mono tracking-widest text-muted-foreground opacity-50 flex flex-col items-center justify-center h-full gap-2 min-h-[220px]">
+                        <div className="text-xs tracking-wider text-muted-foreground opacity-50 flex flex-col items-center justify-center h-full gap-2 min-h-[220px]">
                             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4M12 20V4" /></svg>
-                            NO ASSET DATA
+                            No asset data
                         </div>
                     )}
                 </div>
             </div>
 
             <div className="max-w-screen-xl mx-auto">
-                <h3 className="text-xs font-bold tracking-[0.2em] uppercase text-muted-foreground mb-4">Classified Asset Inventory</h3>
+                <h3 className="text-[10px] font-bold tracking-wider text-muted-foreground mb-4 opacity-70">Classified asset inventory</h3>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
 
                     {/* KRW */}
@@ -273,12 +273,12 @@ export default function ClientOperations({
                         <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button onClick={() => openModal('krw', krwAmount, 'Local Currency', 'KRW')} className="text-[10px] font-bold tracking-widest text-foreground bg-muted border border-border px-3 py-1.5 rounded-sm hover:bg-muted/80 uppercase transition-colors">EDIT</button>
                         </div>
-                        <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-chart-3"></span> Local Currency
+                        <span className="text-[10px] font-bold text-muted-foreground tracking-wider mb-2 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-chart-3"></span> Local currency
                         </span>
                         <span className="text-3xl font-bold text-foreground tracking-tighter mt-1">₩{krwAmount.toLocaleString()}</span>
                         <div className="flex justify-between items-end mt-4">
-                            <span className="text-[10px] font-mono text-muted-foreground opacity-70">LIQUIDITY RESERVE</span>
+                            <span className="text-[10px] text-muted-foreground opacity-60">Liquidity reserve</span>
                             <span className="text-xs font-bold text-foreground bg-muted px-2 py-0.5 rounded-sm">{((krwAmount / netWorth) * 100).toFixed(1)}%</span>
                         </div>
                     </div>
@@ -288,14 +288,14 @@ export default function ClientOperations({
                         <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button onClick={() => openModal('usd', usdAmount, 'Foreign Currency', 'USD')} className="text-[10px] font-bold tracking-widest text-foreground bg-muted border border-border px-3 py-1.5 rounded-sm hover:bg-muted/80 uppercase transition-colors">EDIT</button>
                         </div>
-                        <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-chart-2"></span> Foreign Currency
+                        <span className="text-[10px] font-bold text-muted-foreground tracking-wider mb-2 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-chart-2"></span> Foreign currency
                         </span>
                         <span className="text-3xl font-bold text-foreground tracking-tighter mt-1">${usdAmount.toLocaleString()}</span>
                         <div className="mt-4 flex justify-between items-end">
                             <div className="flex flex-col gap-0.5">
-                                <span className="text-[10px] font-mono text-muted-foreground opacity-70">EST VALUE (KRW)</span>
-                                <span className="text-xs font-mono font-medium text-foreground">₩{usdKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                                <span className="text-[10px] text-muted-foreground opacity-60">est value (krw)</span>
+                                <span className="text-xs font-medium text-foreground">₩{usdKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                             </div>
                             <span className="text-xs font-bold text-foreground bg-muted px-2 py-0.5 rounded-sm">{((usdKrw / netWorth) * 100).toFixed(1)}%</span>
                         </div>
@@ -306,14 +306,14 @@ export default function ClientOperations({
                         <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button onClick={() => openModal('gold', goldAmount, 'Gold Reserve', 'g')} className="text-[10px] font-bold tracking-widest text-foreground bg-muted border border-border px-3 py-1.5 rounded-sm hover:bg-muted/80 uppercase transition-colors">EDIT</button>
                         </div>
-                        <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-chart-1"></span> Gold Reserve
+                        <span className="text-[10px] font-bold text-muted-foreground tracking-wider mb-2 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-chart-1"></span> Gold reserve
                         </span>
                         <span className="text-3xl font-bold text-foreground tracking-tighter mt-1">{goldAmount.toLocaleString()} <span className="text-xl">g</span></span>
                         <div className="mt-4 flex justify-between items-end">
                             <div className="flex flex-col gap-0.5">
-                                <span className="text-[10px] font-mono text-muted-foreground opacity-70">EST VALUE (KRW)</span>
-                                <span className="text-xs font-mono font-medium text-foreground">₩{goldKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                                <span className="text-[10px] text-muted-foreground opacity-60">est value (krw)</span>
+                                <span className="text-xs font-medium text-foreground">₩{goldKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                             </div>
                             <span className="text-xs font-bold text-foreground bg-muted px-2 py-0.5 rounded-sm">{((goldKrw / netWorth) * 100).toFixed(1)}%</span>
                         </div>
@@ -324,16 +324,16 @@ export default function ClientOperations({
                         <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button onClick={() => setGlobalStockSheetOpen(true)} className="text-[10px] font-bold tracking-widest text-foreground bg-muted border border-border px-3 py-1.5 rounded-sm hover:bg-muted/80 uppercase transition-colors">ADD</button>
                         </div>
-                        <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-chart-4"></span> Global Equities
+                        <span className="text-[10px] font-bold text-muted-foreground tracking-wider mb-2 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-chart-4"></span> Global equities
                         </span>
                         <span className="text-3xl font-bold text-foreground tracking-tighter mt-1">
                             ₩{totalStockKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </span>
                         <div className="mt-4 flex justify-between items-end">
                             <div className="flex flex-col gap-0.5">
-                                <span className="text-[10px] font-mono text-muted-foreground opacity-70">SECURITIES TOTAL</span>
-                                <span className="text-xs font-mono font-medium text-foreground">{stocks.length} SYMBOLS</span>
+                                <span className="text-[10px] text-muted-foreground opacity-60">Securities total</span>
+                                <span className="text-xs font-medium text-foreground">{stocks.length} symbols</span>
                             </div>
                             <span className="text-xs font-bold text-foreground bg-muted px-2 py-0.5 rounded-sm">
                                 {((totalStockKrw / netWorth) * 100).toFixed(1)}%
@@ -345,7 +345,7 @@ export default function ClientOperations({
             </div>
 
             <div className="max-w-screen-xl mx-auto mt-10">
-                <h3 className="text-xs font-bold tracking-[0.2em] uppercase text-muted-foreground mb-4">Stock Intelligence (Global Marketplace)</h3>
+                <h3 className="text-[10px] font-bold tracking-wider text-muted-foreground mb-4 opacity-70">Stock intelligence (global marketplace)</h3>
                 {stocks.length === 0 ? (
                     <div className="bg-card border border-input border-dashed rounded-md p-8 flex flex-col items-center justify-center text-muted-foreground font-mono text-xs opacity-50">
                         NO EQUITY ASSETS REGISTERED
@@ -401,7 +401,7 @@ export default function ClientOperations({
                                     </AccordionTrigger>
                                     <AccordionContent className="pt-2 pb-6 border-t border-border/50">
                                         <div className="flex flex-col gap-3">
-                                            <div className="grid grid-cols-12 text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-4 py-2 bg-muted/30 rounded-t-sm">
+                                            <div className="grid grid-cols-12 text-[10px] font-bold text-muted-foreground tracking-wider px-4 py-2 bg-muted/30 rounded-t-sm">
                                                 <div className="col-span-3">Broker</div>
                                                 <div className="col-span-3">Owner</div>
                                                 <div className="col-span-2 text-right">Shares</div>

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Moon, Sun, Terminal, StickyNote } from "lucide-react";
+import { Moon, Sun, Terminal, StickyNote, Leaf } from "lucide-react";
 import { useTheme } from "next-themes";
 
 export function ThemeToggle() {
@@ -20,6 +20,7 @@ export function ThemeToggle() {
         if (theme === "light") setTheme("dark");
         else if (theme === "dark") setTheme("paper");
         else if (theme === "paper") setTheme("cyber");
+        else if (theme === "cyber") setTheme("nature");
         else setTheme("light");
     };
 
@@ -33,6 +34,7 @@ export function ThemeToggle() {
             <Moon className={`absolute h-5 w-5 text-blue-400 transition-all ${theme === "dark" ? "scale-100 rotate-0" : "scale-0 rotate-90"}`} />
             <StickyNote className={`absolute h-5 w-5 text-stone-500 transition-all ${theme === "paper" ? "scale-100 rotate-0" : "scale-0 rotate-90"}`} />
             <Terminal className={`absolute h-5 w-5 text-magenta-500 transition-all ${theme === "cyber" ? "scale-100 rotate-0" : "scale-0 rotate-90"}`} />
+            <Leaf className={`absolute h-5 w-5 text-emerald-600 transition-all ${theme === "nature" ? "scale-100 rotate-0" : "scale-0 rotate-90"}`} />
             <span className="sr-only">Toggle theme</span>
         </button>
     );
