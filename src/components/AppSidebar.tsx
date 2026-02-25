@@ -16,7 +16,7 @@ const NAV_ITEMS = [
     { name: "Intelligence", href: "#", icon: Activity },
 ];
 
-export const TAB_ITEMS = [
+const TAB_ITEMS = [
     { name: "Operations", href: "/operations" },
     { name: "Accounts", href: "/account" },
     { name: "Dividends", href: "/dividends" },
