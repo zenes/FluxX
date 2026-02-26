@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface TickerIconProps {
     symbol: string;
@@ -12,6 +12,7 @@ export default function TickerIcon({ symbol, size = 32, className = "" }: Ticker
     const [sourceIndex, setSourceIndex] = useState(0);
     const [loaded, setLoaded] = useState(false);
     const [error, setError] = useState(false);
+    const imgRef = useRef<HTMLImageElement>(null);
 
     // Clean symbol and normalize to uppercase
     const baseSymbol = symbol.split('.')[0].toUpperCase();
@@ -28,6 +29,15 @@ export default function TickerIcon({ symbol, size = 32, className = "" }: Ticker
             `https://s.yimg.com/cv/apiv2/default/24/${baseSymbol}.png`
         ];
 
+    // Fix: if the image was already loaded from cache before onLoad was attached
+    // (happens on hard refresh), img.complete will be true but onLoad never fires.
+    useEffect(() => {
+        const img = imgRef.current;
+        if (img && img.complete && img.naturalWidth > 0) {
+            setLoaded(true);
+        }
+    }, [sourceIndex]);
+
     const handleImageError = () => {
         if (sourceIndex < sources.length - 1) {
             setSourceIndex(prev => prev + 1);
@@ -38,7 +48,6 @@ export default function TickerIcon({ symbol, size = 32, className = "" }: Ticker
     };
 
     const firstChar = baseSymbol.charAt(0);
-    // Font size scales with container but keeps a minimum
     const fontSize = Math.max(size * 0.42, 11);
 
     return (
@@ -54,17 +63,17 @@ export default function TickerIcon({ symbol, size = 32, className = "" }: Ticker
                 {firstChar}
             </span>
 
-            {/* Logo overlay: white card inset so the rounded container frames it */}
+            {/* Logo overlay */}
             {!error && (
                 <div
                     className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
                 >
-                    {/* White pill — gives transparent PNGs a neutral, always-visible base */}
                     <div
                         className="rounded-md bg-white flex items-center justify-center overflow-hidden"
                         style={{ width: size - 6, height: size - 6 }}
                     >
                         <img
+                            ref={imgRef}
                             key={sources[sourceIndex]}
                             src={sources[sourceIndex]}
                             alt=""
