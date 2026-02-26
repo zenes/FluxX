@@ -190,7 +190,7 @@ export default function ClientOperations({
             <div className="mb-10 max-w-screen-xl mx-auto">
                 <h1 className="text-2xl font-semibold text-foreground flex items-center gap-3">
                     <span className="h-6 w-1 bg-primary"></span>
-                    operations
+                    {t('ops.title')}
                 </h1>
                 <div className="flex justify-between items-center mt-2 pl-5">
                     <p className="text-xs text-muted-foreground opacity-60">
@@ -396,17 +396,36 @@ export default function ClientOperations({
                     </div>
                 ) : (
                     <Accordion type="multiple" className="w-full max-w-4xl">
-                        {stocks.map(stock => {
+                        {Object.values(stocks.reduce((acc, stock) => {
                             const symbol = stock.assetSymbol!;
+                            if (!acc[symbol]) {
+                                acc[symbol] = {
+                                    id: `group-${symbol}`,
+                                    assetSymbol: symbol,
+                                    amount: 0,
+                                    avgPrice: 0,
+                                    totalCost: 0,
+                                    currency: stock.currency,
+                                    entries: []
+                                };
+                            }
+                            acc[symbol].amount += stock.amount;
+                            acc[symbol].totalCost += stock.amount * (stock.avgPrice || 0);
+                            acc[symbol].entries.push(...(stock.entries || []));
+                            // Use first available currency as default
+                            if (!acc[symbol].currency) acc[symbol].currency = stock.currency;
+                            return acc;
+                        }, {} as Record<string, any>)).map(stock => {
+                            const symbol = stock.assetSymbol!;
+                            const avgPrice = stock.amount > 0 ? stock.totalCost / stock.amount : 0;
+
                             const priceData = stockPrices[symbol];
-                            const currentPrice = priceData ? priceData.price : (stock.avgPrice || 0);
-                            const currency = stock.currency || priceData?.currency || 'USD'; // Prefer DB currency
+                            const currentPrice = priceData ? priceData.price : avgPrice;
+                            const currency = stock.currency || priceData?.currency || 'USD';
 
                             const valueOriginal = stock.amount * currentPrice;
                             const valueKrw = currency === 'KRW' ? valueOriginal : valueOriginal * rates.usdKrw;
-                            const valueUsd = currency === 'USD' ? valueOriginal : valueOriginal / rates.usdKrw;
 
-                            const avgPrice = stock.avgPrice || 0;
                             const roi = avgPrice > 0 ? ((currentPrice - avgPrice) / avgPrice) * 100 : 0;
                             const isPositive = roi >= 0;
 

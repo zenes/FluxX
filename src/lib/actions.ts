@@ -81,7 +81,10 @@ export async function getAssets(): Promise<AssetItem[]> {
         let subEntries = undefined;
         let assetCurrency = undefined;
         if (asset.assetType === 'stock' && asset.assetSymbol) {
-            const matches = allStockEntries.filter((e: any) => e.tickerSymbol === asset.assetSymbol);
+            const matches = allStockEntries.filter((e: any) =>
+                e.tickerSymbol === asset.assetSymbol &&
+                e.predefinedAccountId === (asset as any).predefinedAccountId
+            );
             if (matches.length > 0) {
                 assetCurrency = matches[0].currency;
                 subEntries = matches.map((m: any) => ({

@@ -9,6 +9,14 @@ export const en = {
         settings: "Settings",
     },
 
+    // Dashboard
+    dashboard: {
+        total_asset_value: "Total Asset Value",
+        live_sync: "Live Sync",
+        exchange_rate: "live usd/krw",
+        gold_price: "live gold/oz",
+    },
+
     // Auth
     auth: {
         login: "Log in",
@@ -20,6 +28,7 @@ export const en = {
 
     // Operations
     ops: {
+        title: "Operations",
         subtitle: "secure personal asset management & intelligence",
         add_global_stock: "Add Global Stock",
         net_worth: "Total net worth (estimated krw)",
@@ -57,6 +66,11 @@ export const en = {
         edit_entry_desc: "Update existing broker account holding records.",
         unified_stock_entry: "Unified stock Entry",
         unified_stock_entry_desc: "Identify ticker and register broker account holdings.",
+    },
+
+    // Intelligence
+    intel: {
+        title: "Intelligence Dashboard",
     },
 
     // Dividends
@@ -99,6 +113,8 @@ export const en = {
 
     // Accounts
     accounts: {
+        title: "Account Status",
+        subtitle: "consolidated multi-account asset tracking and management.",
         portfolios_view: "Portfolios View",
         overall_assets: "Overall Assets",
         cash_gold_misc: "Cash, Gold & Misc",
@@ -115,6 +131,8 @@ export const en = {
         asset_symbol: "Asset / Symbol",
         quantity_amount: "Quantity / Amount",
         cost_value: "Cost Value",
+        sort_by_account: "By Account",
+        sort_by_owner: "By Owner",
     },
 
     // Theme Toggle
@@ -125,6 +143,17 @@ export const en = {
         nature: "Nature",
         cyber: "Cyber",
         paper: "Paper",
+    },
+
+    // Settings
+    settings: {
+        title: "Personal Settings",
+        subtitle: "Manage your preferences, accounts, and data",
+        user_profile: "User Profile",
+        danger_zone: "Danger Zone",
+        danger_zone_desc: "Permanent actions that affect your account data. Proceed with caution.",
+        export_csv: "Export CSV",
+        reset_assets: "Reset Assets",
     }
 };
 

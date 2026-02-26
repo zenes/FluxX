@@ -9,6 +9,14 @@ export const ko = {
         settings: "설정",
     },
 
+    // Dashboard
+    dashboard: {
+        total_asset_value: "총 자산 가치",
+        live_sync: "실시간 동기화",
+        exchange_rate: "실시간 환율 (usd/krw)",
+        gold_price: "실시간 금 시세 (oz당)",
+    },
+
     // Auth
     auth: {
         login: "로그인",
@@ -20,6 +28,7 @@ export const ko = {
 
     // Operations
     ops: {
+        title: "자산 운영",
         subtitle: "안전한 개인 자산 관리 및 인텔리전스",
         add_global_stock: "해외 주식 추가",
         net_worth: "총 자산 (원화 추정치)",
@@ -57,6 +66,11 @@ export const ko = {
         edit_entry_desc: "기존 계좌 보유 기록을 수정합니다.",
         unified_stock_entry: "통합 자산 등록",
         unified_stock_entry_desc: "주식 티커 등 자산 보유 현황을 등록합니다.",
+    },
+
+    // Intelligence
+    intel: {
+        title: "인텔리전스 대시보드",
     },
 
     // Dividends
@@ -99,6 +113,8 @@ export const ko = {
 
     // Accounts
     accounts: {
+        title: "계좌 현황",
+        subtitle: "통합 다중 계좌 자산 추적 및 관리",
         portfolios_view: "포트폴리오 뷰",
         overall_assets: "전체 자산",
         cash_gold_misc: "현금, 금 및 기타",
@@ -115,6 +131,8 @@ export const ko = {
         asset_symbol: "자산 / 티커",
         quantity_amount: "수량 / 금액",
         cost_value: "투자 원금",
+        sort_by_account: "계좌별",
+        sort_by_owner: "소유자별",
     },
 
     // Theme Toggle
@@ -125,5 +143,16 @@ export const ko = {
         nature: "네이처 테마",
         cyber: "사이버 테마",
         paper: "페이퍼 테마",
+    },
+
+    // Settings
+    settings: {
+        title: "개인 설정",
+        subtitle: "기본 설정, 계좌 및 데이터를 관리합니다.",
+        user_profile: "사용자 프로필",
+        danger_zone: "위험 지역",
+        danger_zone_desc: "계정 데이터에 영향을 미치는 영구적인 작업입니다. 주의해서 진행하십시오.",
+        export_csv: "CSV 내보내기",
+        reset_assets: "자산 초기화",
     }
 };
