@@ -227,6 +227,17 @@ export async function addStockEntry(data: {
             });
         }
 
+        // Auto-generate AssetMemo for this transaction
+        const memoContent = `[SYSTEM] Purchased ${data.quantity.toLocaleString(undefined, { maximumFractionDigits: 4 })} shares at ${(data.totalPurchaseAmount / data.quantity).toLocaleString(undefined, { maximumFractionDigits: data.currency === 'KRW' ? 0 : 2, minimumFractionDigits: data.currency === 'KRW' ? 0 : 2 })} ${data.currency} via ${data.brokerName} - ${data.accountOwner}${data.accountNumber ? ` (${data.accountNumber})` : ''}. Total cost: ${data.totalPurchaseAmount.toLocaleString(undefined, { maximumFractionDigits: data.currency === 'KRW' ? 0 : 2, minimumFractionDigits: data.currency === 'KRW' ? 0 : 2 })} ${data.currency}`;
+
+        await (prisma as any).assetMemo.create({
+            data: {
+                userId: session.user.id,
+                tickerSymbol: data.tickerSymbol,
+                content: memoContent
+            }
+        });
+
         revalidatePath('/operations');
         return entry;
     } catch (e: any) {
