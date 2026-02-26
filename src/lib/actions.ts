@@ -186,47 +186,7 @@ export async function addStockEntry(data: {
             }
         });
 
-        const allEntries = await prisma.stockEntry.findMany({
-            where: {
-                userId: session.user.id,
-                tickerSymbol: data.tickerSymbol
-            }
-        });
-
-        const totalQty = allEntries.reduce((sum: number, e: { quantity: number }) => sum + e.quantity, 0);
-        const totalCost = allEntries.reduce((sum: number, e: { totalPurchaseAmount: number }) => sum + e.totalPurchaseAmount, 0);
-        const avgPrice = totalQty > 0 ? totalCost / totalQty : 0;
-
-        const amountEncrypted = encrypt(totalQty.toString());
-        const avgPriceEncrypted = encrypt(avgPrice.toString());
-
-        const existingAsset = await prisma.asset.findFirst({
-            where: {
-                userId: session.user.id,
-                assetType: 'stock',
-                assetSymbol: data.tickerSymbol,
-            }
-        });
-
-        if (existingAsset) {
-            await prisma.asset.update({
-                where: { id: existingAsset.id },
-                data: {
-                    amountEncrypted,
-                    avgPriceEncrypted,
-                }
-            });
-        } else {
-            await prisma.asset.create({
-                data: {
-                    userId: session.user.id,
-                    assetType: 'stock',
-                    assetSymbol: data.tickerSymbol,
-                    amountEncrypted,
-                    avgPriceEncrypted,
-                }
-            });
-        }
+        await recalculateStockAsset(session.user.id, data.tickerSymbol);
 
         // Auto-generate AssetMemo for this transaction
         let memoContent = `[SYSTEM] Purchased ${data.quantity.toLocaleString(undefined, { maximumFractionDigits: 4 })} shares at ${(data.totalPurchaseAmount / data.quantity).toLocaleString(undefined, { maximumFractionDigits: data.currency === 'KRW' ? 0 : 2, minimumFractionDigits: data.currency === 'KRW' ? 0 : 2 })} ${data.currency} via ${data.brokerName} - ${data.accountOwner}${data.accountNumber ? ` (${data.accountNumber})` : ''}. Total cost: ${data.totalPurchaseAmount.toLocaleString(undefined, { maximumFractionDigits: data.currency === 'KRW' ? 0 : 2, minimumFractionDigits: data.currency === 'KRW' ? 0 : 2 })} ${data.currency}`;
@@ -336,27 +296,66 @@ async function recalculateStockAsset(userId: string, tickerSymbol: string) {
     });
 
     if (allEntries.length === 0) {
-        // If no entries left, delete the master asset
         await prisma.asset.deleteMany({
-            where: {
-                userId,
-                assetType: 'stock',
-                assetSymbol: tickerSymbol
-            }
+            where: { userId, assetType: 'stock', assetSymbol: tickerSymbol }
         });
         return;
     }
 
-    const totalQty = allEntries.reduce((sum: number, e: { quantity: number }) => sum + e.quantity, 0);
-    const totalCost = allEntries.reduce((sum: number, e: { totalPurchaseAmount: number }) => sum + e.totalPurchaseAmount, 0);
-    const avgPrice = totalQty > 0 ? totalCost / totalQty : 0;
+    // Group entries by account to maintain proportional mapping in visualization
+    const entriesByAccount: Record<string, typeof allEntries> = {};
+    allEntries.forEach(entry => {
+        const accId = entry.predefinedAccountId || 'null';
+        if (!entriesByAccount[accId]) entriesByAccount[accId] = [];
+        entriesByAccount[accId].push(entry);
+    });
 
-    const amountEncrypted = encrypt(totalQty.toString());
-    const avgPriceEncrypted = encrypt(avgPrice.toString());
+    // Get current asset records for this ticker
+    const currentAssets = await prisma.asset.findMany({
+        where: { userId, assetType: 'stock', assetSymbol: tickerSymbol }
+    });
 
-    await prisma.asset.updateMany({
-        where: { userId, assetType: 'stock', assetSymbol: tickerSymbol },
-        data: { amountEncrypted, avgPriceEncrypted }
+    // Upsert records for each account group
+    for (const [accId, group] of Object.entries(entriesByAccount)) {
+        const totalQty = group.reduce((sum, e) => sum + e.quantity, 0);
+        const totalCost = group.reduce((sum, e) => sum + e.totalPurchaseAmount, 0);
+        const avgPrice = totalQty > 0 ? totalCost / totalQty : 0;
+        const accountId = accId === 'null' ? null : accId;
+
+        const existing = currentAssets.find(a => a.predefinedAccountId === accountId);
+
+        const data = {
+            amountEncrypted: encrypt(totalQty.toString()),
+            avgPriceEncrypted: encrypt(avgPrice.toString()),
+            predefinedAccountId: accountId
+        };
+
+        if (existing) {
+            await prisma.asset.update({
+                where: { id: existing.id },
+                data
+            });
+        } else {
+            await prisma.asset.create({
+                data: {
+                    userId,
+                    assetType: 'stock',
+                    assetSymbol: tickerSymbol,
+                    ...data
+                }
+            });
+        }
+    }
+
+    // Clean up empty associations
+    const activeAccountIds = Object.keys(entriesByAccount).map(id => id === 'null' ? null : id);
+    await prisma.asset.deleteMany({
+        where: {
+            userId,
+            assetType: 'stock',
+            assetSymbol: tickerSymbol,
+            predefinedAccountId: { notIn: activeAccountIds as any }
+        }
     });
 }
 export async function deleteStockEntry(entryId: string, tickerSymbol: string) {
@@ -655,7 +654,7 @@ export async function uploadProfilePicture(formData: FormData) {
         const imageUrl = `/avatars/${fileName}`;
 
         // Update user in DB
-        await prisma.user.update({
+        await (prisma.user as any).update({
             where: { id: session.user.id },
             data: { image: imageUrl }
         });
@@ -665,5 +664,84 @@ export async function uploadProfilePicture(formData: FormData) {
     } catch (e: any) {
         console.error('Failed to upload profile picture:', e);
         throw new Error(`Failed to upload picture: ${e.message || 'Unknown error'}`);
+    }
+}
+
+export async function getIntelligenceData() {
+    const session = await auth();
+    if (!session?.user?.id) return null;
+
+    try {
+        const [accounts, assets] = await Promise.all([
+            prisma.predefinedAccount.findMany({
+                where: { userId: session.user.id }
+            }),
+            prisma.asset.findMany({
+                where: { userId: session.user.id },
+                include: { predefinedAccount: true }
+            })
+        ]);
+
+        const accountsMap: Record<string, { id: string, name: string, broker: string, value: number, children: any[] }> = {};
+
+        // Initialize with real accounts
+        accounts.forEach(acc => {
+            accountsMap[acc.id] = {
+                id: acc.id,
+                name: acc.alias,
+                broker: acc.broker,
+                value: 0,
+                children: []
+            };
+        });
+
+        let totalNetWorth = 0;
+
+        assets.forEach(asset => {
+            const decVal = decrypt(asset.amountEncrypted);
+            const amount = decVal === 'DECRYPTION_FAILED' ? 0 : Number(decVal) || 0;
+
+            let value = amount;
+            if (asset.assetType === 'stock' && asset.avgPriceEncrypted) {
+                const decPrice = decrypt(asset.avgPriceEncrypted);
+                const price = decPrice === 'DECRYPTION_FAILED' ? 0 : Number(decPrice) || 0;
+                value = amount * price;
+            }
+
+            const accId = asset.predefinedAccountId || 'manual';
+
+            if (!accountsMap[accId]) {
+                accountsMap[accId] = {
+                    id: 'manual',
+                    name: 'Manual Assets',
+                    broker: 'System',
+                    value: 0,
+                    children: []
+                };
+            }
+
+            accountsMap[accId].value += value;
+            accountsMap[accId].children.push({
+                id: asset.id,
+                name: asset.assetSymbol || asset.assetType.toUpperCase(),
+                symbol: asset.assetSymbol,
+                type: asset.assetType,
+                value: value,
+                amount: amount
+            });
+
+            totalNetWorth += value;
+        });
+
+        // Filter out empty "Manual Assets" if no assets are unassigned
+        const finalAccounts = Object.values(accountsMap).filter(acc => acc.children.length > 0);
+
+        return {
+            totalNetWorth,
+            accounts: finalAccounts
+        };
+    } catch (e) {
+        console.error('Failed to fetch intelligence data:', e);
+        return null;
     }
 }

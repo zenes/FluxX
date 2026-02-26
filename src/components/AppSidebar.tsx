@@ -15,7 +15,7 @@ const NAV_ITEMS = [
     { name: "Operations", href: "/operations", icon: Briefcase },
     { name: "Accounts", href: "/account", icon: Landmark },
     { name: "Dividends", href: "/dividends", icon: Coins },
-    { name: "Intelligence", href: "#", icon: Activity },
+    { name: "Intelligence", href: "/intelligence", icon: Activity },
 ];
 
 const TAB_ITEMS = [
