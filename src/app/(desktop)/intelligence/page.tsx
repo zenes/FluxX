@@ -1,5 +1,5 @@
 import { getIntelligenceData } from '@/lib/actions';
-import IntelligenceClient from './IntelligenceClient';
+import IntelligenceClient from '@/app/intelligence/IntelligenceClient';
 import { auth } from '@/../auth';
 import { redirect } from 'next/navigation';
 

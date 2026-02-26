@@ -1,5 +1,5 @@
 import { getAssets, getPredefinedAccounts } from '@/lib/actions';
-import ClientOperations from './ClientOperations';
+import ClientOperations from '@/app/operations/ClientOperations';
 import { redirect } from 'next/navigation';
 import { auth } from '@/../auth';
 import Link from 'next/link';

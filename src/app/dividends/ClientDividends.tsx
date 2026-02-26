@@ -199,17 +199,17 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
             </div>
 
             {/* Metrics Overview */}
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 mb-8">
+            <div className="grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-4 mb-8">
                 {metrics.map((m, i) => (
-                    <div key={i} className="bg-card border border-input rounded-md p-5 shadow-sm relative overflow-hidden group hover:border-primary/50 transition-all">
+                    <div key={i} className="bg-card border border-input rounded-md p-4 md:p-5 shadow-sm relative overflow-hidden group hover:border-primary/50 transition-all">
                         <div className="flex justify-between items-start mb-4">
                             <span className="text-[10px] font-bold tracking-wider text-muted-foreground">{m.title}</span>
                             <m.icon size={16} className={`${m.color} opacity-70`} />
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-3xl md:text-5xl font-bold tracking-tighter text-foreground">
+                            <span className="text-xl sm:text-3xl md:text-5xl font-bold tracking-tighter text-foreground">
                                 {m.prefix && (
-                                    <span className="text-xl md:text-2xl font-medium text-muted-foreground/50 mr-1">{m.prefix}</span>
+                                    <span className="text-base sm:text-xl md:text-2xl font-medium text-muted-foreground/50 mr-1">{m.prefix}</span>
                                 )}
                                 {m.value}
                             </span>
@@ -325,11 +325,11 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="border-b bg-muted/5 transition-colors hover:bg-muted/50">
-                                <th className="h-10 px-6 text-left align-middle font-bold text-muted-foreground uppercase text-[10px] tracking-widest">{t('divs.table_symbol')}</th>
-                                <th className="h-10 px-6 text-right align-middle font-bold text-muted-foreground uppercase text-[10px] tracking-widest">{t('divs.table_quantity')}</th>
-                                <th className="h-10 px-6 text-right align-middle font-bold text-muted-foreground uppercase text-[10px] tracking-widest">{t('divs.table_est_annual')}</th>
-                                <th className="h-10 px-6 text-right align-middle font-bold text-muted-foreground uppercase text-[10px] tracking-widest">{t('divs.table_history')}</th>
-                                <th className="h-10 px-6 text-center align-middle font-bold text-muted-foreground uppercase text-[10px] tracking-widest">{t('divs.table_actions')}</th>
+                                <th className="h-10 px-4 md:px-6 text-left align-middle font-bold text-muted-foreground uppercase text-[10px] tracking-widest">{t('divs.table_symbol')}</th>
+                                <th className="h-10 px-6 text-right align-middle font-bold text-muted-foreground uppercase text-[10px] tracking-widest hidden md:table-cell">{t('divs.table_quantity')}</th>
+                                <th className="h-10 px-6 text-right align-middle font-bold text-muted-foreground uppercase text-[10px] tracking-widest hidden md:table-cell">{t('divs.table_est_annual')}</th>
+                                <th className="h-10 px-4 md:px-6 text-right align-middle font-bold text-muted-foreground uppercase text-[10px] tracking-widest">{t('divs.table_history')}</th>
+                                <th className="h-10 px-4 md:px-6 text-center align-middle font-bold text-muted-foreground uppercase text-[10px] tracking-widest">{t('divs.table_actions')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -348,16 +348,16 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
 
                                     return (
                                         <tr key={stock.id} className="border-b last:border-0 transition-colors hover:bg-muted/20 group">
-                                            <td className="px-6 py-4 align-middle">
+                                            <td className="px-4 md:px-6 py-3 md:py-4 align-middle">
                                                 <span className="text-sm font-bold text-primary tracking-tight group-hover:text-foreground transition-colors">{stock.assetSymbol}</span>
                                             </td>
-                                            <td className="px-6 py-4 align-middle text-right font-mono text-xs font-bold">
+                                            <td className="px-6 py-4 align-middle text-right font-mono text-xs font-bold hidden md:table-cell">
                                                 {stock.amount.toLocaleString()}
                                             </td>
-                                            <td className="px-6 py-4 align-middle text-right font-mono text-xs font-bold">
+                                            <td className="px-6 py-4 align-middle text-right font-mono text-xs font-bold hidden md:table-cell">
                                                 {currency === 'KRW' ? '₩' : '$'}{annual.toLocaleString()}
                                             </td>
-                                            <td className="px-6 py-4 align-middle text-right font-mono text-[10px]">
+                                            <td className="px-4 md:px-6 py-3 md:py-4 align-middle text-right font-mono text-[10px]">
                                                 {recordsForYear.length > 0 ? (
                                                     <button
                                                         onClick={() => handleOpenSheet(stock.assetSymbol!, currency, 'history')}
@@ -369,7 +369,7 @@ export default function ClientDividends({ assets }: { assets: any[] }) {
                                                     <span className="opacity-30">{t('divs.no_data')}</span>
                                                 )}
                                             </td>
-                                            <td className="px-6 py-4 align-middle text-center">
+                                            <td className="px-4 md:px-6 py-3 md:py-4 align-middle text-center">
                                                 <button
                                                     onClick={() => handleOpenSheet(stock.assetSymbol!, currency, 'record')}
                                                     className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-primary hover:bg-primary/20 rounded-sm text-[10px] font-bold tracking-widest transition-all uppercase border border-primary/20"

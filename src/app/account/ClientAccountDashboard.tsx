@@ -168,17 +168,17 @@ export default function ClientAccountDashboard({ accounts, assets }: Props) {
                     </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
+                <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar -mx-1 px-1">
                     <button
                         onClick={() => setActiveTab("global")}
                         className={cn(
-                            "flex items-center gap-3 px-5 py-2.5 rounded-full transition-all border text-sm font-semibold",
+                            "flex items-center gap-2 md:gap-3 px-3 md:px-5 py-2 md:py-2.5 rounded-full transition-all border text-xs md:text-sm font-semibold whitespace-nowrap shrink-0",
                             activeTab === "global"
                                 ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105"
                                 : "bg-card border-border/50 text-muted-foreground hover:bg-muted/80"
                         )}
                     >
-                        <Layers className="size-4" />
+                        <Layers className="size-3.5 md:size-4" />
                         <span>{t('accounts.overall_assets')}</span>
                     </button>
 
@@ -187,13 +187,13 @@ export default function ClientAccountDashboard({ accounts, assets }: Props) {
                             key={acc.id}
                             onClick={() => setActiveTab(acc.id)}
                             className={cn(
-                                "flex items-center gap-3 px-5 py-2.5 rounded-full transition-all border text-sm font-semibold",
+                                "flex items-center gap-2 md:gap-3 px-3 md:px-5 py-2 md:py-2.5 rounded-full transition-all border text-xs md:text-sm font-semibold whitespace-nowrap shrink-0",
                                 activeTab === acc.id
                                     ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105"
                                     : "bg-card border-border/50 text-muted-foreground hover:bg-muted/80"
                             )}
                         >
-                            <Landmark className="size-4" />
+                            <Landmark className="size-3.5 md:size-4" />
                             <span>{acc.alias}</span>
                         </button>
                     ))}
@@ -203,13 +203,13 @@ export default function ClientAccountDashboard({ accounts, assets }: Props) {
                             key={owner}
                             onClick={() => setActiveTab(owner)}
                             className={cn(
-                                "flex items-center gap-3 px-5 py-2.5 rounded-full transition-all border text-sm font-semibold",
+                                "flex items-center gap-2 md:gap-3 px-3 md:px-5 py-2 md:py-2.5 rounded-full transition-all border text-xs md:text-sm font-semibold whitespace-nowrap shrink-0",
                                 activeTab === owner
                                     ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105"
                                     : "bg-card border-border/50 text-muted-foreground hover:bg-muted/80"
                             )}
                         >
-                            <User className="size-4" />
+                            <User className="size-3.5 md:size-4" />
                             <span>{owner}</span>
                         </button>
                     ))}
@@ -217,7 +217,7 @@ export default function ClientAccountDashboard({ accounts, assets }: Props) {
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
                 <Card className="bg-card/40 backdrop-blur border-border/50 shadow-sm hover:shadow-md transition-shadow">
                     <CardContent className="p-6">
                         <div className="flex items-center justify-between space-y-0 pb-2">
@@ -225,7 +225,7 @@ export default function ClientAccountDashboard({ accounts, assets }: Props) {
                             <Wallet className="h-4 w-4 text-profit" />
                         </div>
                         <div className="flex items-baseline gap-2">
-                            <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-foreground mt-1">
+                            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-foreground mt-1">
                                 <span className="text-lg font-medium text-muted-foreground/30 mr-1">$</span>
                                 {viewData.totalValueUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </h2>
@@ -240,7 +240,7 @@ export default function ClientAccountDashboard({ accounts, assets }: Props) {
                             <Coins className="h-4 w-4 text-muted-foreground" />
                         </div>
                         <div className="flex items-baseline gap-2">
-                            <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-foreground mt-1">
+                            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter text-foreground mt-1">
                                 <span className="text-lg font-medium text-muted-foreground/30 mr-1">₩</span>
                                 {viewData.totalValueKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                             </h2>
@@ -255,7 +255,7 @@ export default function ClientAccountDashboard({ accounts, assets }: Props) {
                             <PieChart className="h-4 w-4" />
                         </div>
                         <div className="flex items-center gap-3 mt-1">
-                            <p className="text-3xl md:text-4xl font-black tracking-tighter">{viewData.items.length}</p>
+                            <p className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter">{viewData.items.length}</p>
                             <span className="text-xs font-bold text-muted-foreground opacity-40 uppercase tracking-tighter">Items Discovered</span>
                         </div>
                     </CardContent>

@@ -21,7 +21,7 @@ export const authConfig = {
             const isLoggedIn = !!auth?.user;
 
             // 보호할 일반 라우트
-            const protectedPaths = ['/operations', '/intelligence'];
+            const protectedPaths = ['/operations', '/intelligence', '/m/operations', '/m/intelligence', '/m/dividends', '/m/account'];
             const adminPaths = ['/admin'];
 
             const isProtected = protectedPaths.some((path) => nextUrl.pathname.startsWith(path));

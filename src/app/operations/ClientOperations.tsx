@@ -207,17 +207,17 @@ export default function ClientOperations({
                 </div>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-3 mb-10 max-w-screen-xl mx-auto">
+            <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-3 mb-10 max-w-screen-xl mx-auto">
                 {/* Net Worth Summary Card */}
-                <div className="md:col-span-2 bg-gradient-to-br from-card to-card/50 border border-primary/20 shadow-[0_0_30px_rgba(59,130,246,0.05)] rounded-lg p-8 flex flex-col justify-center relative overflow-hidden">
+                <div className="md:col-span-2 bg-gradient-to-br from-card to-card/50 border border-primary/20 shadow-[0_0_30px_rgba(59,130,246,0.05)] rounded-lg p-5 md:p-8 flex flex-col justify-center relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-4 opacity-10">
                         <svg className="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
                     </div>
 
                     <h2 className="text-[10px] font-bold tracking-wider text-muted-foreground mb-4 opacity-70">{t('ops.net_worth')}</h2>
                     <div className="flex items-baseline gap-2">
-                        <span className="text-4xl md:text-6xl font-bold tracking-tighter text-foreground">
-                            <span className="text-2xl md:text-3xl font-medium text-muted-foreground/50 mr-1 italic">₩</span>
+                        <span className="text-2xl sm:text-4xl md:text-6xl font-bold tracking-tighter text-foreground">
+                            <span className="text-lg sm:text-2xl md:text-3xl font-medium text-muted-foreground/50 mr-1 italic">₩</span>
                             <AnimatedNumber
                                 value={netWorth}
                                 formatOptions={{ maximumFractionDigits: 0 }}
@@ -227,7 +227,7 @@ export default function ClientOperations({
                         </span>
                     </div>
 
-                    <div className="mt-8 pt-6 border-t border-border flex flex-wrap gap-8 text-[10px] tracking-wider uppercase">
+                    <div className="mt-6 md:mt-8 pt-4 md:pt-6 border-t border-border flex flex-wrap gap-4 md:gap-8 text-[10px] tracking-wider uppercase">
                         <div>
                             <span className="text-muted-foreground block mb-1">{t('ops.live_usd_krw')}</span>
                             <span className="text-primary font-bold">{loadingRates ? '---' : `₩${rates.usdKrw.toLocaleString()}`}</span>
@@ -316,17 +316,17 @@ export default function ClientOperations({
 
             <div className="max-w-screen-xl mx-auto">
                 <h3 className="text-[10px] font-bold tracking-wider text-muted-foreground mb-4 opacity-70">{t('ops.inventory_title')}</h3>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-4">
 
                     {/* KRW */}
-                    <div className="bg-card border border-input rounded-md p-6 flex flex-col relative group overflow-hidden shadow-sm hover:border-foreground/30 hover:shadow-md transition-all">
-                        <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => openModal('krw', krwAmount, 'Local Currency', 'KRW')} className="text-[10px] font-bold tracking-widest text-foreground bg-muted border border-border px-3 py-1.5 rounded-sm hover:bg-muted/80 uppercase transition-colors">{t('ops.edit')}</button>
+                    <div className="bg-card border border-input rounded-md p-4 md:p-6 flex flex-col relative group overflow-hidden shadow-sm hover:border-foreground/30 hover:shadow-md transition-all">
+                        <div className="absolute top-0 right-0 p-3 md:p-4 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                            <button onClick={() => openModal('krw', krwAmount, 'Local Currency', 'KRW')} className="text-[10px] font-bold tracking-widest text-foreground bg-muted border border-border px-2 md:px-3 py-1 md:py-1.5 rounded-sm hover:bg-muted/80 uppercase transition-colors">{t('ops.edit')}</button>
                         </div>
                         <span className="text-[10px] font-bold text-muted-foreground tracking-wider mb-2 flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-chart-3"></span> {t('ops.local_currency')}
                         </span>
-                        <span className="text-3xl font-bold text-foreground tracking-tighter mt-1">₩{krwAmount.toLocaleString()}</span>
+                        <span className="text-xl md:text-3xl font-bold text-foreground tracking-tighter mt-1">₩{krwAmount.toLocaleString()}</span>
                         <div className="flex justify-between items-end mt-4">
                             <span className="text-[10px] text-muted-foreground opacity-60">{t('ops.liquidity_reserve')}</span>
                             <span className="text-xs font-bold text-foreground bg-muted px-2 py-0.5 rounded-sm">{((krwAmount / netWorth) * 100).toFixed(1)}%</span>
@@ -334,14 +334,14 @@ export default function ClientOperations({
                     </div>
 
                     {/* USD */}
-                    <div className="bg-card border border-input rounded-md p-6 flex flex-col relative group overflow-hidden shadow-sm hover:border-foreground/30 hover:shadow-md transition-all">
-                        <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => openModal('usd', usdAmount, 'Foreign Currency', 'USD')} className="text-[10px] font-bold tracking-widest text-foreground bg-muted border border-border px-3 py-1.5 rounded-sm hover:bg-muted/80 uppercase transition-colors">{t('ops.edit')}</button>
+                    <div className="bg-card border border-input rounded-md p-4 md:p-6 flex flex-col relative group overflow-hidden shadow-sm hover:border-foreground/30 hover:shadow-md transition-all">
+                        <div className="absolute top-0 right-0 p-3 md:p-4 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                            <button onClick={() => openModal('usd', usdAmount, 'Foreign Currency', 'USD')} className="text-[10px] font-bold tracking-widest text-foreground bg-muted border border-border px-2 md:px-3 py-1 md:py-1.5 rounded-sm hover:bg-muted/80 uppercase transition-colors">{t('ops.edit')}</button>
                         </div>
                         <span className="text-[10px] font-bold text-muted-foreground tracking-wider mb-2 flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-chart-2"></span> {t('ops.foreign_currency')}
                         </span>
-                        <span className="text-3xl font-bold text-foreground tracking-tighter mt-1">${usdAmount.toLocaleString()}</span>
+                        <span className="text-xl md:text-3xl font-bold text-foreground tracking-tighter mt-1">${usdAmount.toLocaleString()}</span>
                         <div className="mt-4 flex justify-between items-end">
                             <div className="flex flex-col gap-0.5">
                                 <span className="text-[10px] text-muted-foreground opacity-60">{t('ops.est_value_krw')}</span>
@@ -352,14 +352,14 @@ export default function ClientOperations({
                     </div>
 
                     {/* Gold */}
-                    <div className="bg-card border border-input rounded-md p-6 flex flex-col relative group overflow-hidden shadow-sm hover:border-foreground/30 hover:shadow-md transition-all">
-                        <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => openModal('gold', goldAmount, 'Gold Reserve', 'g')} className="text-[10px] font-bold tracking-widest text-foreground bg-muted border border-border px-3 py-1.5 rounded-sm hover:bg-muted/80 uppercase transition-colors">{t('ops.edit')}</button>
+                    <div className="bg-card border border-input rounded-md p-4 md:p-6 flex flex-col relative group overflow-hidden shadow-sm hover:border-foreground/30 hover:shadow-md transition-all">
+                        <div className="absolute top-0 right-0 p-3 md:p-4 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                            <button onClick={() => openModal('gold', goldAmount, 'Gold Reserve', 'g')} className="text-[10px] font-bold tracking-widest text-foreground bg-muted border border-border px-2 md:px-3 py-1 md:py-1.5 rounded-sm hover:bg-muted/80 uppercase transition-colors">{t('ops.edit')}</button>
                         </div>
                         <span className="text-[10px] font-bold text-muted-foreground tracking-wider mb-2 flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-chart-1"></span> {t('ops.gold_reserve')}
                         </span>
-                        <span className="text-3xl font-bold text-foreground tracking-tighter mt-1">{goldAmount.toLocaleString()} <span className="text-xl">g</span></span>
+                        <span className="text-xl md:text-3xl font-bold text-foreground tracking-tighter mt-1">{goldAmount.toLocaleString()} <span className="text-base md:text-xl">g</span></span>
                         <div className="mt-4 flex justify-between items-end">
                             <div className="flex flex-col gap-0.5">
                                 <span className="text-[10px] text-muted-foreground opacity-60">{t('ops.est_value_krw')}</span>
@@ -370,14 +370,14 @@ export default function ClientOperations({
                     </div>
 
                     {/* Global Equities Card */}
-                    <div className="bg-card border border-input rounded-md p-6 flex flex-col relative group overflow-hidden shadow-sm hover:border-foreground/30 hover:shadow-md transition-all">
-                        <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => setGlobalStockSheetOpen(true)} className="text-[10px] font-bold tracking-widest text-foreground bg-muted border border-border px-3 py-1.5 rounded-sm hover:bg-muted/80 uppercase transition-colors">{t('ops.add')}</button>
+                    <div className="bg-card border border-input rounded-md p-4 md:p-6 flex flex-col relative group overflow-hidden shadow-sm hover:border-foreground/30 hover:shadow-md transition-all">
+                        <div className="absolute top-0 right-0 p-3 md:p-4 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                            <button onClick={() => setGlobalStockSheetOpen(true)} className="text-[10px] font-bold tracking-widest text-foreground bg-muted border border-border px-2 md:px-3 py-1 md:py-1.5 rounded-sm hover:bg-muted/80 uppercase transition-colors">{t('ops.add')}</button>
                         </div>
                         <span className="text-[10px] font-bold text-muted-foreground tracking-wider mb-2 flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-chart-4"></span> {t('ops.global_equities')}
                         </span>
-                        <span className="text-3xl font-bold text-foreground tracking-tighter mt-1">
+                        <span className="text-xl md:text-3xl font-bold text-foreground tracking-tighter mt-1">
                             ₩{totalStockKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </span>
                         <div className="mt-4 flex justify-between items-end">
@@ -493,8 +493,8 @@ export default function ClientOperations({
                                     </AccordionTrigger>
                                     <AccordionContent className="border-t border-border/40">
                                         <div className="flex flex-col">
-                                            {/* Table header */}
-                                            <div className="grid grid-cols-12 text-[11px] font-bold text-muted-foreground tracking-wide px-5 py-2.5 bg-muted/20">
+                                            {/* Table header — hidden on mobile */}
+                                            <div className="hidden md:grid grid-cols-12 text-[11px] font-bold text-muted-foreground tracking-wide px-5 py-2.5 bg-muted/20">
                                                 <div className="col-span-3">{t('ops.broker')}</div>
                                                 <div className="col-span-3">{t('ops.owner')}</div>
                                                 <div className="col-span-2 text-right">{t('ops.shares_col')}</div>
@@ -546,66 +546,125 @@ export default function ClientOperations({
                                                     const primaryEntry = group.entries[0];
 
                                                     return (
-                                                        <div key={group.key} className={`grid grid-cols-12 text-xs items-center px-5 py-3 border-b border-border/30 hover:bg-muted/20 transition-colors ${Object.values(grouped).indexOf(group) % 2 === 0 ? '' : 'bg-muted/5'
-                                                            }`}>
-                                                            <div className="col-span-3 flex items-center gap-2">
-                                                                <Building2 size={12} className="text-muted-foreground font-bold" />
-                                                                <span>{group.broker}</span>
-                                                            </div>
-                                                            <div className="col-span-3 flex items-center gap-2 text-muted-foreground">
-                                                                <UserCircle2 size={12} />
-                                                                <span className="truncate">
-                                                                    {group.owner} {group.account ? `(${group.account})` : ''}
-                                                                    {group.predefinedAccountAlias && (
-                                                                        <span className="ml-2 text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm border border-primary/20">
-                                                                            {group.predefinedAccountAlias}
-                                                                        </span>
-                                                                    )}
-                                                                </span>
-                                                            </div>
-                                                            <div className="col-span-2 text-right font-medium">
-                                                                {group.totalQty.toLocaleString()}
-                                                            </div>
-                                                            <div className="col-span-2 text-right text-muted-foreground">
-                                                                {group.currency === 'KRW' ? '₩' : '$'}{group.totalQty > 0 ? (group.totalCost / group.totalQty).toLocaleString(undefined, { minimumFractionDigits: group.currency === 'KRW' ? 0 : 2, maximumFractionDigits: 2 }) : '0.00'}
-                                                            </div>
-                                                            <div className="col-span-2 flex justify-end items-center gap-3">
-                                                                <span className="text-right text-foreground">{group.currency === 'KRW' ? '₩' : '$'}{group.totalCost.toLocaleString(undefined, { minimumFractionDigits: group.currency === 'KRW' ? 0 : 2, maximumFractionDigits: 2 })}</span>
-                                                                <button
-                                                                    onClick={(e) => { e.stopPropagation(); setEditingEntryId(primaryEntry.id); }}
-                                                                    className="text-blue-500 hover:text-blue-400 p-1 rounded-sm bg-blue-500/10 hover:bg-blue-500/20 transition-colors"
-                                                                    title={group.entries.length > 1 ? "Edit primary entry" : "Edit Entry"}
-                                                                >
-                                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                                                                </button>
-                                                                <button
-                                                                    onClick={(e) => { e.stopPropagation(); handleDeleteEntry(primaryEntry.id, symbol); }}
-                                                                    className="text-red-500 hover:text-red-400 p-1 rounded-sm bg-red-500/10 hover:bg-red-500/20 transition-colors"
-                                                                    title={group.entries.length > 1 ? "Delete primary entry" : "Delete Entry"}
-                                                                >
-                                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                                                </button>
+                                                        <>
+                                                            {/* Desktop: grid row */}
+                                                            <div key={group.key} className={`hidden md:grid grid-cols-12 text-xs items-center px-5 py-3 border-b border-border/30 hover:bg-muted/20 transition-colors ${Object.values(grouped).indexOf(group) % 2 === 0 ? '' : 'bg-muted/5'
+                                                                }`}>
+                                                                <div className="col-span-3 flex items-center gap-2">
+                                                                    <Building2 size={12} className="text-muted-foreground font-bold" />
+                                                                    <span>{group.broker}</span>
+                                                                </div>
+                                                                <div className="col-span-3 flex items-center gap-2 text-muted-foreground">
+                                                                    <UserCircle2 size={12} />
+                                                                    <span className="truncate">
+                                                                        {group.owner} {group.account ? `(${group.account})` : ''}
+                                                                        {group.predefinedAccountAlias && (
+                                                                            <span className="ml-2 text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm border border-primary/20">
+                                                                                {group.predefinedAccountAlias}
+                                                                            </span>
+                                                                        )}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="col-span-2 text-right font-medium">
+                                                                    {group.totalQty.toLocaleString()}
+                                                                </div>
+                                                                <div className="col-span-2 text-right text-muted-foreground">
+                                                                    {group.currency === 'KRW' ? '₩' : '$'}{group.totalQty > 0 ? (group.totalCost / group.totalQty).toLocaleString(undefined, { minimumFractionDigits: group.currency === 'KRW' ? 0 : 2, maximumFractionDigits: 2 }) : '0.00'}
+                                                                </div>
+                                                                <div className="col-span-2 flex justify-end items-center gap-3">
+                                                                    <span className="text-right text-foreground">{group.currency === 'KRW' ? '₩' : '$'}{group.totalCost.toLocaleString(undefined, { minimumFractionDigits: group.currency === 'KRW' ? 0 : 2, maximumFractionDigits: 2 })}</span>
+                                                                    <button
+                                                                        onClick={(e) => { e.stopPropagation(); setEditingEntryId(primaryEntry.id); }}
+                                                                        className="text-blue-500 hover:text-blue-400 p-1 rounded-sm bg-blue-500/10 hover:bg-blue-500/20 transition-colors"
+                                                                        title={group.entries.length > 1 ? "Edit primary entry" : "Edit Entry"}
+                                                                    >
+                                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={(e) => { e.stopPropagation(); handleDeleteEntry(primaryEntry.id, symbol); }}
+                                                                        className="text-red-500 hover:text-red-400 p-1 rounded-sm bg-red-500/10 hover:bg-red-500/20 transition-colors"
+                                                                        title={group.entries.length > 1 ? "Delete primary entry" : "Delete Entry"}
+                                                                    >
+                                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                                    </button>
+                                                                </div>
+
+                                                                {editingEntryId === primaryEntry.id && (
+                                                                    <div className="col-span-12 mt-4 p-4 border border-input rounded-md bg-muted/20">
+                                                                        <StockEntryForm
+                                                                            symbol={symbol}
+                                                                            initialData={{
+                                                                                id: primaryEntry.id,
+                                                                                broker: primaryEntry.broker,
+                                                                                owner: primaryEntry.owner,
+                                                                                account: primaryEntry.account,
+                                                                                qty: primaryEntry.qty,
+                                                                                totalCost: primaryEntry.totalCost,
+                                                                                currency: primaryEntry.currency,
+                                                                                predefinedAccountId: primaryEntry.predefinedAccountId
+                                                                            }}
+                                                                            onSuccess={() => setEditingEntryId(null)}
+                                                                        />
+                                                                    </div>
+                                                                )}
                                                             </div>
 
-                                                            {editingEntryId === primaryEntry.id && (
-                                                                <div className="col-span-12 mt-4 p-4 border border-input rounded-md bg-muted/20">
-                                                                    <StockEntryForm
-                                                                        symbol={symbol}
-                                                                        initialData={{
-                                                                            id: primaryEntry.id,
-                                                                            broker: primaryEntry.broker,
-                                                                            owner: primaryEntry.owner,
-                                                                            account: primaryEntry.account,
-                                                                            qty: primaryEntry.qty,
-                                                                            totalCost: primaryEntry.totalCost,
-                                                                            currency: primaryEntry.currency,
-                                                                            predefinedAccountId: primaryEntry.predefinedAccountId
-                                                                        }}
-                                                                        onSuccess={() => setEditingEntryId(null)}
-                                                                    />
+                                                            {/* Mobile: card layout */}
+                                                            <div key={`mobile-${group.key}`} className="md:hidden px-4 py-3 border-b border-border/30">
+                                                                <div className="flex items-center justify-between mb-2">
+                                                                    <div className="flex items-center gap-2 min-w-0">
+                                                                        <Building2 size={12} className="text-muted-foreground shrink-0" />
+                                                                        <span className="text-xs font-medium truncate">{group.broker}</span>
+                                                                        {group.predefinedAccountAlias && (
+                                                                            <span className="text-[9px] bg-primary/10 text-primary px-1 py-0.5 rounded-sm border border-primary/20 shrink-0">
+                                                                                {group.predefinedAccountAlias}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="flex items-center gap-2 shrink-0">
+                                                                        <button
+                                                                            onClick={(e) => { e.stopPropagation(); setEditingEntryId(primaryEntry.id); }}
+                                                                            className="text-blue-500 p-1.5 rounded-sm bg-blue-500/10 transition-colors"
+                                                                        >
+                                                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={(e) => { e.stopPropagation(); handleDeleteEntry(primaryEntry.id, symbol); }}
+                                                                            className="text-red-500 p-1.5 rounded-sm bg-red-500/10 transition-colors"
+                                                                        >
+                                                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                                        </button>
+                                                                    </div>
                                                                 </div>
-                                                            )}
-                                                        </div>
+                                                                <div className="flex items-center gap-2 text-[11px] text-muted-foreground mb-1">
+                                                                    <UserCircle2 size={10} />
+                                                                    <span className="truncate">{group.owner} {group.account ? `(${group.account})` : ''}</span>
+                                                                </div>
+                                                                <div className="flex items-center justify-between text-xs">
+                                                                    <span className="text-muted-foreground">{group.totalQty.toLocaleString()} shares</span>
+                                                                    <span className="font-medium text-foreground">{group.currency === 'KRW' ? '₩' : '$'}{group.totalCost.toLocaleString(undefined, { minimumFractionDigits: group.currency === 'KRW' ? 0 : 2, maximumFractionDigits: 2 })}</span>
+                                                                </div>
+
+                                                                {editingEntryId === primaryEntry.id && (
+                                                                    <div className="mt-3 p-3 border border-input rounded-md bg-muted/20">
+                                                                        <StockEntryForm
+                                                                            symbol={symbol}
+                                                                            initialData={{
+                                                                                id: primaryEntry.id,
+                                                                                broker: primaryEntry.broker,
+                                                                                owner: primaryEntry.owner,
+                                                                                account: primaryEntry.account,
+                                                                                qty: primaryEntry.qty,
+                                                                                totalCost: primaryEntry.totalCost,
+                                                                                currency: primaryEntry.currency,
+                                                                                predefinedAccountId: primaryEntry.predefinedAccountId
+                                                                            }}
+                                                                            onSuccess={() => setEditingEntryId(null)}
+                                                                        />
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </>
                                                     );
                                                 });
                                             })()}

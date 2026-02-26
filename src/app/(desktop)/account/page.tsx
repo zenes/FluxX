@@ -1,7 +1,7 @@
 import { auth } from "@/../auth";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
-import ClientAccountDashboard from "./ClientAccountDashboard";
+import ClientAccountDashboard from "@/app/account/ClientAccountDashboard";
 
 export default async function AccountPage() {
     const session = await auth();

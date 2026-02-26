@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import ExchangeRateChart from "@/components/ExchangeRateChart";
 import GoldPriceChart from "@/components/GoldPriceChart";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
@@ -55,16 +56,12 @@ export default function DashboardClient({ initialAssets, initialExchange, initia
     // Drag and Drop state
     const [cardsOrder, setCardsOrder] = useState(['portfolio', 'gold', 'exchange']);
     const [isMounted, setIsMounted] = useState(false);
-    const [isMobile, setIsMobile] = useState(false);
+    const isMobile = useMediaQuery("(max-width: 767px)");
 
     const router = useRouter();
 
     useEffect(() => {
         setIsMounted(true);
-        const checkMobile = () => setIsMobile(window.innerWidth < 768);
-        checkMobile();
-        window.addEventListener('resize', checkMobile);
-
         const savedOrder = localStorage.getItem('fluxx-dashboard-cards');
         if (savedOrder) {
             try {
@@ -72,7 +69,6 @@ export default function DashboardClient({ initialAssets, initialExchange, initia
                 setCardsOrder(parsed.map((item: string) => item === 'nodes' ? 'portfolio' : item));
             } catch (e) { }
         }
-        return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
     const onDragEnd = (result: any) => {
@@ -233,7 +229,7 @@ export default function DashboardClient({ initialAssets, initialExchange, initia
                             {isNetWorthLoading && netWorth === null ? (
                                 <span className="flex h-10 w-40 items-center bg-muted/50 rounded-sm animate-pulse"></span>
                             ) : (
-                                <span className="text-2xl md:text-3xl font-bold tracking-tighter text-foreground">
+                                <span className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tighter text-foreground">
                                     <span className="text-lg font-medium text-muted-foreground/40 mr-0.5">₩</span>
                                     <AnimatedNumber
                                         value={netWorth || 0}
@@ -302,7 +298,7 @@ export default function DashboardClient({ initialAssets, initialExchange, initia
                             </div>
                         ) : (
                             <>
-                                <span className="text-2xl md:text-3xl font-bold tracking-tighter text-foreground mt-2">
+                                <span className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tighter text-foreground mt-2">
                                     {goldType === 'krx' ? '₩' : '$'}
                                     {goldPrice ? goldPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A'}
                                 </span>
@@ -366,7 +362,7 @@ export default function DashboardClient({ initialAssets, initialExchange, initia
                             </div>
                         ) : (
                             <>
-                                <span className="text-2xl md:text-3xl font-bold tracking-tighter text-foreground mt-2">
+                                <span className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tighter text-foreground mt-2">
                                     {exchangeRate ? `₩${exchangeRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A'}
                                 </span>
 
@@ -471,8 +467,8 @@ export default function DashboardClient({ initialAssets, initialExchange, initia
                         <thead>
                             <tr className="border-b transition-colors hover:bg-muted/50">
                                 <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground uppercase text-[10px] tracking-wider whitespace-nowrap">Timestamp</th>
-                                <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground uppercase text-[10px] tracking-wider whitespace-nowrap">Source</th>
-                                <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground uppercase text-[10px] tracking-wider whitespace-nowrap">Type</th>
+                                <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground uppercase text-[10px] tracking-wider whitespace-nowrap hidden md:table-cell">Source</th>
+                                <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground uppercase text-[10px] tracking-wider whitespace-nowrap hidden md:table-cell">Type</th>
                                 <th className="h-10 px-4 text-left align-middle font-medium text-muted-foreground uppercase text-[10px] tracking-wider whitespace-nowrap">Details</th>
                             </tr>
                         </thead>
@@ -484,18 +480,23 @@ export default function DashboardClient({ initialAssets, initialExchange, initia
                             ) : (
                                 allLogs.map((log) => (
                                     <tr key={`${log.type}-${log.id}`} className="border-b transition-colors hover:bg-muted/50">
-                                        <td className="p-4 align-middle text-xs text-muted-foreground font-mono whitespace-nowrap">
+                                        <td className="p-3 md:p-4 align-middle text-[10px] md:text-xs text-muted-foreground font-mono whitespace-nowrap">
                                             {new Date(log.createdAt).toISOString().replace('T', ' ').substring(0, 19)}Z
                                         </td>
-                                        <td className="p-4 align-middle font-mono text-xs text-primary">
+                                        <td className="p-4 align-middle font-mono text-xs text-primary hidden md:table-cell">
                                             {log.type === 'ASSET' ? <span className="text-blue-500">ASSET: {log.tickerSymbol}</span> : 'INTELLIGENCE'}
                                         </td>
-                                        <td className="p-4 align-middle">
+                                        <td className="p-4 align-middle hidden md:table-cell">
                                             <span className={`inline-flex items-center rounded-sm border px-2 py-0.5 text-[10px] font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent ${log.type === 'ASSET' ? 'bg-blue-500/20 text-blue-500' : 'bg-primary/20 text-primary'}`}>
                                                 {log.type === 'ASSET' ? 'ASSET MEMO' : 'GLOBAL MEMO'}
                                             </span>
                                         </td>
-                                        <td className="p-4 align-middle text-xs min-w-[200px]">{log.content}</td>
+                                        <td className="p-3 md:p-4 align-middle text-xs">
+                                            <span className="inline-flex md:hidden items-center rounded-sm border px-1.5 py-0.5 text-[9px] font-semibold border-transparent mr-1.5 align-middle ${log.type === 'ASSET' ? 'bg-blue-500/20 text-blue-500' : 'bg-primary/20 text-primary'}">
+                                                {log.type === 'ASSET' ? log.tickerSymbol : 'MEMO'}
+                                            </span>
+                                            {log.content}
+                                        </td>
                                     </tr>
                                 ))
                             )}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -24,6 +25,7 @@ export default function IntelligenceClient({ initialData }: { initialData: any }
     const [hoveredNode, setHoveredNode] = useState<string | null>(null);
     const [selectedNode, setSelectedNode] = useState<string | null>(null);
     const [ripple, setRipple] = useState<{ id: string; x: number; y: number } | null>(null);
+    const isMobile = useMediaQuery('(max-width: 767px)');
 
     useEffect(() => {
         const updateDimensions = () => {
@@ -62,7 +64,6 @@ export default function IntelligenceClient({ initialData }: { initialData: any }
         };
 
         const accounts = initialData.accounts;
-        const isMobile = dimensions.width < 768;
         const radiusAccount = isMobile ? dimensions.height * 0.25 : Math.min(dimensions.width, dimensions.height) * 0.35;
         const radiusAsset = isMobile ? dimensions.height * 0.12 : Math.min(dimensions.width, dimensions.height) * 0.18;
 
@@ -176,7 +177,7 @@ export default function IntelligenceClient({ initialData }: { initialData: any }
             {/* Main Graph Card */}
             <Card className="flex-1 border-primary/20 bg-background/50 backdrop-blur-sm shadow-2xl overflow-hidden relative" ref={containerRef}>
                 {/* Localized Header Overlay */}
-                <div className="absolute top-4 left-4 z-50 pointer-events-none">
+                <div className="absolute top-4 left-4 z-50 pointer-events-none hidden md:block">
                     <h2 className="text-xl font-bold tracking-tight uppercase opacity-50 flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-primary animate-pulse inline-block"></span>
                         {t('intel.title')}
@@ -380,8 +381,8 @@ export default function IntelligenceClient({ initialData }: { initialData: any }
             </Card>
 
             {/* Bottom Status Bar */}
-            <div className="flex gap-4 h-24 font-mono flex-shrink-0">
-                <Card className="flex-[2] border-primary/10 bg-muted/20 flex items-center px-6 relative overflow-hidden group">
+            <div className="flex flex-col md:flex-row gap-3 md:gap-4 md:h-24 font-mono flex-shrink-0">
+                <Card className="flex-[2] border-primary/10 bg-muted/20 flex items-center px-4 md:px-6 py-3 md:py-0 relative overflow-hidden group">
                     <div className="absolute left-0 top-0 w-1 h-full bg-primary" />
                     <div className="space-y-1 relative z-10 w-full">
                         <div className="flex justify-between items-center mb-1">
@@ -394,7 +395,7 @@ export default function IntelligenceClient({ initialData }: { initialData: any }
                         </div>
                     </div>
                 </Card>
-                <Card className="flex-1 border-primary/10 bg-muted/20 flex flex-col justify-center px-6 relative overflow-hidden group">
+                <Card className="flex-1 border-primary/10 bg-muted/20 flex flex-col justify-center px-4 md:px-6 py-3 md:py-0 relative overflow-hidden group">
                     <div className="absolute left-0 top-0 w-1 h-full bg-primary/40" />
                     <div className="text-[9px] text-muted-foreground/60 uppercase tracking-widest mb-1">Stability_Index</div>
                     <div className="flex items-baseline gap-2">
