@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface TickerIconProps {
     symbol: string;
@@ -17,49 +17,53 @@ export default function TickerIcon({ symbol, size = 32, className = "" }: Ticker
     const baseSymbol = symbol.split('.')[0].toUpperCase();
     const isKorean = symbol.toUpperCase().endsWith('.KS') || symbol.toUpperCase().endsWith('.KQ');
 
-    // Sources prioritized for quality and reliability
-    // TradingView SVG is high quality and works for most US tickers
+    // Sources prioritized for quality and reliability (Toss is very reliable for KR/US)
     const sources = isKorean
-        ? [`https://file.alphasquare.co.kr/media/symbol/stock/KRX/${baseSymbol}.png`]
+        ? [
+            `https://static.toss.im/png-logos/stock/ticker/KR:${baseSymbol}.png`,
+            `https://file.alphasquare.co.kr/media/symbol/stock/KRX/${baseSymbol}.png`
+        ]
         : [
-            `https://s3-symbol-logo.tradingview.com/${baseSymbol}.svg`,
+            `https://static.toss.im/png-logos/stock/ticker/${baseSymbol}.png`,
             `https://financialmodelingprep.com/image-stock/${baseSymbol}.png`,
-            `https://logo.clearbit.com/${baseSymbol.toLowerCase()}.com`
+            `https://s.yimg.com/cv/apiv2/default/24/${baseSymbol}.png`
         ];
 
     const handleImageError = () => {
         if (sourceIndex < sources.length - 1) {
             setSourceIndex(prev => prev + 1);
+            setLoaded(false); // Reset loaded state for the next source
         } else {
             setError(true);
         }
     };
 
-    // Fallback Design: Letter/Number (Minimalist, no background)
+    // Fallback Design: Letter/Number (Minimalist, no background color)
     const firstChar = baseSymbol.charAt(0);
 
-    // Use a clean, themed border
-    const borderColor = 'border-primary/30';
+    // Theme-compatible border
+    const borderColor = 'border-primary/20';
 
     return (
         <div
             className={`relative rounded-sm overflow-hidden flex items-center justify-center shrink-0 border ${borderColor} ${className}`}
             style={{ width: size, height: size }}
         >
-            {/* Base: Fallback Letter (Visible as fallback or background) */}
+            {/* Fallback Letter: Always rendered as background/placeholder */}
             <div
-                className="w-full h-full flex items-center justify-center font-black text-primary/60 uppercase"
-                style={{ fontSize: size * 0.7 }}
+                className="w-full h-full flex items-center justify-center font-black text-primary/40 uppercase"
+                style={{ fontSize: size * 0.75 }}
             >
                 {firstChar}
             </div>
 
-            {/* Over: Real Logo (Fades in over the fallback only when loaded) */}
+            {/* Real Logo Overlay: Fades in only on success */}
             {!error && (
                 <img
+                    key={sources[sourceIndex]} // Force remount on source change
                     src={sources[sourceIndex]}
-                    alt="" // Empty alt to prevent broken icon + text flicker
-                    className={`absolute inset-0 w-full h-full object-contain p-1.5 bg-white transition-opacity duration-300 z-20 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+                    alt=""
+                    className={`absolute inset-0 w-full h-full object-contain p-1.5 bg-background transition-opacity duration-300 z-20 ${loaded ? 'opacity-100' : 'opacity-0'}`}
                     onLoad={() => setLoaded(true)}
                     onError={handleImageError}
                 />
