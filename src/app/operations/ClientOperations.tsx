@@ -575,8 +575,8 @@ export default function ClientOperations({
                                                             <Plus size={14} /> {t('ops.add_account_for')} {symbol}
                                                         </button>
                                                     </SheetTrigger>
-                                                    <SheetContent className="sm:max-w-md border-l border-primary/20 flex flex-col items-center justify-center">
-                                                        <SheetHeader className="absolute top-6 left-6 text-left">
+                                                    <SheetContent className="sm:max-w-md border-l border-primary/20 flex flex-col overflow-y-auto pr-6">
+                                                        <SheetHeader className="mb-8 text-left">
                                                             <SheetTitle className="text-2xl font-black tracking-tighter uppercase text-primary flex items-center gap-2">
                                                                 <span className="h-5 w-1.5 bg-primary animate-pulse"></span>
                                                                 {t('ops.add_entry')}
@@ -586,7 +586,7 @@ export default function ClientOperations({
                                                             </SheetDescription>
                                                         </SheetHeader>
 
-                                                        <div className="w-full h-full mt-24">
+                                                        <div className="w-full pb-8">
                                                             <StockEntryForm
                                                                 symbol={symbol}
                                                                 initialCurrency={currency} // Pass determined currency
@@ -764,8 +764,8 @@ export default function ClientOperations({
 
                     return (
                         <Sheet open={!!editingEntryId} onOpenChange={(open) => !open && setEditingEntryId(null)}>
-                            <SheetContent className="sm:max-w-md border-l border-primary/20 flex flex-col items-center justify-center">
-                                <SheetHeader className="absolute top-6 left-6 text-left">
+                            <SheetContent className="sm:max-w-md border-l border-primary/20 flex flex-col overflow-y-auto pr-6">
+                                <SheetHeader className="mb-8 text-left">
                                     <SheetTitle className="text-2xl font-black tracking-tighter uppercase text-primary flex items-center gap-2">
                                         <span className="h-5 w-1.5 bg-primary animate-pulse"></span>
                                         {t('ops.edit_entry_title')} - {foundEntryContext.symbol}
@@ -774,7 +774,7 @@ export default function ClientOperations({
                                         {t('ops.edit_entry_desc')}
                                     </SheetDescription>
                                 </SheetHeader>
-                                <div className="w-full h-full mt-24">
+                                <div className="w-full pb-8">
                                     <StockEntryForm
                                         symbol={foundEntryContext.symbol}
                                         onSuccess={() => {
@@ -801,8 +801,8 @@ export default function ClientOperations({
             />
 
             <Sheet open={globalStockSheetOpen} onOpenChange={setGlobalStockSheetOpen}>
-                <SheetContent className="sm:max-w-md border-l border-primary/20 flex flex-col items-center justify-center">
-                    <SheetHeader className="absolute top-6 left-6 text-left">
+                <SheetContent className="sm:max-w-md border-l border-primary/20 flex flex-col overflow-y-auto pr-6">
+                    <SheetHeader className="mb-8 text-left">
                         <SheetTitle className="text-2xl font-black tracking-tighter uppercase text-primary flex items-center gap-2">
                             <span className="h-5 w-1.5 bg-primary animate-pulse"></span>
                             {t('ops.unified_stock_entry')}
@@ -811,7 +811,7 @@ export default function ClientOperations({
                             {t('ops.unified_stock_entry_desc')}
                         </SheetDescription>
                     </SheetHeader>
-                    <div className="w-full h-full mt-24">
+                    <div className="w-full pb-8">
                         <StockEntryForm
                             onSuccess={() => {
                                 setGlobalStockSheetOpen(false);
