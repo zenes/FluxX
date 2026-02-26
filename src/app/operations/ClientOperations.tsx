@@ -19,11 +19,12 @@ import {
     SheetTitle,
     SheetTrigger,
 } from "@/components/ui/sheet";
-import { Plus, Building2, UserCircle2, Hash } from 'lucide-react';
+import { Plus, Building2, UserCircle2, Hash, Trash2 } from 'lucide-react';
 
 import StockEntryForm from '@/components/StockEntryForm';
-import { deleteStockEntry } from '@/lib/actions';
+import { deleteStockEntry, addAssetMemo, getAssetMemos, deleteAssetMemo } from '@/lib/actions';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { format } from 'date-fns';
 
 const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))'];
 
@@ -37,6 +38,9 @@ export default function ClientOperations({
     const { t } = useLanguage();
     const accounts = predefinedAccounts; // assign prop to local variable to match previous usage
     const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
+    const [memosBySymbol, setMemosBySymbol] = useState<Record<string, any[]>>({});
+    const [newMemoContent, setNewMemoContent] = useState<Record<string, string>>({});
+    const [isSubmittingMemo, setIsSubmittingMemo] = useState<Record<string, boolean>>({});
 
     const handleDeleteEntry = async (entryId: string, symbol: string) => {
         if (!confirm('Are you sure you want to delete this account entry?')) return;
@@ -55,6 +59,43 @@ export default function ClientOperations({
         label: '',
         unit: ''
     });
+
+    const loadMemos = async (symbol: string) => {
+        try {
+            const fetchedMemos = await getAssetMemos(symbol);
+            setMemosBySymbol(prev => ({ ...prev, [symbol]: fetchedMemos }));
+        } catch (e) {
+            console.error('Failed to load memos for', symbol, e);
+        }
+    };
+
+    const handleAddMemo = async (symbol: string) => {
+        const content = newMemoContent[symbol]?.trim();
+        if (!content) return;
+
+        setIsSubmittingMemo(prev => ({ ...prev, [symbol]: true }));
+        try {
+            await addAssetMemo(symbol, content);
+            setNewMemoContent(prev => ({ ...prev, [symbol]: '' }));
+            await loadMemos(symbol);
+        } catch (e) {
+            console.error('Failed to add memo', e);
+            alert('Failed to add memo');
+        } finally {
+            setIsSubmittingMemo(prev => ({ ...prev, [symbol]: false }));
+        }
+    };
+
+    const handleDeleteMemo = async (symbol: string, memoId: string) => {
+        if (!confirm('Are you sure you want to delete this memo?')) return;
+        try {
+            await deleteAssetMemo(memoId);
+            await loadMemos(symbol);
+        } catch (e) {
+            console.error('Failed to delete memo', e);
+            alert('Failed to delete memo');
+        }
+    };
 
     const [globalStockSheetOpen, setGlobalStockSheetOpen] = useState(false);
     const [stockPrices, setStockPrices] = useState<Record<string, { price: number, change: number, changePercent: number, shortName: string, currency: string }>>({});
@@ -375,7 +416,12 @@ export default function ClientOperations({
 
                             return (
                                 <AccordionItem key={stock.id} value={symbol} className="bg-card border border-input rounded-md shadow-sm overflow-hidden mb-4 px-6 transition-all hover:border-purple-500/30">
-                                    <AccordionTrigger className="hover:no-underline py-6">
+                                    <AccordionTrigger className="hover:no-underline py-6" onClick={() => {
+                                        // Load memos only when the accordion might be opened
+                                        if (!memosBySymbol[symbol]) {
+                                            loadMemos(symbol);
+                                        }
+                                    }}>
                                         <div className="flex justify-between items-center w-full pr-4 text-left">
                                             <div className="flex flex-col">
                                                 <div className="flex items-center gap-2">
@@ -503,6 +549,59 @@ export default function ClientOperations({
                                                         </div>
                                                     </SheetContent>
                                                 </Sheet>
+                                            </div>
+
+                                            {/* Asset Memos Section */}
+                                            <div className="mt-8 px-4">
+                                                <h4 className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase flex items-center gap-2 mb-4 border-b border-border/50 pb-2">
+                                                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> {t('ops.asset_intelligence') || 'Asset Intelligence'}
+                                                </h4>
+
+                                                <div className="bg-muted/10 border border-input rounded-md p-4 mb-4">
+                                                    <div className="flex gap-2">
+                                                        <input
+                                                            type="text"
+                                                            placeholder={t('ops.write_memo_placeholder') || `Record insights or reasons for holding ${symbol}...`}
+                                                            value={newMemoContent[symbol] || ''}
+                                                            onChange={e => setNewMemoContent(prev => ({ ...prev, [symbol]: e.target.value }))}
+                                                            className="flex-1 bg-background border border-input rounded-sm px-3 py-2 text-xs focus:outline-none focus:border-primary transition-colors"
+                                                            onKeyDown={e => {
+                                                                if (e.key === 'Enter') handleAddMemo(symbol);
+                                                            }}
+                                                        />
+                                                        <button
+                                                            onClick={() => handleAddMemo(symbol)}
+                                                            disabled={!newMemoContent[symbol]?.trim() || isSubmittingMemo[symbol]}
+                                                            className="bg-primary/20 text-primary border border-primary/50 px-4 py-2 rounded-sm text-xs font-bold uppercase tracking-wider hover:bg-primary/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                                                        >
+                                                            {isSubmittingMemo[symbol] ? 'Saving...' : (t('ops.save_memo') || 'Save')}
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-3">
+                                                    {memosBySymbol[symbol] === undefined ? (
+                                                        <div className="text-center py-4 text-xs text-muted-foreground animate-pulse">Loading memos...</div>
+                                                    ) : memosBySymbol[symbol].length === 0 ? (
+                                                        <div className="text-center py-4 text-xs text-muted-foreground opacity-50 italic">No memos recorded for this asset yet.</div>
+                                                    ) : (
+                                                        memosBySymbol[symbol].map(memo => (
+                                                            <div key={memo.id} className="bg-background border border-border/50 rounded-sm p-3 hover:border-border transition-colors group relative">
+                                                                <button
+                                                                    onClick={() => handleDeleteMemo(symbol, memo.id)}
+                                                                    className="absolute top-2 right-2 text-muted-foreground/50 hover:text-destructive opacity-0 group-hover:opacity-100 transition-all bg-background/80 p-1.5 rounded-sm"
+                                                                    title="Delete memo"
+                                                                >
+                                                                    <Trash2 size={12} />
+                                                                </button>
+                                                                <div className="text-xs text-foreground/90 whitespace-pre-wrap leading-relaxed pr-6">{memo.content}</div>
+                                                                <div className="text-[10px] text-muted-foreground mt-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                                                                    {format(new Date(memo.createdAt), 'yyyy-MM-dd HH:mm')}
+                                                                </div>
+                                                            </div>
+                                                        ))
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </AccordionContent>

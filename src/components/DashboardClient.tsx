@@ -16,10 +16,18 @@ interface DashboardClientProps {
     initialExchange: any;
     initialGold: any;
     initialMemos: any[];
+    initialAssetMemos?: any[];
 }
 
-export default function DashboardClient({ initialAssets, initialExchange, initialGold, initialMemos }: DashboardClientProps) {
+export default function DashboardClient({ initialAssets, initialExchange, initialGold, initialMemos, initialAssetMemos = [] }: DashboardClientProps) {
     const [memos, setMemos] = useState<any[]>(initialMemos);
+    const [assetMemos, setAssetMemos] = useState<any[]>(initialAssetMemos);
+
+    const allLogs = [
+        ...memos.map(m => ({ ...m, type: 'GLOBAL' })),
+        ...assetMemos.map(m => ({ ...m, type: 'ASSET' }))
+    ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
     const [memoContent, setMemoContent] = useState("");
     const [isMemoSubmitting, setIsMemoSubmitting] = useState(false);
     const [exchangeRate, setExchangeRate] = useState<number | null>(initialExchange?.rate || null);
@@ -462,21 +470,25 @@ export default function DashboardClient({ initialAssets, initialExchange, initia
                             </tr>
                         </thead>
                         <tbody>
-                            {memos.length === 0 ? (
+                            {allLogs.length === 0 ? (
                                 <tr className="border-b transition-colors hover:bg-muted/50">
                                     <td colSpan={4} className="p-4 align-middle text-xs text-muted-foreground text-center">No recent activity detected.</td>
                                 </tr>
                             ) : (
-                                memos.map((memo) => (
-                                    <tr key={memo.id} className="border-b transition-colors hover:bg-muted/50">
+                                allLogs.map((log) => (
+                                    <tr key={`${log.type}-${log.id}`} className="border-b transition-colors hover:bg-muted/50">
                                         <td className="p-4 align-middle text-xs text-muted-foreground font-mono whitespace-nowrap">
-                                            {new Date(memo.createdAt).toISOString().replace('T', ' ').substring(0, 19)}Z
+                                            {new Date(log.createdAt).toISOString().replace('T', ' ').substring(0, 19)}Z
                                         </td>
-                                        <td className="p-4 align-middle font-mono text-xs text-primary">INTELLIGENCE</td>
+                                        <td className="p-4 align-middle font-mono text-xs text-primary">
+                                            {log.type === 'ASSET' ? <span className="text-blue-500">ASSET: {log.tickerSymbol}</span> : 'INTELLIGENCE'}
+                                        </td>
                                         <td className="p-4 align-middle">
-                                            <span className="inline-flex items-center rounded-sm border px-2 py-0.5 text-[10px] font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary/20 text-primary">MEMO</span>
+                                            <span className={`inline-flex items-center rounded-sm border px-2 py-0.5 text-[10px] font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent ${log.type === 'ASSET' ? 'bg-blue-500/20 text-blue-500' : 'bg-primary/20 text-primary'}`}>
+                                                {log.type === 'ASSET' ? 'ASSET MEMO' : 'GLOBAL MEMO'}
+                                            </span>
                                         </td>
-                                        <td className="p-4 align-middle text-xs min-w-[200px]">{memo.content}</td>
+                                        <td className="p-4 align-middle text-xs min-w-[200px]">{log.content}</td>
                                     </tr>
                                 ))
                             )}

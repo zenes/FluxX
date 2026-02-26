@@ -58,6 +58,7 @@ export default function StockEntryForm({
     };
 
     const [currency, setCurrency] = useState(getInitialCurrency());
+    const [initialMemo, setInitialMemo] = useState('');
     const [presets, setPresets] = useState<any[]>([]);
     const [selectedPresetId, setSelectedPresetId] = useState<string>(initialData?.predefinedAccountId || '');
 
@@ -167,6 +168,14 @@ export default function StockEntryForm({
                     dividendFrequency: dividendFrequency ? parseInt(dividendFrequency) : undefined,
                     dividendMonths: dividendMonths || undefined
                 });
+
+                // Add initial memo if provided
+                if (initialMemo.trim()) {
+                    // Important: import addAssetMemo dynamically or ensure it is available if needed,
+                    // but since this component uses server actions, we should import addAssetMemo at the top.
+                    const { addAssetMemo } = await import('@/lib/actions');
+                    await addAssetMemo(finalSymbol.toUpperCase(), initialMemo.trim());
+                }
             }
             onSuccess();
         } catch (error: any) {
@@ -342,6 +351,23 @@ export default function StockEntryForm({
                     </span>
                 </div>
             </div>
+
+            {/* Initial Memo Section (Only for new entries) */}
+            {!isEditing && (
+                <div className="flex flex-col gap-4 mt-4">
+                    <h3 className="text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase border-b border-border/50 pb-2 flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> Initial Asset Memo (Optional)
+                    </h3>
+                    <div className="flex flex-col gap-1.5">
+                        <textarea
+                            placeholder="Why are you opening this position? What is your strategy?"
+                            value={initialMemo}
+                            onChange={e => setInitialMemo(e.target.value)}
+                            className="w-full bg-muted/30 border border-input rounded-sm px-4 py-3 focus:outline-none focus:border-primary transition-colors text-xs resize-none h-20"
+                        />
+                    </div>
+                </div>
+            )}
 
             {/* Dividend Configuration Section */}
             <div className="flex flex-col gap-4 mt-4">

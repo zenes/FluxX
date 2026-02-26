@@ -471,6 +471,86 @@ export async function getDividendRecords() {
     }
 }
 
+// Asset Memo Management Actions
+export async function addAssetMemo(tickerSymbol: string, content: string) {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error('Unauthorized');
+
+    try {
+        if (!(prisma as any).assetMemo) {
+            console.error('Prisma model "assetMemo" is missing from the client instance.');
+            throw new Error('Prisma database sync issue: "assetMemo" model not initialized in runtime. Please restart the server.');
+        }
+        const memo = await (prisma as any).assetMemo.create({
+            data: {
+                userId: session.user.id,
+                tickerSymbol,
+                content
+            }
+        });
+        revalidatePath('/operations');
+        return JSON.parse(JSON.stringify(memo));
+    } catch (e: any) {
+        console.error('Failed to add asset memo:', e);
+        throw new Error(`Failed to add asset memo: ${e.message || 'Unknown error'}`);
+    }
+}
+
+export async function getAssetMemos(tickerSymbol: string) {
+    const session = await auth();
+    if (!session?.user?.id) return [];
+
+    try {
+        return await (prisma as any).assetMemo.findMany({
+            where: {
+                userId: session.user.id,
+                tickerSymbol
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    } catch (e) {
+        console.error('Failed to fetch asset memos:', e);
+        return [];
+    }
+}
+
+export async function getAllAssetMemos() {
+    const session = await auth();
+    if (!session?.user?.id) return [];
+
+    try {
+        return await (prisma as any).assetMemo.findMany({
+            where: {
+                userId: session.user.id
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 50
+        });
+    } catch (e) {
+        console.error('Failed to fetch all asset memos:', e);
+        return [];
+    }
+}
+
+export async function deleteAssetMemo(memoId: string) {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error('Unauthorized');
+
+    try {
+        await (prisma as any).assetMemo.delete({
+            where: {
+                id: memoId,
+                userId: session.user.id
+            }
+        });
+        revalidatePath('/operations');
+        return { success: true };
+    } catch (e: any) {
+        console.error('Failed to delete asset memo:', e);
+        throw new Error(`Failed to delete asset memo: ${e.message || 'Unknown error'}`);
+    }
+}
+
 // Memo Management Actions
 export async function addMemo(content: string) {
     const session = await auth();
