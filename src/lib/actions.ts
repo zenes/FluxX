@@ -166,6 +166,7 @@ export async function addStockEntry(data: {
     dividendPerShare?: number;
     dividendFrequency?: number;
     dividendMonths?: string;
+    initialMemo?: string;
 }) {
     const session = await auth();
     if (!session?.user?.id) {
@@ -173,7 +174,7 @@ export async function addStockEntry(data: {
     }
 
     try {
-        const { predefinedAccountId, ...rest } = data;
+        const { predefinedAccountId, initialMemo, ...rest } = data;
         const entry = await prisma.stockEntry.create({
             data: {
                 userId: session.user.id,
@@ -228,7 +229,12 @@ export async function addStockEntry(data: {
         }
 
         // Auto-generate AssetMemo for this transaction
-        const memoContent = `[SYSTEM] Purchased ${data.quantity.toLocaleString(undefined, { maximumFractionDigits: 4 })} shares at ${(data.totalPurchaseAmount / data.quantity).toLocaleString(undefined, { maximumFractionDigits: data.currency === 'KRW' ? 0 : 2, minimumFractionDigits: data.currency === 'KRW' ? 0 : 2 })} ${data.currency} via ${data.brokerName} - ${data.accountOwner}${data.accountNumber ? ` (${data.accountNumber})` : ''}. Total cost: ${data.totalPurchaseAmount.toLocaleString(undefined, { maximumFractionDigits: data.currency === 'KRW' ? 0 : 2, minimumFractionDigits: data.currency === 'KRW' ? 0 : 2 })} ${data.currency}`;
+        let memoContent = `[SYSTEM] Purchased ${data.quantity.toLocaleString(undefined, { maximumFractionDigits: 4 })} shares at ${(data.totalPurchaseAmount / data.quantity).toLocaleString(undefined, { maximumFractionDigits: data.currency === 'KRW' ? 0 : 2, minimumFractionDigits: data.currency === 'KRW' ? 0 : 2 })} ${data.currency} via ${data.brokerName} - ${data.accountOwner}${data.accountNumber ? ` (${data.accountNumber})` : ''}. Total cost: ${data.totalPurchaseAmount.toLocaleString(undefined, { maximumFractionDigits: data.currency === 'KRW' ? 0 : 2, minimumFractionDigits: data.currency === 'KRW' ? 0 : 2 })} ${data.currency}`;
+
+        // Append user's initial memo if provided to prevent duplication
+        if (initialMemo && initialMemo.trim()) {
+            memoContent += `\n\n${initialMemo.trim()}`;
+        }
 
         await (prisma as any).assetMemo.create({
             data: {

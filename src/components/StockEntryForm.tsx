@@ -166,16 +166,9 @@ export default function StockEntryForm({
                     predefinedAccountId: selectedPresetId || undefined,
                     dividendPerShare: dividendPerShare ? parseFloat(dividendPerShare) : undefined,
                     dividendFrequency: dividendFrequency ? parseInt(dividendFrequency) : undefined,
-                    dividendMonths: dividendMonths || undefined
+                    dividendMonths: dividendMonths || undefined,
+                    initialMemo: initialMemo.trim() || undefined
                 });
-
-                // Add initial memo if provided
-                if (initialMemo.trim()) {
-                    // Important: import addAssetMemo dynamically or ensure it is available if needed,
-                    // but since this component uses server actions, we should import addAssetMemo at the top.
-                    const { addAssetMemo } = await import('@/lib/actions');
-                    await addAssetMemo(finalSymbol.toUpperCase(), initialMemo.trim());
-                }
             }
             onSuccess();
         } catch (error: any) {

@@ -609,9 +609,10 @@ export default function ClientOperations({
                                                             placeholder={t('ops.write_memo_placeholder') || `Record insights or reasons for holding ${symbol}...`}
                                                             value={newMemoContent[symbol] || ''}
                                                             onChange={e => setNewMemoContent(prev => ({ ...prev, [symbol]: e.target.value }))}
-                                                            className="flex-1 bg-background border border-input rounded-sm px-3 py-2 text-xs focus:outline-none focus:border-primary transition-colors"
+                                                            disabled={isSubmittingMemo[symbol]}
+                                                            className="flex-1 bg-background border border-input rounded-sm px-3 py-2 text-xs focus:outline-none focus:border-primary transition-colors disabled:opacity-50"
                                                             onKeyDown={e => {
-                                                                if (e.key === 'Enter') handleAddMemo(symbol);
+                                                                if (e.key === 'Enter' && !isSubmittingMemo[symbol]) handleAddMemo(symbol);
                                                             }}
                                                         />
                                                         <button
