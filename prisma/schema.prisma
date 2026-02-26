@@ -15,9 +15,11 @@ model User {
   email         String    @unique
   passwordHash  String
   role          String    @default("USER") // 'USER' or 'ADMIN'
+  image         String?   // Profile picture path or URL
   lastLoginAt   DateTime?
   lastActiveAt  DateTime?
-  createdAt     DateTime      @default(now())
+  createdAt     DateTime  @default(now())
+  
   assets              Asset[]
   stockEntries        StockEntry[]
   predefinedAccounts  PredefinedAccount[]

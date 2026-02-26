@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import PredefinedAccountsManager from "@/components/PredefinedAccountsManager";
 import { getPredefinedAccounts } from "@/lib/actions";
 import { Download, Trash2, ShieldAlert } from "lucide-react";
+import ProfilePictureUpload from "@/components/ProfilePictureUpload";
 
 export default async function SettingsPage() {
     const session = await auth();
@@ -32,11 +33,16 @@ export default async function SettingsPage() {
                             <span className="w-1.5 h-4 bg-primary rounded-sm"></span> User Profile
                         </h3>
                         <div className="flex flex-col gap-2 font-mono text-sm">
-                            <div className="flex justify-between items-center py-2 border-b border-border/50">
+                            <ProfilePictureUpload
+                                currentImage={(session.user as any).image}
+                                userEmail={session.user.email}
+                            />
+
+                            <div className="flex justify-between items-center py-4 border-b border-border/50 mt-2">
                                 <span className="text-muted-foreground uppercase opacity-70">Email</span>
                                 <span className="font-medium">{session.user.email}</span>
                             </div>
-                            <div className="flex justify-between items-center py-2 border-b border-border/50">
+                            <div className="flex justify-between items-center py-4 border-b border-border/50">
                                 <span className="text-muted-foreground uppercase opacity-70">Role</span>
                                 <span className="font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-sm">{session.user.role}</span>
                             </div>

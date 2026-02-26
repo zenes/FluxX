@@ -548,6 +548,16 @@ export async function deleteAssetMemo(memoId: string) {
     if (!session?.user?.id) throw new Error('Unauthorized');
 
     try {
+        const memo = await (prisma as any).assetMemo.findUnique({
+            where: { id: memoId, userId: session.user.id }
+        });
+
+        if (!memo) throw new Error('Memo not found');
+
+        if (memo.content.startsWith('[SYSTEM]')) {
+            throw new Error('System-generated memos cannot be deleted.');
+        }
+
         await (prisma as any).assetMemo.delete({
             where: {
                 id: memoId,
@@ -595,5 +605,59 @@ export async function getMemos() {
     } catch (e) {
         console.error('Failed to fetch memos:', e);
         return [];
+    }
+}
+
+import { writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
+
+export async function uploadProfilePicture(formData: FormData) {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error('Unauthorized');
+
+    const file = formData.get('file') as File;
+    if (!file) throw new Error('No file provided');
+
+    // Basic validation
+    if (!file.type.startsWith('image/')) {
+        throw new Error('File must be an image');
+    }
+    // Limit to 5MB
+    if (file.size > 5 * 1024 * 1024) {
+        throw new Error('Image must be less than 5MB');
+    }
+
+    try {
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+
+        // Save to public/avatars
+        const uploadDir = join(process.cwd(), 'public', 'avatars');
+        try {
+            await mkdir(uploadDir, { recursive: true });
+        } catch (e: any) {
+            if (e.code !== 'EEXIST') throw e;
+        }
+
+        // Use a unique filename
+        const fileExtension = file.name.split('.').pop() || 'jpg';
+        const fileName = `${session.user.id}-${Date.now()}.${fileExtension}`;
+        const filePath = join(uploadDir, fileName);
+
+        await writeFile(filePath, buffer);
+
+        const imageUrl = `/avatars/${fileName}`;
+
+        // Update user in DB
+        await prisma.user.update({
+            where: { id: session.user.id },
+            data: { image: imageUrl }
+        });
+
+        revalidatePath('/settings');
+        return { success: true, imageUrl };
+    } catch (e: any) {
+        console.error('Failed to upload profile picture:', e);
+        throw new Error(`Failed to upload picture: ${e.message || 'Unknown error'}`);
     }
 }

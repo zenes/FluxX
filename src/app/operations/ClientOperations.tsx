@@ -722,13 +722,6 @@ export default function ClientOperations({
                                                                                         </div>
                                                                                     )}
                                                                                 </div>
-                                                                                <button
-                                                                                    onClick={() => handleDeleteMemo(symbol, memo.id)}
-                                                                                    className="absolute top-2 right-2 text-muted-foreground/30 hover:text-destructive opacity-0 group-hover/sys:opacity-100 transition-all p-1.5 rounded-sm bg-background/80"
-                                                                                    title="Delete system log"
-                                                                                >
-                                                                                    <Trash2 size={12} />
-                                                                                </button>
                                                                             </div>
                                                                         </div>
                                                                     ))}

@@ -26,10 +26,20 @@ export default function AuthButton() {
                         {t('auth.admin_panel')}
                     </Link>
                 )}
-                <span className="text-xs text-muted-foreground hidden sm:inline-block">
-                    <span className="text-[10px] uppercase tracking-wider mr-2">{t('auth.logged_in_as')}</span>
-                    <strong className="text-primary font-mono">{session.user.email}</strong>
-                </span>
+                <div className="flex items-center gap-2 mr-2">
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-muted flex items-center justify-center border border-primary/20 shrink-0">
+                        {(session.user as any)?.image ? (
+                            <img src={(session.user as any).image} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                            <span className="text-sm font-bold text-muted-foreground uppercase">
+                                {session.user.email?.charAt(0) || 'U'}
+                            </span>
+                        )}
+                    </div>
+                    <span className="text-xs text-muted-foreground hidden sm:inline-block">
+                        <strong className="text-primary font-mono">{session.user.email}</strong>
+                    </span>
+                </div>
 
                 <Link
                     href="/settings"
