@@ -389,13 +389,16 @@ export default function ClientOperations({
             </div>
 
             <div className="max-w-screen-xl mx-auto mt-10">
-                <h3 className="text-[10px] font-bold tracking-wider text-muted-foreground mb-4 opacity-70">{t('ops.intelligence_title')}</h3>
+                <h3 className="text-xs font-bold tracking-widest text-muted-foreground mb-4 uppercase flex items-center gap-2">
+                    <span className="w-4 h-px bg-primary/60 inline-block"></span>
+                    {t('ops.intelligence_title')}
+                </h3>
                 {stocks.length === 0 ? (
                     <div className="bg-card border border-input border-dashed rounded-md p-8 flex flex-col items-center justify-center text-muted-foreground font-mono text-xs opacity-50">
                         {t('ops.no_equity_assets')}
                     </div>
                 ) : (
-                    <Accordion type="multiple" className="w-full max-w-4xl">
+                    <Accordion type="multiple" className="w-full space-y-3">
                         {Object.values(stocks.reduce((acc, stock) => {
                             const symbol = stock.assetSymbol!;
                             if (!acc[symbol]) {
@@ -435,49 +438,62 @@ export default function ClientOperations({
                             const entriesList = stock.entries || [];
 
                             return (
-                                <AccordionItem key={stock.id} value={symbol} className="bg-card border border-input rounded-md shadow-sm overflow-hidden mb-4 px-6 transition-all hover:border-purple-500/30">
-                                    <AccordionTrigger className="hover:no-underline py-6" onClick={() => {
-                                        // Load memos only when the accordion might be opened
+                                <AccordionItem key={stock.id} value={symbol} className="bg-card border border-border rounded-lg shadow-sm overflow-hidden transition-all hover:border-primary/30 hover:shadow-md">
+                                    <AccordionTrigger className="hover:no-underline px-5 py-4" onClick={() => {
                                         if (!memosBySymbol[symbol]) {
                                             loadMemos(symbol);
                                         }
                                     }}>
-                                        <div className="flex justify-between items-center w-full pr-4 text-left">
-                                            <div className="flex items-center gap-4">
-                                                <TickerIcon symbol={symbol} size={40} className="shrink-0" />
-                                                <div className="flex flex-col">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-xl font-bold text-foreground tracking-tighter">{symbol}</span>
-                                                        <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-sm border border-border">{stock.amount.toLocaleString(undefined, { maximumFractionDigits: 4 })} {t('ops.shares')}</span>
+                                        <div className="flex justify-between items-center w-full pr-3 text-left gap-4">
+                                            {/* Left: Icon + Names */}
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <TickerIcon symbol={symbol} size={44} className="shrink-0" />
+                                                <div className="flex flex-col gap-0.5 min-w-0">
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <span className="text-base font-bold text-foreground tracking-tight">{symbol}</span>
+                                                        <span className="text-[10px] font-semibold bg-muted text-muted-foreground px-2 py-0.5 rounded border border-border shrink-0">
+                                                            {stock.amount.toLocaleString(undefined, { maximumFractionDigits: 4 })} {t('ops.shares')}
+                                                        </span>
                                                     </div>
-                                                    <span className="text-[10px] text-muted-foreground truncate max-w-[200px] mt-1">{priceData?.shortName || 'Equity Asset'}</span>
+                                                    <span className="text-xs text-muted-foreground/70 truncate max-w-[220px]">
+                                                        {priceData?.shortName || 'Equity Asset'}
+                                                    </span>
                                                 </div>
                                             </div>
 
-                                            <div className="flex flex-col items-end gap-1">
-                                                <div className="flex items-center gap-3">
-                                                    <span className="text-xs font-bold text-foreground bg-muted px-2 py-0.5 rounded-sm" title={t('ops.weight_tooltip')}>
-                                                        {(totalStockKrw > 0 ? (valueKrw / totalStockKrw) * 100 : 0).toFixed(1)}% <span className="text-muted-foreground opacity-50 font-normal">/</span> {(netWorth > 0 ? (totalStockKrw / netWorth) * 100 : 0).toFixed(1)}%
-                                                    </span>
-                                                    <span className="text-lg font-bold text-foreground tracking-tighter">
-                                                        {currency === 'KRW' ? '₩' : '$'}{valueOriginal.toLocaleString(undefined, { maximumFractionDigits: currency === 'KRW' ? 0 : 2 })}
-                                                    </span>
-                                                </div>
+                                            {/* Right: Value + ROI */}
+                                            <div className="flex flex-col items-end gap-1 shrink-0">
+                                                {/* Primary: current value */}
+                                                <span className="text-lg font-bold text-foreground tracking-tight">
+                                                    {currency === 'KRW' ? '₩' : '$'}{valueOriginal.toLocaleString(undefined, { maximumFractionDigits: currency === 'KRW' ? 0 : 2 })}
+                                                </span>
+                                                {/* Secondary row: weight + avg + ROI */}
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-[10px] text-muted-foreground">{t('ops.avg_price')} {currency === 'KRW' ? '₩' : '$'}{avgPrice.toLocaleString(undefined, { maximumFractionDigits: currency === 'KRW' ? 0 : 2 })}</span>
-                                                    <span className={`text-xs font-bold ${roiColor}`}>{isPositive ? '+' : ''}{roi.toFixed(2)}%</span>
+                                                    <span className="text-[10px] text-muted-foreground/60 font-mono hidden sm:inline">
+                                                        avg {currency === 'KRW' ? '₩' : '$'}{avgPrice.toLocaleString(undefined, { maximumFractionDigits: currency === 'KRW' ? 0 : 2 })}
+                                                    </span>
+                                                    <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${isPositive
+                                                            ? 'text-profit bg-profit/10 border border-profit/20'
+                                                            : 'text-loss bg-loss/10 border border-loss/20'
+                                                        }`}>
+                                                        {isPositive ? '+' : ''}{roi.toFixed(2)}%
+                                                    </span>
+                                                    <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded border border-border hidden md:inline">
+                                                        {(totalStockKrw > 0 ? (valueKrw / totalStockKrw) * 100 : 0).toFixed(1)}%
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
                                     </AccordionTrigger>
-                                    <AccordionContent className="pt-2 pb-6 border-t border-border/50">
-                                        <div className="flex flex-col gap-3">
-                                            <div className="grid grid-cols-12 text-[10px] font-bold text-muted-foreground tracking-wider px-4 py-2 bg-muted/30 rounded-t-sm">
+                                    <AccordionContent className="border-t border-border/40">
+                                        <div className="flex flex-col">
+                                            {/* Table header */}
+                                            <div className="grid grid-cols-12 text-[11px] font-bold text-muted-foreground tracking-wide px-5 py-2.5 bg-muted/20">
                                                 <div className="col-span-3">{t('ops.broker')}</div>
                                                 <div className="col-span-3">{t('ops.owner')}</div>
                                                 <div className="col-span-2 text-right">{t('ops.shares_col')}</div>
                                                 <div className="col-span-2 text-right">{t('ops.avg_cost_col')}</div>
-                                                <div className="col-span-2 text-right pr-14">{t('ops.total_cost_col')}</div>
+                                                <div className="col-span-2 text-right pr-16">{t('ops.total_cost_col')}</div>
                                             </div>
 
                                             {entriesList.length === 0 && (
@@ -524,7 +540,8 @@ export default function ClientOperations({
                                                     const primaryEntry = group.entries[0];
 
                                                     return (
-                                                        <div key={group.key} className="grid grid-cols-12 text-xs font-mono items-center px-4 py-2 border-b border-border/50 hover:bg-muted/10 transition-colors">
+                                                        <div key={group.key} className={`grid grid-cols-12 text-xs items-center px-5 py-3 border-b border-border/30 hover:bg-muted/20 transition-colors ${Object.values(grouped).indexOf(group) % 2 === 0 ? '' : 'bg-muted/5'
+                                                            }`}>
                                                             <div className="col-span-3 flex items-center gap-2">
                                                                 <Building2 size={12} className="text-muted-foreground font-bold" />
                                                                 <span>{group.broker}</span>

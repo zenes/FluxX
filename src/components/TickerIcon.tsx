@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 interface TickerIconProps {
     symbol: string;
@@ -17,7 +17,6 @@ export default function TickerIcon({ symbol, size = 32, className = "" }: Ticker
     const baseSymbol = symbol.split('.')[0].toUpperCase();
     const isKorean = symbol.toUpperCase().endsWith('.KS') || symbol.toUpperCase().endsWith('.KQ');
 
-    // Sources prioritized for quality and reliability (Toss is very reliable for KR/US)
     const sources = isKorean
         ? [
             `https://static.toss.im/png-logos/stock/ticker/KR:${baseSymbol}.png`,
@@ -32,41 +31,49 @@ export default function TickerIcon({ symbol, size = 32, className = "" }: Ticker
     const handleImageError = () => {
         if (sourceIndex < sources.length - 1) {
             setSourceIndex(prev => prev + 1);
-            setLoaded(false); // Reset loaded state for the next source
+            setLoaded(false);
         } else {
             setError(true);
         }
     };
 
-    // Fallback Design: Letter/Number (Minimalist, no background color)
     const firstChar = baseSymbol.charAt(0);
-
-    // Theme-compatible border
-    const borderColor = 'border-primary/20';
+    // Font size scales with container but keeps a minimum
+    const fontSize = Math.max(size * 0.42, 11);
 
     return (
         <div
-            className={`relative rounded-sm overflow-hidden flex items-center justify-center shrink-0 border ${borderColor} ${className}`}
+            className={`relative rounded-lg overflow-hidden flex items-center justify-center shrink-0 border border-border/40 bg-muted/30 ${className}`}
             style={{ width: size, height: size }}
         >
-            {/* Fallback Letter: Always rendered as background/placeholder */}
-            <div
-                className="w-full h-full flex items-center justify-center font-black text-primary/40 uppercase"
-                style={{ fontSize: size * 0.75 }}
+            {/* Fallback: ticker letter, always shown until logo loads */}
+            <span
+                className="font-black text-foreground/30 uppercase select-none leading-none"
+                style={{ fontSize }}
             >
                 {firstChar}
-            </div>
+            </span>
 
-            {/* Real Logo Overlay: Fades in only on success */}
+            {/* Logo overlay: white card inset so the rounded container frames it */}
             {!error && (
-                <img
-                    key={sources[sourceIndex]} // Force remount on source change
-                    src={sources[sourceIndex]}
-                    alt=""
-                    className={`absolute inset-0 w-full h-full object-contain p-1.5 bg-background transition-opacity duration-300 z-20 ${loaded ? 'opacity-100' : 'opacity-0'}`}
-                    onLoad={() => setLoaded(true)}
-                    onError={handleImageError}
-                />
+                <div
+                    className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+                >
+                    {/* White pill — gives transparent PNGs a neutral, always-visible base */}
+                    <div
+                        className="rounded-md bg-white flex items-center justify-center overflow-hidden"
+                        style={{ width: size - 6, height: size - 6 }}
+                    >
+                        <img
+                            key={sources[sourceIndex]}
+                            src={sources[sourceIndex]}
+                            alt=""
+                            className="w-full h-full object-contain p-1"
+                            onLoad={() => setLoaded(true)}
+                            onError={handleImageError}
+                        />
+                    </div>
+                </div>
             )}
         </div>
     );
