@@ -23,6 +23,7 @@ import { Plus, Building2, UserCircle2, Hash, Trash2 } from 'lucide-react';
 
 import StockEntryForm from '@/components/StockEntryForm';
 import TickerIcon from '@/components/TickerIcon';
+import AnimatedNumber from '@/components/AnimatedNumber';
 import { deleteStockEntry, addAssetMemo, getAssetMemos, deleteAssetMemo } from '@/lib/actions';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { format } from 'date-fns';
@@ -217,7 +218,12 @@ export default function ClientOperations({
                     <div className="flex items-baseline gap-2">
                         <span className="text-4xl md:text-6xl font-bold tracking-tighter text-foreground">
                             <span className="text-2xl md:text-3xl font-medium text-muted-foreground/50 mr-1 italic">₩</span>
-                            {netWorth.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            <AnimatedNumber
+                                value={netWorth}
+                                formatOptions={{ maximumFractionDigits: 0 }}
+                                duration={900}
+                                animateOnChange
+                            />
                         </span>
                     </div>
 
@@ -473,8 +479,8 @@ export default function ClientOperations({
                                                         avg {currency === 'KRW' ? '₩' : '$'}{avgPrice.toLocaleString(undefined, { maximumFractionDigits: currency === 'KRW' ? 0 : 2 })}
                                                     </span>
                                                     <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${isPositive
-                                                            ? 'text-profit bg-profit/10 border border-profit/20'
-                                                            : 'text-loss bg-loss/10 border border-loss/20'
+                                                        ? 'text-profit bg-profit/10 border border-profit/20'
+                                                        : 'text-loss bg-loss/10 border border-loss/20'
                                                         }`}>
                                                         {isPositive ? '+' : ''}{roi.toFixed(2)}%
                                                     </span>

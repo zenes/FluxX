@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { Activity, Zap } from "lucide-react";
 import { AssetItem, getAssets, addMemo } from "@/lib/actions";
 import { calculateNetWorth, MarketPrices } from "@/lib/calculations";
+import AnimatedNumber from "@/components/AnimatedNumber";
 
 type GoldType = 'global' | 'krx';
 
@@ -230,10 +231,16 @@ export default function DashboardClient({ initialAssets, initialExchange, initia
                         </span>
                         <div className="mt-1 flex-1 flex flex-col justify-center">
                             {isNetWorthLoading && netWorth === null ? (
-                                <span className="flex h-10 w-32 items-center bg-muted/50 rounded-sm animate-pulse"></span>
+                                <span className="flex h-10 w-40 items-center bg-muted/50 rounded-sm animate-pulse"></span>
                             ) : (
                                 <span className="text-2xl md:text-3xl font-bold tracking-tighter text-foreground">
-                                    ₩{(netWorth || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                    <span className="text-lg font-medium text-muted-foreground/40 mr-0.5">₩</span>
+                                    <AnimatedNumber
+                                        value={netWorth || 0}
+                                        formatOptions={{ maximumFractionDigits: 0 }}
+                                        duration={1000}
+                                        animateOnChange
+                                    />
                                 </span>
                             )}
                         </div>
