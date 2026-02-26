@@ -22,6 +22,7 @@ import {
 import { Plus, Building2, UserCircle2, Hash, Trash2 } from 'lucide-react';
 
 import StockEntryForm from '@/components/StockEntryForm';
+import TickerIcon from '@/components/TickerIcon';
 import { deleteStockEntry, addAssetMemo, getAssetMemos, deleteAssetMemo } from '@/lib/actions';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { format } from 'date-fns';
@@ -423,12 +424,15 @@ export default function ClientOperations({
                                         }
                                     }}>
                                         <div className="flex justify-between items-center w-full pr-4 text-left">
-                                            <div className="flex flex-col">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-xl font-bold text-foreground tracking-tighter">{symbol}</span>
-                                                    <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-sm border border-border">{stock.amount.toLocaleString(undefined, { maximumFractionDigits: 4 })} {t('ops.shares')}</span>
+                                            <div className="flex items-center gap-4">
+                                                <TickerIcon symbol={symbol} size={40} className="shrink-0" />
+                                                <div className="flex flex-col">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xl font-bold text-foreground tracking-tighter">{symbol}</span>
+                                                        <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-sm border border-border">{stock.amount.toLocaleString(undefined, { maximumFractionDigits: 4 })} {t('ops.shares')}</span>
+                                                    </div>
+                                                    <span className="text-[10px] text-muted-foreground truncate max-w-[200px] mt-1">{priceData?.shortName || 'Equity Asset'}</span>
                                                 </div>
-                                                <span className="text-[10px] text-muted-foreground truncate max-w-[200px] mt-1">{priceData?.shortName || 'US Equity'}</span>
                                             </div>
 
                                             <div className="flex flex-col items-end gap-1">
