@@ -22,33 +22,21 @@ export default function TickerIcon({ symbol, size = 32, className = "" }: Ticker
         ? `https://file.alphasquare.co.kr/media/symbol/stock/KRX/${baseSymbol}.png`
         : `https://financialmodelingprep.com/image-stock/${baseSymbol}.png`;
 
-    // Fallback Design: Letter/Number circle
+    // Fallback Design: Letter/Number (Minimalist, no background)
     const firstChar = baseSymbol.charAt(0);
-    const colors = [
-        'bg-blue-600', 'bg-purple-600', 'bg-green-600',
-        'bg-red-600', 'bg-orange-600', 'bg-indigo-600', 'bg-pink-600', 'bg-slate-600'
-    ];
-    // Use a very subtle border based on the color to feel "harmonious"
-    const borderAccentColors = [
-        'border-blue-500/20', 'border-purple-500/20', 'border-green-500/20',
-        'border-red-500/20', 'border-orange-500/20', 'border-indigo-500/20', 'border-pink-500/20', 'border-slate-500/20'
-    ];
-    const colorIndex = baseSymbol.charCodeAt(0) % colors.length;
-    const bgColor = colors[colorIndex];
-    const borderAccent = borderAccentColors[colorIndex];
+
+    // Use a clean, themed border
+    const borderColor = 'border-primary/40';
 
     return (
         <div
-            className={`relative rounded-sm overflow-hidden flex items-center justify-center shadow-sm shrink-0 border border-border/40 ${className}`}
+            className={`relative rounded-sm overflow-hidden flex items-center justify-center shrink-0 border ${borderColor} ${className}`}
             style={{ width: size, height: size }}
         >
-            {/* Outer Glow/Border Accent */}
-            <div className={`absolute inset-0 border-2 ${borderAccent} rounded-sm pointer-events-none z-10`}></div>
-
-            {/* Base: Fallback Icon (Always visible initially) */}
+            {/* Base: Fallback Letter (Clean themed text, no background color) */}
             <div
-                className={`${bgColor} w-full h-full flex items-center justify-center font-black text-white uppercase opacity-90`}
-                style={{ fontSize: size * 0.55 }}
+                className="w-full h-full flex items-center justify-center font-black text-primary/80 uppercase"
+                style={{ fontSize: size * 0.7 }}
             >
                 {firstChar}
             </div>
