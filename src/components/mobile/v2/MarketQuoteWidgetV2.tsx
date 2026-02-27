@@ -39,6 +39,7 @@ const Sparkline = ({ isUp }: { isUp: boolean }) => {
 interface MarketQuoteWidgetV2Props {
     myStocks: MarketAsset[];
     setMyStocks: React.Dispatch<React.SetStateAction<MarketAsset[]>>;
+    onModalToggle?: (isOpen: boolean) => void;
 }
 
 const StockReorderItem = ({
@@ -96,7 +97,7 @@ const StockReorderItem = ({
     );
 };
 
-export default function MarketQuoteWidgetV2({ myStocks, setMyStocks }: MarketQuoteWidgetV2Props) {
+export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalToggle }: MarketQuoteWidgetV2Props) {
     const [activeTab, setActiveTab] = useState('MY종목');
     const [isExpanded, setIsExpanded] = useState(false);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -108,6 +109,11 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks }: MarketQuo
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [pendingAsset, setPendingAsset] = useState<any | null>(null);
+
+    // Synchronize modal state with parent
+    useEffect(() => {
+        onModalToggle?.(isSheetOpen || !!selectedAsset);
+    }, [isSheetOpen, !!selectedAsset, onModalToggle]);
 
     // --- CHART DATA GENERATION ---
     const chartData = React.useMemo(() => {
@@ -353,6 +359,8 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks }: MarketQuo
                             exit={{ y: "100%" }}
                             transition={{ type: 'tween', ease: 'easeInOut', duration: 0.15 }}
                             className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#1A1A1E] rounded-t-[32px] shadow-2xl z-[110] max-h-[85vh] flex flex-col border-t border-zinc-100 dark:border-white/10"
+                            onTouchStart={(e) => e.stopPropagation()}
+                            onTouchMove={(e) => e.stopPropagation()}
                         >
                             <div className="mx-auto w-12 h-1.5 bg-zinc-200 dark:bg-white/10 rounded-full mt-3 mb-1" />
 
@@ -483,6 +491,8 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks }: MarketQuo
                             exit={{ y: "100%" }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                             className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#1A1A1E] rounded-t-[32px] shadow-2xl z-[130] max-h-[90vh] flex flex-col"
+                            onTouchStart={(e) => e.stopPropagation()}
+                            onTouchMove={(e) => e.stopPropagation()}
                         >
                             {/* Handle & Close */}
                             <div className="relative pt-3 pb-2 flex justify-center shrink-0">

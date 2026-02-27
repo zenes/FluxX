@@ -23,17 +23,23 @@ interface NewsItem {
 
 interface InvestmentNewsCardV2Props {
     myStocks: MarketAsset[];
+    onModalToggle?: (isOpen: boolean) => void;
 }
 
 // Tiers: 1 (News Thumbnail) -> 2 (FMP Logo) -> 3 (Ticker Box)
 const FMP_API_KEY = "demo"; // Placeholder API key
 
-export default function InvestmentNewsCardV2({ myStocks }: InvestmentNewsCardV2Props) {
+export default function InvestmentNewsCardV2({ myStocks, onModalToggle }: InvestmentNewsCardV2Props) {
     const [newsList, setNewsList] = useState<NewsItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isExpanded, setIsExpanded] = useState(false);
     const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
+
+    // Synchronize modal state with parent
+    useEffect(() => {
+        onModalToggle?.(!!selectedNews);
+    }, [!!selectedNews, onModalToggle]);
 
     const fetchNews = useCallback(async () => {
         if (!myStocks || myStocks.length === 0) {

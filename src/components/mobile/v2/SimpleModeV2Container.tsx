@@ -25,6 +25,7 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
     const [activeTag, setActiveTag] = useState('all');
     const [currentPage, setCurrentPage] = useState(0);
     const [myStocks, setMyStocks] = useState<MarketAsset[]>(INITIAL_STOCKS);
+    const [isAnyModalOpen, setIsAnyModalOpen] = useState(false);
 
     // Persistence: Load stocks from localStorage on mount
     useEffect(() => {
@@ -114,7 +115,7 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
         <div className="overflow-hidden min-h-screen relative bg-[#edf0f4] dark:bg-[#0D0D0E]" ref={containerRef}>
             <motion.div
                 className="flex"
-                drag="x"
+                drag={isAnyModalOpen ? false : "x"}
                 dragDirectionLock={true}
                 dragConstraints={{ left: -width * 3, right: 0 }}
                 dragElastic={0.05}
@@ -176,9 +177,16 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                         />
 
                         {/* New Stock Quotes Widget */}
-                        <MarketQuoteWidgetV2 myStocks={myStocks} setMyStocks={setMyStocks} />
-
-                        <InvestmentNewsCardV2 myStocks={myStocks} />
+                        <MarketQuoteWidgetV2
+                            myStocks={myStocks}
+                            setMyStocks={setMyStocks}
+                            onModalToggle={setIsAnyModalOpen}
+                        />
+                        +
+                        <InvestmentNewsCardV2
+                            myStocks={myStocks}
+                            onModalToggle={setIsAnyModalOpen}
+                        />
                     </div>
                 </div>
 
