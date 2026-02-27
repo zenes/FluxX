@@ -53,6 +53,7 @@ export type AssetItem = {
 
 export async function getAssets(): Promise<AssetItem[]> {
     const session = await auth();
+    console.log('getAssets: Session user ID:', session?.user?.id);
     if (!session?.user?.id) {
         return [];
     }
@@ -60,6 +61,7 @@ export async function getAssets(): Promise<AssetItem[]> {
     const assets = await prisma.asset.findMany({
         where: { userId: session.user.id },
     });
+    console.log('getAssets: Found', assets.length, 'raw assets in DB');
 
     // Fetch associated stock entries with their predefined accounts for aliases
     const allStockEntries = await prisma.stockEntry.findMany({
