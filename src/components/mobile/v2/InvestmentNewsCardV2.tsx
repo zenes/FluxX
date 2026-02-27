@@ -18,6 +18,7 @@ interface NewsItem {
     enclosure: any;
     categories: string[];
     sourceName?: string;
+    ticker?: string;
 }
 
 interface InvestmentNewsCardV2Props {
@@ -43,11 +44,10 @@ export default function InvestmentNewsCardV2({ myStocks }: InvestmentNewsCardV2P
 
         try {
             // Take top 4 stocks
-            const keywords = myStocks.slice(0, 4).map(s => s.name?.split('(')[0]?.trim()).filter(Boolean);
-            const timestamp = Date.now();
-
-            const fetchPromises = keywords.map(async (keyword) => {
-                // Add timestamp for cache-busting
+            const fetchPromises = myStocks.slice(0, 4).map(async (stock) => {
+                const keyword = stock.name?.split('(')[0]?.trim();
+                if (!keyword) return [];
+                const timestamp = Date.now();
                 const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(keyword)}&hl=ko&gl=KR&ceid=KR:ko&t=${timestamp}`;
                 const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&t=${timestamp}`;
 
@@ -66,7 +66,8 @@ export default function InvestmentNewsCardV2({ myStocks }: InvestmentNewsCardV2P
                             .map((item: any) => ({
                                 ...item,
                                 thumbnail: item?.thumbnail || item?.enclosure?.link || (item?.description?.match(/<img[^>]+src="([^">]+)"/)?.[1] || ''),
-                                sourceName: keyword
+                                sourceName: keyword,
+                                ticker: stock.ticker
                             }));
                     }
                     return [];
@@ -79,7 +80,7 @@ export default function InvestmentNewsCardV2({ myStocks }: InvestmentNewsCardV2P
             const results = await Promise.all(fetchPromises);
 
             // Logic: 3 items per stock preference, but fill shortfall from active stocks
-            const targetTotal = keywords.length * 3;
+            const targetTotal = results.length * 3;
             let fairList: NewsItem[] = [];
             let overflowList: NewsItem[] = [];
 
@@ -186,7 +187,7 @@ export default function InvestmentNewsCardV2({ myStocks }: InvestmentNewsCardV2P
                                     </div>
 
                                     {/* Thumbnail with Fallback */}
-                                    <div className="w-20 h-20 rounded-2xl overflow-hidden bg-zinc-50 dark:bg-zinc-800 shrink-0 border border-zinc-100 dark:border-white/5 relative flex items-center justify-center">
+                                    <div className="w-20 h-20 rounded-2xl overflow-hidden bg-gray-100 dark:bg-white/5 shrink-0 border border-zinc-100 dark:border-white/5 relative flex items-center justify-center">
                                         {news.thumbnail ? (
                                             <img
                                                 src={news.thumbnail}
@@ -194,12 +195,21 @@ export default function InvestmentNewsCardV2({ myStocks }: InvestmentNewsCardV2P
                                                 className="size-full object-cover transition-transform duration-500 group-hover:scale-110"
                                                 onError={(e) => {
                                                     e.currentTarget.style.display = 'none';
-                                                    e.currentTarget.parentElement?.classList.add('bg-zinc-100');
+                                                    if (e.currentTarget.parentElement) {
+                                                        const fallback = e.currentTarget.parentElement.querySelector('.thumbnail-fallback');
+                                                        if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                                                    }
                                                 }}
                                             />
-                                        ) : (
-                                            <ImageIcon className="size-6 text-zinc-200 dark:text-zinc-700" />
-                                        )}
+                                        ) : null}
+                                        <div className={cn(
+                                            "thumbnail-fallback size-full items-center justify-center",
+                                            news.thumbnail ? "hidden" : "flex"
+                                        )}>
+                                            <span className="font-bold text-gray-500 dark:text-zinc-500 text-lg uppercase tracking-wider">
+                                                {news.ticker || news.sourceName?.charAt(0)}
+                                            </span>
+                                        </div>
                                     </div>
                                 </button>
                             ))}
@@ -260,14 +270,34 @@ export default function InvestmentNewsCardV2({ myStocks }: InvestmentNewsCardV2P
 
                             <div className="overflow-y-auto pb-32">
                                 {/* Thumbnail */}
-                                {selectedNews.thumbnail && (
+                                {selectedNews.thumbnail ? (
                                     <div className="px-6 mb-6">
-                                        <div className="w-full h-48 rounded-2xl overflow-hidden border border-zinc-100 dark:border-white/5 bg-zinc-50 dark:bg-zinc-900">
+                                        <div className="w-full h-48 rounded-2xl overflow-hidden border border-zinc-100 dark:border-white/5 bg-zinc-50 dark:bg-zinc-900 relative flex items-center justify-center">
                                             <img
                                                 src={selectedNews.thumbnail}
                                                 alt=""
                                                 className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    e.currentTarget.style.display = 'none';
+                                                    if (e.currentTarget.parentElement) {
+                                                        const fallback = e.currentTarget.parentElement.querySelector('.detail-fallback');
+                                                        if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                                                    }
+                                                }}
                                             />
+                                            <div className="detail-fallback hidden size-full items-center justify-center bg-gray-100 dark:bg-white/5">
+                                                <span className="font-bold text-gray-500 dark:text-zinc-500 text-3xl uppercase tracking-widest">
+                                                    {selectedNews.ticker}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="px-6 mb-6">
+                                        <div className="w-full h-48 rounded-2xl bg-gray-100 dark:bg-white/5 flex items-center justify-center border border-zinc-100 dark:border-white/5">
+                                            <span className="font-bold text-gray-500 dark:text-zinc-500 text-3xl uppercase tracking-widest">
+                                                {selectedNews.ticker}
+                                            </span>
                                         </div>
                                     </div>
                                 )}
