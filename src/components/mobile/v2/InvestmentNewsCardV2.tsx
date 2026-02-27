@@ -25,6 +25,9 @@ interface InvestmentNewsCardV2Props {
     myStocks: MarketAsset[];
 }
 
+// Tiers: 1 (News Thumbnail) -> 2 (FMP Logo) -> 3 (Ticker Box)
+const FMP_API_KEY = "demo"; // Placeholder API key
+
 export default function InvestmentNewsCardV2({ myStocks }: InvestmentNewsCardV2Props) {
     const [newsList, setNewsList] = useState<NewsItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -188,24 +191,45 @@ export default function InvestmentNewsCardV2({ myStocks }: InvestmentNewsCardV2P
 
                                     {/* Thumbnail with Fallback */}
                                     <div className="w-20 h-20 rounded-2xl overflow-hidden bg-gray-100 dark:bg-white/5 shrink-0 border border-zinc-100 dark:border-white/5 relative flex items-center justify-center">
-                                        {news.thumbnail ? (
+                                        {/* Tier 1: News Thumbnail */}
+                                        {news.thumbnail && (
                                             <img
                                                 src={news.thumbnail}
                                                 alt=""
-                                                className="size-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                className="tier-1-img size-full object-cover transition-transform duration-500 group-hover:scale-110"
                                                 onError={(e) => {
                                                     e.currentTarget.style.display = 'none';
                                                     if (e.currentTarget.parentElement) {
-                                                        const fallback = e.currentTarget.parentElement.querySelector('.thumbnail-fallback');
-                                                        if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                                                        const tier2 = e.currentTarget.parentElement.querySelector('.tier-2-img');
+                                                        if (tier2) (tier2 as HTMLElement).style.display = 'block';
+                                                        else {
+                                                            const tier3 = e.currentTarget.parentElement.querySelector('.tier-3-fallback');
+                                                            if (tier3) (tier3 as HTMLElement).style.display = 'flex';
+                                                        }
                                                     }
                                                 }}
                                             />
-                                        ) : null}
-                                        <div className={cn(
-                                            "thumbnail-fallback size-full items-center justify-center",
-                                            news.thumbnail ? "hidden" : "flex"
-                                        )}>
+                                        )}
+
+                                        {/* Tier 2: FMP Official Logo */}
+                                        <img
+                                            src={`https://financialmodelingprep.com/image-stock/${news.ticker}.png?apikey=${FMP_API_KEY}`}
+                                            alt=""
+                                            className={cn(
+                                                "tier-2-img size-full object-contain p-2 bg-white",
+                                                news.thumbnail ? "hidden" : "block"
+                                            )}
+                                            onError={(e) => {
+                                                e.currentTarget.style.display = 'none';
+                                                if (e.currentTarget.parentElement) {
+                                                    const tier3 = e.currentTarget.parentElement.querySelector('.tier-3-fallback');
+                                                    if (tier3) (tier3 as HTMLElement).style.display = 'flex';
+                                                }
+                                            }}
+                                        />
+
+                                        {/* Tier 3: Ticker Text Box */}
+                                        <div className="tier-3-fallback hidden size-full items-center justify-center">
                                             <span className="font-bold text-gray-500 dark:text-zinc-500 text-lg uppercase tracking-wider">
                                                 {news.ticker || news.sourceName?.charAt(0)}
                                             </span>
@@ -269,38 +293,54 @@ export default function InvestmentNewsCardV2({ myStocks }: InvestmentNewsCardV2P
                             </div>
 
                             <div className="overflow-y-auto pb-32">
-                                {/* Thumbnail */}
-                                {selectedNews.thumbnail ? (
-                                    <div className="px-6 mb-6">
-                                        <div className="w-full h-48 rounded-2xl overflow-hidden border border-zinc-100 dark:border-white/5 bg-zinc-50 dark:bg-zinc-900 relative flex items-center justify-center">
+                                {/* 3-Tier Thumbnail Logic in Detail Sheet */}
+                                <div className="px-6 mb-6">
+                                    <div className="w-full h-48 rounded-2xl overflow-hidden border border-zinc-100 dark:border-white/5 bg-zinc-50 dark:bg-zinc-900 relative flex items-center justify-center">
+                                        {/* Tier 1 */}
+                                        {selectedNews.thumbnail && (
                                             <img
                                                 src={selectedNews.thumbnail}
                                                 alt=""
-                                                className="w-full h-full object-cover"
+                                                className="tier-1-detail w-full h-full object-cover"
                                                 onError={(e) => {
                                                     e.currentTarget.style.display = 'none';
                                                     if (e.currentTarget.parentElement) {
-                                                        const fallback = e.currentTarget.parentElement.querySelector('.detail-fallback');
-                                                        if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                                                        const t2 = e.currentTarget.parentElement.querySelector('.tier-2-detail');
+                                                        if (t2) (t2 as HTMLElement).style.display = 'block';
+                                                        else {
+                                                            const t3 = e.currentTarget.parentElement.querySelector('.tier-3-detail');
+                                                            if (t3) (t3 as HTMLElement).style.display = 'flex';
+                                                        }
                                                     }
                                                 }}
                                             />
-                                            <div className="detail-fallback hidden size-full items-center justify-center bg-gray-100 dark:bg-white/5">
-                                                <span className="font-bold text-gray-500 dark:text-zinc-500 text-3xl uppercase tracking-widest">
-                                                    {selectedNews.ticker}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="px-6 mb-6">
-                                        <div className="w-full h-48 rounded-2xl bg-gray-100 dark:bg-white/5 flex items-center justify-center border border-zinc-100 dark:border-white/5">
+                                        )}
+
+                                        {/* Tier 2 */}
+                                        <img
+                                            src={`https://financialmodelingprep.com/image-stock/${selectedNews.ticker}.png?apikey=${FMP_API_KEY}`}
+                                            alt=""
+                                            className={cn(
+                                                "tier-2-detail w-full h-full object-contain p-4 bg-white",
+                                                selectedNews.thumbnail ? "hidden" : "block"
+                                            )}
+                                            onError={(e) => {
+                                                e.currentTarget.style.display = 'none';
+                                                if (e.currentTarget.parentElement) {
+                                                    const t3 = e.currentTarget.parentElement.querySelector('.tier-3-detail');
+                                                    if (t3) (t3 as HTMLElement).style.display = 'flex';
+                                                }
+                                            }}
+                                        />
+
+                                        {/* Tier 3 */}
+                                        <div className="tier-3-detail hidden size-full items-center justify-center bg-gray-100 dark:bg-white/5">
                                             <span className="font-bold text-gray-500 dark:text-zinc-500 text-3xl uppercase tracking-widest">
                                                 {selectedNews.ticker}
                                             </span>
                                         </div>
                                     </div>
-                                )}
+                                </div>
 
                                 {/* Content */}
                                 <div className="px-6">
