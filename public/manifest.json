@@ -1,0 +1,30 @@
+{
+    "name": "FluxX",
+    "short_name": "FluxX",
+    "description": "Personal Asset Management",
+    "start_url": "/m/simple",
+    "display": "standalone",
+    "background_color": "#121214",
+    "theme_color": "#121214",
+    "orientation": "portrait-primary",
+    "scope": "/",
+    "lang": "ko",
+    "categories": [
+        "finance",
+        "productivity"
+    ],
+    "icons": [
+        {
+            "src": "/icons/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icons/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}
