@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { calculateNetWorth, MarketPrices } from '@/lib/calculations';
 import { AssetItem } from '@/lib/actions';
 import AssetBreakdownSheet from './AssetBreakdownSheet';
+import StockDetailSheet from './StockDetailSheet';
 
 // 톤다운되고 안정된 느낌의 세련된 색상 팔레트
 const COLORS = [
@@ -102,6 +103,7 @@ export default function SimpleModeCard({
     const [stockPriceInfo, setStockPriceInfo] = useState<{ price: number; currency: string; change?: number; changePercent?: number } | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isBreakdownOpen, setIsBreakdownOpen] = useState(false);
+    const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [activeBgTheme, setActiveBgTheme] = useState(BG_THEMES[0].name);
     const [marketPrices, setMarketPrices] = useState<MarketPrices>({
         usdKrw: initialExchange?.rate || 1400,
@@ -224,8 +226,11 @@ export default function SimpleModeCard({
     };
 
     const handleCardClick = () => {
+        if (isReorderMode) return;
         if (id === 'total' || id === 1) {
             setIsBreakdownOpen(true);
+        } else if (stockAsset) {
+            setIsDetailOpen(true);
         }
     };
 
@@ -436,7 +441,7 @@ export default function SimpleModeCard({
                 </div>
             </Card>
 
-            {/* Asset Breakdown Sheet */}
+            {/* Asset Breakdown Sheet — total card only */}
             {(id === 'total' || id === 1) && initialAssets && (
                 <AssetBreakdownSheet
                     isOpen={isBreakdownOpen}
@@ -446,6 +451,18 @@ export default function SimpleModeCard({
                     totalNetWorth={netWorth || 0}
                     bgColor={selectedColor.hex}
                     isDark={isDark}
+                />
+            )}
+
+            {/* Stock Detail Sheet */}
+            {stockAsset && (
+                <StockDetailSheet
+                    isOpen={isDetailOpen}
+                    onClose={() => setIsDetailOpen(false)}
+                    stockAsset={stockAsset}
+                    currentPrice={stockPriceInfo?.price ?? null}
+                    changePercent={stockPriceInfo?.changePercent ?? null}
+                    exchangeRate={initialExchange?.rate || 1400}
                 />
             )}
         </motion.div>
