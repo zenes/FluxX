@@ -40,6 +40,7 @@ interface MarketQuoteWidgetV2Props {
     myStocks: MarketAsset[];
     setMyStocks: React.Dispatch<React.SetStateAction<MarketAsset[]>>;
     onModalToggle?: (isOpen: boolean) => void;
+    onRefresh?: () => Promise<void>;
 }
 
 const StockReorderItem = ({
@@ -97,12 +98,13 @@ const StockReorderItem = ({
     );
 };
 
-export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalToggle }: MarketQuoteWidgetV2Props) {
+export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalToggle, onRefresh }: MarketQuoteWidgetV2Props) {
     const [activeTab, setActiveTab] = useState('MY종목');
     const [isExpanded, setIsExpanded] = useState(false);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [selectedAsset, setSelectedAsset] = useState<MarketAsset | null>(null);
     const [selectedRange, setSelectedRange] = useState('1일');
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     // --- SEARCH & BOTTOM SHEET STATE ---
     const [searchQuery, setSearchQuery] = useState('');
@@ -114,6 +116,16 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
     useEffect(() => {
         onModalToggle?.(isSheetOpen || !!selectedAsset);
     }, [isSheetOpen, !!selectedAsset, onModalToggle]);
+
+    const handleRefresh = async () => {
+        if (!onRefresh || isRefreshing) return;
+        setIsRefreshing(true);
+        try {
+            await onRefresh();
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
 
     // --- CHART DATA GENERATION ---
     const chartData = React.useMemo(() => {
@@ -256,21 +268,32 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
             className="bg-white dark:bg-[#1A1A1E] rounded-[24px] shadow-sm border border-zinc-100 dark:border-white/5 overflow-hidden flex flex-col pt-4 relative"
         >
             {/* Top Navigation */}
-            <div className="flex overflow-x-auto hide-scrollbar px-4 gap-2 mb-3">
-                {TABS.map((tab) => (
+            <div className="flex items-center justify-between px-4 mb-3">
+                <div className="flex overflow-x-auto hide-scrollbar gap-2 flex-1 mr-2">
+                    {TABS.map((tab) => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={cn(
+                                "px-4 py-1.5 rounded-full text-[13px] font-bold whitespace-nowrap transition-colors",
+                                activeTab === tab
+                                    ? "bg-zinc-800 text-white dark:bg-white dark:text-zinc-900"
+                                    : "bg-zinc-100 text-zinc-600 dark:bg-white/5 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-white/10"
+                            )}
+                        >
+                            {tab}
+                        </button>
+                    ))}
+                </div>
+                {onRefresh && (
                     <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        className={cn(
-                            "px-4 py-1.5 rounded-full text-[13px] font-bold whitespace-nowrap transition-colors",
-                            activeTab === tab
-                                ? "bg-zinc-800 text-white dark:bg-white dark:text-zinc-900"
-                                : "bg-zinc-100 text-zinc-600 dark:bg-white/5 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-white/10"
-                        )}
+                        onClick={handleRefresh}
+                        disabled={isRefreshing}
+                        className="p-1.5 rounded-full hover:bg-zinc-100 dark:hover:bg-white/5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all disabled:opacity-50 shrink-0"
                     >
-                        {tab}
+                        <RefreshCw className={cn("size-4", isRefreshing && "animate-spin")} />
                     </button>
-                ))}
+                )}
             </div>
 
             {/* List Layout (1-Column) */}

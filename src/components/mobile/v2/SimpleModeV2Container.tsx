@@ -50,6 +50,54 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
         localStorage.setItem('v2-my-stocks', JSON.stringify(myStocks));
     }, [myStocks, isHydrated]);
 
+    const refreshAllQuotes = async () => {
+        if (myStocks.length === 0) return;
+
+        try {
+            // Yahoo Finance friendly symbols
+            const symbols = myStocks.map(s => {
+                if (s.type === 'KR' && !s.ticker.includes('.')) {
+                    // Try to infer suffix if missing for common KR tickers
+                    return `${s.ticker}.KS`;
+                }
+                return s.ticker;
+            }).join(',');
+
+            const response = await fetch(`/api/stock-price?symbols=${symbols}`);
+            if (!response.ok) throw new Error('Failed to fetch prices');
+
+            const data = await response.json();
+            const quotes = data.quotes;
+
+            if (quotes) {
+                setMyStocks(prev => prev.map(s => {
+                    // Match with possible suffixes
+                    const ticker = s.ticker;
+                    const qData = quotes[ticker] || quotes[`${ticker}.KS`] || quotes[`${ticker}.KQ`];
+
+                    if (qData) {
+                        return {
+                            ...s,
+                            currentPrice: qData.price,
+                            changeAmount: qData.change || 0,
+                            changeRate: qData.changePercent || 0
+                        };
+                    }
+                    return s;
+                }));
+            }
+        } catch (e) {
+            console.error("Refresh failed:", e);
+        }
+    };
+
+    // Initial refresh after hydration
+    useEffect(() => {
+        if (isHydrated) {
+            refreshAllQuotes();
+        }
+    }, [isHydrated]);
+
     const containerRef = React.useRef<HTMLDivElement>(null);
     const dragX = useMotionValue(0);
 
@@ -184,11 +232,13 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                             myStocks={myStocks}
                             setMyStocks={setMyStocks}
                             onModalToggle={setIsAnyModalOpen}
+                            onRefresh={refreshAllQuotes}
                         />
 
                         <InvestmentNewsCardV2
                             myStocks={myStocks}
                             onModalToggle={setIsAnyModalOpen}
+                            isHydrated={isHydrated}
                         />
                     </div>
                 </div>

@@ -24,17 +24,19 @@ interface NewsItem {
 interface InvestmentNewsCardV2Props {
     myStocks: MarketAsset[];
     onModalToggle?: (isOpen: boolean) => void;
+    isHydrated?: boolean;
 }
 
 // Tiers: 1 (News Thumbnail) -> 2 (FMP Logo) -> 3 (Ticker Box)
 const FMP_API_KEY = "demo"; // Placeholder API key
 
-export default function InvestmentNewsCardV2({ myStocks, onModalToggle }: InvestmentNewsCardV2Props) {
+export default function InvestmentNewsCardV2({ myStocks, onModalToggle, isHydrated }: InvestmentNewsCardV2Props) {
     const [newsList, setNewsList] = useState<NewsItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isExpanded, setIsExpanded] = useState(false);
     const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
+    const lastFetchedQuery = React.useRef<string>('');
 
     // Synchronize modal state with parent
     useEffect(() => {
@@ -42,29 +44,35 @@ export default function InvestmentNewsCardV2({ myStocks, onModalToggle }: Invest
     }, [!!selectedNews, onModalToggle]);
 
     const fetchNews = useCallback(async () => {
-        if (!myStocks || myStocks.length === 0) {
+        if (!myStocks || myStocks.length === 0 || !isHydrated) {
             setNewsList([]);
             setIsLoading(false);
             return;
         }
 
+        const keywords = myStocks
+            .map(s => s.name?.split('(')[0]?.trim())
+            .filter(Boolean);
+
+        if (keywords.length === 0) {
+            setNewsList([]);
+            setIsLoading(false);
+            return;
+        }
+
+        const query = keywords.join(' OR ');
+
+        // Prevent redundant fetches if the query hasn't changed
+        if (query === lastFetchedQuery.current) {
+            setIsLoading(false);
+            return;
+        }
+
+        lastFetchedQuery.current = query;
         setIsLoading(true);
         setError(null);
 
         try {
-            // Combine all keywords into a single search query with OR operators
-            const keywords = myStocks
-                .map(s => s.name?.split('(')[0]?.trim())
-                .filter(Boolean);
-
-            if (keywords.length === 0) {
-                setNewsList([]);
-                setIsLoading(false);
-                return;
-            }
-
-            // Group keywords for the query (Google News search supports OR)
-            const query = keywords.join(' OR ');
             const timestamp = Date.now();
             const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=ko&gl=KR&ceid=KR:ko&t=${timestamp}`;
             const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&t=${timestamp}`;
@@ -96,7 +104,7 @@ export default function InvestmentNewsCardV2({ myStocks, onModalToggle }: Invest
                     });
 
                 // Final sort by latest time
-                finalCombined.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
+                finalCombined.sort((a: any, b: any) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
 
                 // Limit to 15 items total
                 setNewsList(finalCombined.slice(0, 15));
@@ -112,8 +120,10 @@ export default function InvestmentNewsCardV2({ myStocks, onModalToggle }: Invest
     }, [myStocks]);
 
     useEffect(() => {
-        fetchNews();
-    }, [fetchNews]);
+        if (isHydrated) {
+            fetchNews();
+        }
+    }, [fetchNews, isHydrated]);
 
     const formatTime = (dateStr: string) => {
         const date = new Date(dateStr);
