@@ -26,6 +26,7 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
     const [currentPage, setCurrentPage] = useState(0);
     const [myStocks, setMyStocks] = useState<MarketAsset[]>(INITIAL_STOCKS);
     const [isAnyModalOpen, setIsAnyModalOpen] = useState(false);
+    const isInitialized = React.useRef(false);
 
     // Persistence: Load stocks from localStorage on mount
     useEffect(() => {
@@ -40,10 +41,12 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                 console.error("Failed to load v2-my-stocks from localStorage:", e);
             }
         }
+        isInitialized.current = true;
     }, []);
 
     // Persistence: Save stocks to localStorage on change
     useEffect(() => {
+        if (!isInitialized.current) return;
         localStorage.setItem('v2-my-stocks', JSON.stringify(myStocks));
     }, [myStocks]);
 
