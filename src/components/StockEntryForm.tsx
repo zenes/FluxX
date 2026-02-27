@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Building2, UserCircle2, Hash, ArrowRight, Bookmark, Search, Info } from 'lucide-react';
 import { addStockEntry, editStockEntry, getPredefinedAccounts } from '@/lib/actions';
 import { useDebounce } from 'use-debounce';
+import { koreanNameMap } from '@/lib/koreanNameMap';
 
 type SearchResult = {
     symbol: string;
@@ -85,9 +86,13 @@ export default function StockEntryForm({
 
             setIsSearching(true);
             try {
-                const res = await fetch(`/api/ticker-search?q=${encodeURIComponent(debouncedTicker)}`);
+                const res = await fetch(`/api/search?q=${encodeURIComponent(debouncedTicker)}`);
                 const data = await res.json();
-                setSearchResults(data.results || []);
+                const processedResults = (data.results || []).map((item: any) => {
+                    const fallbackName = koreanNameMap[item.symbol];
+                    return fallbackName ? { ...item, shortname: fallbackName } : item;
+                });
+                setSearchResults(processedResults);
                 setShowDropdown(true);
             } catch (err) {
                 console.error('Failed to search ticker', err);

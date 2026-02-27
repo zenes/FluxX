@@ -33,8 +33,14 @@ export async function GET(request: Request) {
     }
 
     try {
-        // Fetch only missing quotes
-        const results = await yahooFinance.quote(symbolsToFetch);
+        // Fetch only missing quotes with localization and validation disabled
+        const results = await yahooFinance.quote(symbolsToFetch, {
+            // @ts-ignore
+            lang: 'ko-KR',
+            // @ts-ignore
+            region: 'KR'
+        }, { validateResult: false });
+
         const quotesArray = Array.isArray(results) ? results : [results];
 
         quotesArray.forEach(q => {
@@ -43,7 +49,8 @@ export async function GET(request: Request) {
                     price: q.regularMarketPrice || 0,
                     change: q.regularMarketChange || 0,
                     changePercent: q.regularMarketChangePercent || 0,
-                    shortName: q.shortName || q.longName || q.symbol,
+                    // Prioritize longName for localized (Korean) names
+                    shortName: q.longName || q.shortName || q.symbol,
                     currency: q.currency || 'USD',
                 };
                 resultsMap[q.symbol] = data;

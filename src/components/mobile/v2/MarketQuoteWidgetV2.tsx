@@ -16,6 +16,8 @@ import {
     Bar,
     ComposedChart
 } from 'recharts';
+import ChartTooltipV2 from './ChartTooltipV2';
+import { koreanNameMap } from '@/lib/koreanNameMap';
 
 const TABS = ['주요', 'MY종목', 'MY지수', '환율', '주가지수', '원자재', '국채수익률'];
 
@@ -127,47 +129,54 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
         }
     };
 
-    // --- CHART DATA GENERATION ---
-    const chartData = React.useMemo(() => {
-        if (!selectedAsset) return [];
-        const data = [];
-        const baseline = 100;
+    // --- CHART DATA FETCHING ---
+    const [chartData, setChartData] = useState<any[]>([]);
+    const [isChartLoading, setIsChartLoading] = useState(false);
 
-        const ranges: Record<string, { steps: number, vol: number, trendFactor: number }> = {
-            '1일': { steps: 80, vol: 0.8, trendFactor: 0.5 },
-            '1주': { steps: 80, vol: 1.5, trendFactor: 1.0 },
-            '1개월': { steps: 80, vol: 2.5, trendFactor: 1.5 },
-            '3개월': { steps: 100, vol: 4.0, trendFactor: 2.5 },
-            '6개월': { steps: 100, vol: 5.5, trendFactor: 3.5 },
-            'YTD': { steps: 120, vol: 7.5, trendFactor: 4.5 },
-            '1년': { steps: 120, vol: 10.0, trendFactor: 5.5 }
-        };
-
-        const config = ranges[selectedRange] || ranges['1일'];
-        const steps = config.steps;
-        const volatility = config.vol;
-        const trend = selectedAsset.changeRate * config.trendFactor;
-
-        let currentPrice = baseline - (trend * 0.4);
-        const startTime = new Date();
-        startTime.setHours(9, 0, 0, 0);
-
-        for (let i = 0; i <= steps; i++) {
-            const drift = (baseline + trend - currentPrice) / (steps - i + 1) * 0.15;
-            currentPrice += drift + (Math.random() - 0.5) * volatility;
-
-            const time = new Date(startTime.getTime() + i * (6.5 * 60 * 60 * 1000 / steps));
-            const timeStr = time.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
-
-            data.push({
-                time: timeStr,
-                price: parseFloat(currentPrice.toFixed(2)),
-                volume: Math.floor(Math.random() * 2000) + 1000
-            });
+    useEffect(() => {
+        if (!selectedAsset) {
+            setChartData([]);
+            return;
         }
 
-        return data;
-    }, [selectedAsset, selectedRange]);
+        const fetchChartData = async () => {
+            setIsChartLoading(true);
+            try {
+                const rangeMap: Record<string, { range: string, interval: string }> = {
+                    '1일': { range: '1d', interval: '15m' },
+                    '1주': { range: '5d', interval: '1h' },
+                    '1개월': { range: '1mo', interval: '1d' },
+                    '3개월': { range: '3mo', interval: '1d' },
+                    '6개월': { range: '6mo', interval: '1wk' },
+                    'YTD': { range: 'ytd', interval: '1wk' },
+                    '1년': { range: '1y', interval: '1mo' }
+                };
+
+                const { range, interval } = rangeMap[selectedRange] || rangeMap['1일'];
+
+                // Add suffix for KR stocks if missing
+                let symbol = selectedAsset.ticker;
+                if (selectedAsset.type === 'KR' && !symbol.includes('.')) {
+                    symbol = `${symbol}.KS`;
+                }
+
+                const response = await fetch(`/api/stock-history?symbol=${symbol}&range=${range}&interval=${interval}`);
+                if (!response.ok) throw new Error('Failed to fetch chart');
+
+                const data = await response.json();
+                if (data.chartData) {
+                    setChartData(data.chartData);
+                }
+            } catch (err) {
+                console.error("Chart fetch failed:", err);
+                setChartData([]);
+            } finally {
+                setIsChartLoading(false);
+            }
+        };
+
+        fetchChartData();
+    }, [selectedAsset?.ticker, selectedRange]);
 
     const isUp = selectedAsset?.changeAmount ? selectedAsset.changeAmount >= 0 : true;
     const chartColor = isUp ? "#FF4F60" : "#2684FE";
@@ -196,10 +205,14 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
         const fetchResults = async () => {
             setIsSearching(true);
             try {
-                const response = await fetch(`/api/ticker-search?q=${encodeURIComponent(searchQuery)}`);
+                const response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
                 const data = await response.json();
                 if (data.results) {
-                    setSearchResults(data.results);
+                    const processedResults = data.results.map((item: any) => {
+                        const fallbackName = koreanNameMap[item.symbol];
+                        return fallbackName ? { ...item, shortname: fallbackName } : item;
+                    });
+                    setSearchResults(processedResults);
                 }
             } catch (error) {
                 console.error('Search failed:', error);
@@ -575,59 +588,69 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
                                 {/* Detailed Chart (Recharts Upgrade) */}
                                 <div className="px-4 mb-8">
                                     <div className="w-full h-72 bg-white dark:bg-[#1A1A1E] rounded-[32px] border border-zinc-100 dark:border-white/5 relative overflow-hidden flex flex-col pt-8 pb-4">
-                                        <div className="flex-1 w-full px-2">
-                                            <ResponsiveContainer width="100%" height="100%">
-                                                <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-                                                    <defs>
-                                                        <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="5%" stopColor={chartColor} stopOpacity={0.15} />
-                                                            <stop offset="95%" stopColor={chartColor} stopOpacity={0} />
-                                                        </linearGradient>
-                                                    </defs>
-                                                    <CartesianGrid vertical={false} strokeDasharray="3 3" strokeOpacity={0.1} />
-                                                    <XAxis
-                                                        dataKey="time"
-                                                        hide
-                                                    />
-                                                    <YAxis
-                                                        yAxisId="price"
-                                                        domain={['auto', 'auto']}
-                                                        orientation="right"
-                                                        axisLine={false}
-                                                        tickLine={false}
-                                                        tick={{ fontSize: 10, fontWeight: 'bold', fill: '#A1A1AA' }}
-                                                        mirror
-                                                    />
-                                                    <YAxis
-                                                        yAxisId="volume"
-                                                        orientation="left"
-                                                        domain={[0, (dataMax: number) => dataMax * 3.5]}
-                                                        hide={true}
-                                                    />
-                                                    <Tooltip content={<CustomTooltip />} />
+                                        <div className="flex-1 w-full px-2 relative">
+                                            {isChartLoading ? (
+                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                    <Loader2 className="size-8 text-zinc-200 dark:text-zinc-800 animate-spin" />
+                                                </div>
+                                            ) : chartData.length > 0 ? (
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                                                        <defs>
+                                                            <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
+                                                                <stop offset="5%" stopColor={chartColor} stopOpacity={0.15} />
+                                                                <stop offset="95%" stopColor={chartColor} stopOpacity={0} />
+                                                            </linearGradient>
+                                                        </defs>
+                                                        <CartesianGrid vertical={false} strokeDasharray="3 3" strokeOpacity={0.1} />
+                                                        <XAxis
+                                                            dataKey="time"
+                                                            hide
+                                                        />
+                                                        <YAxis
+                                                            yAxisId="price"
+                                                            domain={['auto', 'auto']}
+                                                            orientation="right"
+                                                            axisLine={false}
+                                                            tickLine={false}
+                                                            tick={{ fontSize: 10, fontWeight: 'bold', fill: '#A1A1AA' }}
+                                                            mirror
+                                                        />
+                                                        <YAxis
+                                                            yAxisId="volume"
+                                                            orientation="left"
+                                                            domain={[0, (dataMax: number) => dataMax * 3.5]}
+                                                            hide={true}
+                                                        />
+                                                        <Tooltip content={<CustomTooltip />} />
 
-                                                    <Bar
-                                                        yAxisId="volume"
-                                                        dataKey="volume"
-                                                        fill="#A1A1AA"
-                                                        opacity={0.12}
-                                                        barSize={2}
-                                                    />
+                                                        <Bar
+                                                            yAxisId="volume"
+                                                            dataKey="volume"
+                                                            fill="#A1A1AA"
+                                                            opacity={0.12}
+                                                            barSize={2}
+                                                        />
 
-                                                    <Area
-                                                        yAxisId="price"
-                                                        type="monotone"
-                                                        dataKey="price"
-                                                        stroke={chartColor}
-                                                        strokeWidth={2.5}
-                                                        fillOpacity={1}
-                                                        fill="url(#colorPrice)"
-                                                        animationDuration={1000}
-                                                        dot={false}
-                                                        activeDot={{ r: 6, strokeWidth: 0, fill: chartColor }}
-                                                    />
-                                                </ComposedChart>
-                                            </ResponsiveContainer>
+                                                        <Area
+                                                            yAxisId="price"
+                                                            type="monotone"
+                                                            dataKey="price"
+                                                            stroke={chartColor}
+                                                            strokeWidth={2.5}
+                                                            fillOpacity={1}
+                                                            fill="url(#colorPrice)"
+                                                            animationDuration={1000}
+                                                            dot={false}
+                                                            activeDot={{ r: 6, strokeWidth: 0, fill: chartColor }}
+                                                        />
+                                                    </ComposedChart>
+                                                </ResponsiveContainer>
+                                            ) : (
+                                                <div className="absolute inset-0 flex items-center justify-center text-zinc-400 font-bold text-sm">
+                                                    데이터를 불러올 수 없습니다.
+                                                </div>
+                                            )}
                                         </div>
 
                                         {/* Time Labels Overlay */}

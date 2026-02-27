@@ -1,0 +1,483 @@
+diff --git a/src/app/api/ticker-search/route.ts b/src/app/api/search/route.ts
+similarity index 63%
+rename from src/app/api/ticker-search/route.ts
+rename to src/app/api/search/route.ts
+index ca0423b..c5f17d8 100644
+--- a/src/app/api/ticker-search/route.ts
++++ b/src/app/api/search/route.ts
+@@ -1,5 +1,6 @@
+ import { NextResponse } from 'next/server';
+ import YahooFinance from 'yahoo-finance2';
++
+ const yahooFinance = new YahooFinance();
+ 
+ export async function GET(request: Request) {
+@@ -11,14 +12,18 @@ export async function GET(request: Request) {
+     }
+ 
+     try {
++        // Use localized search with validation disabled to handle schema variations
+         const result = await yahooFinance.search(query, {
+-            quotesCount: 10,
+-            newsCount: 0,
+-        });
++            quotesCount: 8,
++            // @ts-ignore
++            lang: 'ko-KR',
++            // @ts-ignore
++            region: 'KR'
++        }, { validateResult: false }) as any;
+ 
+         const quotes = (result.quotes || []) as any[];
+ 
+-        // Filter for relevant types
++        // Filter for relevant types: Equities, ETFs, Indices, Currencies
+         const relevantQuotes = quotes.filter((q: any) =>
+             q.quoteType === 'EQUITY' ||
+             q.quoteType === 'ETF' ||
+@@ -29,13 +34,14 @@ export async function GET(request: Request) {
+         return NextResponse.json({
+             results: relevantQuotes.map((q: any) => ({
+                 symbol: q.symbol,
+-                shortname: q.shortname || q.longname || q.symbol,
++                // Prioritize longname for localized (Korean) names
++                shortname: q.longname || q.shortname || q.symbol,
+                 exchange: q.exchange,
+                 quoteType: q.quoteType
+             }))
+         });
+     } catch (error) {
+         console.error('Ticker search failed:', error);
+-        return NextResponse.json({ error: 'Search failed', results: [] }, { status: 500 });
++        return NextResponse.json({ error: (error as any).message || 'Search failed', results: [] }, { status: 500 });
+     }
+ }
+diff --git a/src/app/api/stock-history/route.ts b/src/app/api/stock-history/route.ts
+new file mode 100644
+index 0000000..bfd4aec
+--- /dev/null
++++ b/src/app/api/stock-history/route.ts
+@@ -0,0 +1,82 @@
++import { NextResponse } from 'next/server';
++import yahooFinanceDefault from 'yahoo-finance2';
++
++const yahooFinance = typeof yahooFinanceDefault === 'function'
++    // @ts-ignore
++    ? new yahooFinanceDefault()
++    : yahooFinanceDefault;
++
++export const revalidate = 300; // Cache for 5 minutes
++
++export async function GET(request: Request) {
++    try {
++        const { searchParams } = new URL(request.url);
++        const symbol = searchParams.get('symbol');
++        const range = searchParams.get('range') || '1mo';
++
++        if (!symbol) {
++            return NextResponse.json({ error: 'Symbol parameter is required' }, { status: 400 });
++        }
++
++        let period1 = new Date();
++        switch (range) {
++            case '1d':
++                period1.setDate(period1.getDate() - 1);
++                break;
++            case '5d':
++            case '1w':
++                period1.setDate(period1.getDate() - 7);
++                break;
++            case '3mo':
++            case '3m':
++                period1.setMonth(period1.getMonth() - 3);
++                break;
++            case '6mo':
++            case '6m':
++                period1.setMonth(period1.getMonth() - 6);
++                break;
++            case '1y':
++                period1.setFullYear(period1.getFullYear() - 1);
++                break;
++            case '5y':
++                period1.setFullYear(period1.getFullYear() - 5);
++                break;
++            case '1mo':
++            case '1m':
++            default:
++                period1.setMonth(period1.getMonth() - 1);
++                break;
++        }
++
++        let intervalValue = '1d';
++        if (range === '1d' || range === '5d' || range === '1w') intervalValue = '15m';
++        else if (range === '5y') intervalValue = '1wk';
++
++        const queryOptions = {
++            period1,
++            period2: new Date(),
++            interval: intervalValue as any,
++        };
++
++        // @ts-ignore
++        const result = await yahooFinance.historical(symbol, queryOptions);
++
++        const formattedData = result.map((item: any) => ({
++            time: item.date instanceof Date
++                ? item.date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })
++                : new Date(item.date).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false }),
++            date: item.date,
++            price: item.close || item.open || 0,
++            volume: item.volume || 0
++        })).filter((item: any) => item.price > 0);
++
++        return NextResponse.json({ chartData: formattedData });
++
++    } catch (error: any) {
++        console.error('Stock history fetch error:', error);
++        return NextResponse.json(
++            { error: 'Failed to fetch stock history', details: error.message || error.toString() },
++            { status: 500 }
++        );
++    }
++}
+diff --git a/src/app/api/stock-price/route.ts b/src/app/api/stock-price/route.ts
+index 253ee37..2ad2512 100644
+--- a/src/app/api/stock-price/route.ts
++++ b/src/app/api/stock-price/route.ts
+@@ -33,8 +33,14 @@ export async function GET(request: Request) {
+     }
+ 
+     try {
+-        // Fetch only missing quotes
+-        const results = await yahooFinance.quote(symbolsToFetch);
++        // Fetch only missing quotes with localization and validation disabled
++        const results = await yahooFinance.quote(symbolsToFetch, {
++            // @ts-ignore
++            lang: 'ko-KR',
++            // @ts-ignore
++            region: 'KR'
++        }, { validateResult: false });
++
+         const quotesArray = Array.isArray(results) ? results : [results];
+ 
+         quotesArray.forEach(q => {
+@@ -43,7 +49,8 @@ export async function GET(request: Request) {
+                     price: q.regularMarketPrice || 0,
+                     change: q.regularMarketChange || 0,
+                     changePercent: q.regularMarketChangePercent || 0,
+-                    shortName: q.shortName || q.longName || q.symbol,
++                    // Prioritize longName for localized (Korean) names
++                    shortName: q.longName || q.shortName || q.symbol,
+                     currency: q.currency || 'USD',
+                 };
+                 resultsMap[q.symbol] = data;
+diff --git a/src/components/StockEntryForm.tsx b/src/components/StockEntryForm.tsx
+index ac77569..4883e6d 100644
+--- a/src/components/StockEntryForm.tsx
++++ b/src/components/StockEntryForm.tsx
+@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
+ import { Building2, UserCircle2, Hash, ArrowRight, Bookmark, Search, Info } from 'lucide-react';
+ import { addStockEntry, editStockEntry, getPredefinedAccounts } from '@/lib/actions';
+ import { useDebounce } from 'use-debounce';
++import { koreanNameMap } from '@/lib/koreanNameMap';
+ 
+ type SearchResult = {
+     symbol: string;
+@@ -85,9 +86,13 @@ export default function StockEntryForm({
+ 
+             setIsSearching(true);
+             try {
+-                const res = await fetch(`/api/ticker-search?q=${encodeURIComponent(debouncedTicker)}`);
++                const res = await fetch(`/api/search?q=${encodeURIComponent(debouncedTicker)}`);
+                 const data = await res.json();
+-                setSearchResults(data.results || []);
++                const processedResults = (data.results || []).map((item: any) => {
++                    const fallbackName = koreanNameMap[item.symbol];
++                    return fallbackName ? { ...item, shortname: fallbackName } : item;
++                });
++                setSearchResults(processedResults);
+                 setShowDropdown(true);
+             } catch (err) {
+                 console.error('Failed to search ticker', err);
+diff --git a/src/components/mobile/v2/MarketQuoteWidgetV2.tsx b/src/components/mobile/v2/MarketQuoteWidgetV2.tsx
+index e3bed83..0f5ed9b 100644
+--- a/src/components/mobile/v2/MarketQuoteWidgetV2.tsx
++++ b/src/components/mobile/v2/MarketQuoteWidgetV2.tsx
+@@ -16,6 +16,8 @@ import {
+     Bar,
+     ComposedChart
+ } from 'recharts';
++import ChartTooltipV2 from './ChartTooltipV2';
++import { koreanNameMap } from '@/lib/koreanNameMap';
+ 
+ const TABS = ['주요', 'MY종목', 'MY지수', '환율', '주가지수', '원자재', '국채수익률'];
+ 
+@@ -127,47 +129,54 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
+         }
+     };
+ 
+-    // --- CHART DATA GENERATION ---
+-    const chartData = React.useMemo(() => {
+-        if (!selectedAsset) return [];
+-        const data = [];
+-        const baseline = 100;
+-
+-        const ranges: Record<string, { steps: number, vol: number, trendFactor: number }> = {
+-            '1일': { steps: 80, vol: 0.8, trendFactor: 0.5 },
+-            '1주': { steps: 80, vol: 1.5, trendFactor: 1.0 },
+-            '1개월': { steps: 80, vol: 2.5, trendFactor: 1.5 },
+-            '3개월': { steps: 100, vol: 4.0, trendFactor: 2.5 },
+-            '6개월': { steps: 100, vol: 5.5, trendFactor: 3.5 },
+-            'YTD': { steps: 120, vol: 7.5, trendFactor: 4.5 },
+-            '1년': { steps: 120, vol: 10.0, trendFactor: 5.5 }
+-        };
+-
+-        const config = ranges[selectedRange] || ranges['1일'];
+-        const steps = config.steps;
+-        const volatility = config.vol;
+-        const trend = selectedAsset.changeRate * config.trendFactor;
++    // --- CHART DATA FETCHING ---
++    const [chartData, setChartData] = useState<any[]>([]);
++    const [isChartLoading, setIsChartLoading] = useState(false);
+ 
+-        let currentPrice = baseline - (trend * 0.4);
+-        const startTime = new Date();
+-        startTime.setHours(9, 0, 0, 0);
++    useEffect(() => {
++        if (!selectedAsset) {
++            setChartData([]);
++            return;
++        }
+ 
+-        for (let i = 0; i <= steps; i++) {
+-            const drift = (baseline + trend - currentPrice) / (steps - i + 1) * 0.15;
+-            currentPrice += drift + (Math.random() - 0.5) * volatility;
++        const fetchChartData = async () => {
++            setIsChartLoading(true);
++            try {
++                const rangeMap: Record<string, { range: string, interval: string }> = {
++                    '1일': { range: '1d', interval: '15m' },
++                    '1주': { range: '5d', interval: '1h' },
++                    '1개월': { range: '1mo', interval: '1d' },
++                    '3개월': { range: '3mo', interval: '1d' },
++                    '6개월': { range: '6mo', interval: '1wk' },
++                    'YTD': { range: 'ytd', interval: '1wk' },
++                    '1년': { range: '1y', interval: '1mo' }
++                };
++
++                const { range, interval } = rangeMap[selectedRange] || rangeMap['1일'];
++
++                // Add suffix for KR stocks if missing
++                let symbol = selectedAsset.ticker;
++                if (selectedAsset.type === 'KR' && !symbol.includes('.')) {
++                    symbol = `${symbol}.KS`;
++                }
+ 
+-            const time = new Date(startTime.getTime() + i * (6.5 * 60 * 60 * 1000 / steps));
+-            const timeStr = time.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
++                const response = await fetch(`/api/stock-history?symbol=${symbol}&range=${range}&interval=${interval}`);
++                if (!response.ok) throw new Error('Failed to fetch chart');
+ 
+-            data.push({
+-                time: timeStr,
+-                price: parseFloat(currentPrice.toFixed(2)),
+-                volume: Math.floor(Math.random() * 2000) + 1000
+-            });
+-        }
++                const data = await response.json();
++                if (data.chartData) {
++                    setChartData(data.chartData);
++                }
++            } catch (err) {
++                console.error("Chart fetch failed:", err);
++                setChartData([]);
++            } finally {
++                setIsChartLoading(false);
++            }
++        };
+ 
+-        return data;
+-    }, [selectedAsset, selectedRange]);
++        fetchChartData();
++    }, [selectedAsset?.ticker, selectedRange]);
+ 
+     const isUp = selectedAsset?.changeAmount ? selectedAsset.changeAmount >= 0 : true;
+     const chartColor = isUp ? "#FF4F60" : "#2684FE";
+@@ -196,10 +205,14 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
+         const fetchResults = async () => {
+             setIsSearching(true);
+             try {
+-                const response = await fetch(`/api/ticker-search?q=${encodeURIComponent(searchQuery)}`);
++                const response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
+                 const data = await response.json();
+                 if (data.results) {
+-                    setSearchResults(data.results);
++                    const processedResults = data.results.map((item: any) => {
++                        const fallbackName = koreanNameMap[item.symbol];
++                        return fallbackName ? { ...item, shortname: fallbackName } : item;
++                    });
++                    setSearchResults(processedResults);
+                 }
+             } catch (error) {
+                 console.error('Search failed:', error);
+@@ -575,59 +588,69 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
+                                 {/* Detailed Chart (Recharts Upgrade) */}
+                                 <div className="px-4 mb-8">
+                                     <div className="w-full h-72 bg-white dark:bg-[#1A1A1E] rounded-[32px] border border-zinc-100 dark:border-white/5 relative overflow-hidden flex flex-col pt-8 pb-4">
+-                                        <div className="flex-1 w-full px-2">
+-                                            <ResponsiveContainer width="100%" height="100%">
+-                                                <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+-                                                    <defs>
+-                                                        <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
+-                                                            <stop offset="5%" stopColor={chartColor} stopOpacity={0.15} />
+-                                                            <stop offset="95%" stopColor={chartColor} stopOpacity={0} />
+-                                                        </linearGradient>
+-                                                    </defs>
+-                                                    <CartesianGrid vertical={false} strokeDasharray="3 3" strokeOpacity={0.1} />
+-                                                    <XAxis
+-                                                        dataKey="time"
+-                                                        hide
+-                                                    />
+-                                                    <YAxis
+-                                                        yAxisId="price"
+-                                                        domain={['auto', 'auto']}
+-                                                        orientation="right"
+-                                                        axisLine={false}
+-                                                        tickLine={false}
+-                                                        tick={{ fontSize: 10, fontWeight: 'bold', fill: '#A1A1AA' }}
+-                                                        mirror
+-                                                    />
+-                                                    <YAxis
+-                                                        yAxisId="volume"
+-                                                        orientation="left"
+-                                                        domain={[0, (dataMax: number) => dataMax * 3.5]}
+-                                                        hide={true}
+-                                                    />
+-                                                    <Tooltip content={<CustomTooltip />} />
+-
+-                                                    <Bar
+-                                                        yAxisId="volume"
+-                                                        dataKey="volume"
+-                                                        fill="#A1A1AA"
+-                                                        opacity={0.12}
+-                                                        barSize={2}
+-                                                    />
+-
+-                                                    <Area
+-                                                        yAxisId="price"
+-                                                        type="monotone"
+-                                                        dataKey="price"
+-                                                        stroke={chartColor}
+-                                                        strokeWidth={2.5}
+-                                                        fillOpacity={1}
+-                                                        fill="url(#colorPrice)"
+-                                                        animationDuration={1000}
+-                                                        dot={false}
+-                                                        activeDot={{ r: 6, strokeWidth: 0, fill: chartColor }}
+-                                                    />
+-                                                </ComposedChart>
+-                                            </ResponsiveContainer>
++                                        <div className="flex-1 w-full px-2 relative">
++                                            {isChartLoading ? (
++                                                <div className="absolute inset-0 flex items-center justify-center">
++                                                    <Loader2 className="size-8 text-zinc-200 dark:text-zinc-800 animate-spin" />
++                                                </div>
++                                            ) : chartData.length > 0 ? (
++                                                <ResponsiveContainer width="100%" height="100%">
++                                                    <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
++                                                        <defs>
++                                                            <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
++                                                                <stop offset="5%" stopColor={chartColor} stopOpacity={0.15} />
++                                                                <stop offset="95%" stopColor={chartColor} stopOpacity={0} />
++                                                            </linearGradient>
++                                                        </defs>
++                                                        <CartesianGrid vertical={false} strokeDasharray="3 3" strokeOpacity={0.1} />
++                                                        <XAxis
++                                                            dataKey="time"
++                                                            hide
++                                                        />
++                                                        <YAxis
++                                                            yAxisId="price"
++                                                            domain={['auto', 'auto']}
++                                                            orientation="right"
++                                                            axisLine={false}
++                                                            tickLine={false}
++                                                            tick={{ fontSize: 10, fontWeight: 'bold', fill: '#A1A1AA' }}
++                                                            mirror
++                                                        />
++                                                        <YAxis
++                                                            yAxisId="volume"
++                                                            orientation="left"
++                                                            domain={[0, (dataMax: number) => dataMax * 3.5]}
++                                                            hide={true}
++                                                        />
++                                                        <Tooltip content={<CustomTooltip />} />
++
++                                                        <Bar
++                                                            yAxisId="volume"
++                                                            dataKey="volume"
++                                                            fill="#A1A1AA"
++                                                            opacity={0.12}
++                                                            barSize={2}
++                                                        />
++
++                                                        <Area
++                                                            yAxisId="price"
++                                                            type="monotone"
++                                                            dataKey="price"
++                                                            stroke={chartColor}
++                                                            strokeWidth={2.5}
++                                                            fillOpacity={1}
++                                                            fill="url(#colorPrice)"
++                                                            animationDuration={1000}
++                                                            dot={false}
++                                                            activeDot={{ r: 6, strokeWidth: 0, fill: chartColor }}
++                                                        />
++                                                    </ComposedChart>
++                                                </ResponsiveContainer>
++                                            ) : (
++                                                <div className="absolute inset-0 flex items-center justify-center text-zinc-400 font-bold text-sm">
++                                                    데이터를 불러올 수 없습니다.
++                                                </div>
++                                            )}
+                                         </div>
+ 
+                                         {/* Time Labels Overlay */}
+diff --git a/src/lib/koreanNameMap.ts b/src/lib/koreanNameMap.ts
+new file mode 100644
+index 0000000..5c4fac2
+--- /dev/null
++++ b/src/lib/koreanNameMap.ts
+@@ -0,0 +1,32 @@
++// Fallback dictionary for Korean stock names
++// Used when yahoo-finance2 returns English names for Korean stocks or popular US stocks.
++
++export const koreanNameMap: Record<string, string> = {
++    // Top US Tech Stocks
++    'AAPL': '애플',
++    'MSFT': '마이크로소프트',
++    'GOOGL': '알파벳 A',
++    'GOOG': '알파벳 C',
++    'AMZN': '아마존닷컴',
++    'NVDA': '엔비디아',
++    'TSLA': '테슬라',
++    'META': '메타 플랫폼스',
++
++    // Top KR Stocks
++    '005930.KS': '삼성전자',
++    '000660.KS': 'SK하이닉스',
++    '373220.KS': 'LG에너지솔루션',
++    '207940.KS': '삼성바이오로직스',
++    '005380.KS': '현대차',
++    '000270.KS': '기아',
++    '068270.KS': '셀트리온',
++    '051910.KS': 'LG화학',
++    '005490.KS': 'POSCO홀딩스',
++    '035420.KS': 'NAVER',
++    '035720.KS': '카카오',
++
++    // Popular Korean ETFs
++    '446720.KS': 'SOL 미국배당다우존스',
++    '476830.KS': 'KODEX 미국배당커버드콜',
++    '305080.KS': 'TIGER 미국배당다우존스',
++};
