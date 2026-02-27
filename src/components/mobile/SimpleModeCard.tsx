@@ -15,6 +15,7 @@ import {
 import { cn } from '@/lib/utils';
 import { calculateNetWorth, MarketPrices } from '@/lib/calculations';
 import { AssetItem } from '@/lib/actions';
+import AssetBreakdownSheet from './AssetBreakdownSheet';
 
 // 톤다운되고 안정된 느낌의 세련된 색상 팔레트
 const COLORS = [
@@ -52,6 +53,12 @@ const COLORS = [
     { name: '아이보리', class: 'bg-[#FFFFF0]', hex: '#FFFFF0' },
     { name: '클라우드', class: 'bg-[#F8F9FA]', hex: '#F8F9FA' },
     { name: '페블', class: 'bg-[#D1D5DB]', hex: '#D1D5DB' },
+];
+
+export const BG_THEMES = [
+    { name: 'Premium Dark', hex: '#121214', label: '다크' },
+    { name: 'White Silk', hex: '#F5F5F7', label: '실크' },
+    { name: 'Midnight Blue', hex: '#0A111F', label: '미드나잇' },
 ];
 
 /**
@@ -94,8 +101,16 @@ export default function SimpleModeCard({
     const [netWorth, setNetWorth] = useState<number | null>(null);
     const [stockPriceInfo, setStockPriceInfo] = useState<{ price: number; currency: string; change?: number; changePercent?: number } | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isBreakdownOpen, setIsBreakdownOpen] = useState(false);
+    const [activeBgTheme, setActiveBgTheme] = useState(BG_THEMES[0].name);
+    const [marketPrices, setMarketPrices] = useState<MarketPrices>({
+        usdKrw: initialExchange?.rate || 1400,
+        goldUsd: initialGold?.price || 2400,
+        stockPrices: {}
+    });
 
     const storageKey = `fluxx-card-color-${id}`;
+    const bgStorageKey = 'fluxx-simple-bg-theme';
 
     useEffect(() => {
         const savedColorName = localStorage.getItem(storageKey);
@@ -103,12 +118,24 @@ export default function SimpleModeCard({
             const foundColor = COLORS.find(c => c.name === savedColorName);
             if (foundColor) setSelectedColor(foundColor);
         }
+
+        const savedBgTheme = localStorage.getItem(bgStorageKey);
+        if (savedBgTheme) {
+            setActiveBgTheme(savedBgTheme);
+        }
     }, [storageKey]);
 
     const handleColorSelect = (color: typeof COLORS[0]) => {
         setSelectedColor(color);
         localStorage.setItem(storageKey, color.name);
         setTimeout(() => setIsOpen(false), 300);
+    };
+
+    const handleBgThemeSelect = (themeName: string) => {
+        setActiveBgTheme(themeName);
+        localStorage.setItem(bgStorageKey, themeName);
+        // Dispatch custom event for container to listen to
+        window.dispatchEvent(new CustomEvent('fluxx-theme-change', { detail: { theme: themeName } }));
     };
 
     const isDark = isColorDark(selectedColor.hex);
@@ -147,7 +174,9 @@ export default function SimpleModeCard({
                         goldUsd: initialGold?.price || 2600,
                         stockPrices: stockPrices as any,
                     };
-                    setNetWorth(calculateNetWorth(initialAssets, prices));
+                    setMarketPrices(prices);
+                    const calculatedValue = calculateNetWorth(initialAssets, prices);
+                    setNetWorth(calculatedValue);
                 }
             } catch (err) {
                 console.error("Failed to fetch data:", err);
@@ -184,6 +213,7 @@ export default function SimpleModeCard({
     };
 
     const handleSettingsClick = (e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent triggering handleCardClick
         if (ignoreNextClick || isReorderMode) {
             e.preventDefault();
             e.stopPropagation();
@@ -191,6 +221,12 @@ export default function SimpleModeCard({
             return;
         }
         setIsOpen(true);
+    };
+
+    const handleCardClick = () => {
+        if (id === 'total' || id === 1) {
+            setIsBreakdownOpen(true);
+        }
     };
 
     return (
@@ -203,10 +239,11 @@ export default function SimpleModeCard({
             className="w-full"
         >
             <Card
+                onClick={handleCardClick}
                 className={cn(
-                    "relative overflow-hidden transition-all duration-700 border-none rounded-[32px] ring-1 ring-black/5 select-none",
+                    "relative overflow-hidden transition-all duration-700 border-none rounded-[32px] ring-1 ring-black/5 select-none animate-in fade-in slide-in-from-bottom-5",
                     selectedColor.class,
-                    isReorderMode ? "shadow-2xl opacity-90 ring-primary/30" : "shadow-sm"
+                    isReorderMode ? "shadow-2xl opacity-90 ring-primary/30" : "shadow-sm active:scale-[0.98] cursor-pointer"
                 )}
             >
                 {isReorderMode && (
@@ -238,45 +275,87 @@ export default function SimpleModeCard({
                                 <Settings2 className={cn("size-5", isDark ? "text-white/40" : "text-zinc-400")} />
                             </button>
                         </SheetTrigger>
-                        <SheetContent side="bottom" className="h-[80vh] rounded-t-[40px] p-0 overflow-hidden border-none shadow-2xl bg-white">
-                            <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-50">
-                                <button onClick={() => setIsOpen(false)} className="text-zinc-400 p-1">
+                        <SheetContent
+                            side="bottom"
+                            className="h-[85vh] rounded-t-[40px] p-0 overflow-hidden border-none shadow-2xl bg-white flex flex-col"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-50 shrink-0">
+                                <button onClick={() => setIsOpen(false)} className="text-zinc-400 p-1 active:scale-90 transition-transform">
                                     <X className="size-6" />
                                 </button>
                                 <SheetClose asChild>
-                                    <button className="text-sm font-bold text-zinc-900 px-4 py-2 bg-zinc-100 rounded-full">확인</button>
+                                    <button className="text-sm font-bold text-zinc-900 px-5 py-2.5 bg-zinc-100 rounded-full active:scale-95 transition-all">확인</button>
                                 </SheetClose>
                             </div>
 
-                            <div className="px-8 pt-10 pb-4">
-                                <div className="flex items-center gap-2.5 mb-2">
-                                    <h3 className="text-2xl font-bold text-zinc-900 tracking-tight">테마 설정</h3>
-                                    <div className="size-2 rounded-full bg-primary animate-pulse" />
+                            <div className="flex-1 overflow-y-auto hide-scrollbar">
+                                <div className="px-8 pt-10 pb-4">
+                                    <div className="flex items-center gap-2.5 mb-2">
+                                        <h3 className="text-2xl font-bold text-zinc-900 tracking-tight">테마 설정</h3>
+                                        <div className="size-2 rounded-full bg-primary animate-pulse" />
+                                    </div>
+                                    <p className="text-sm text-zinc-400 font-medium leading-relaxed">
+                                        카드의 분위기를 결정할 차분하고 세련된 톤의 팔레트입니다.
+                                    </p>
                                 </div>
-                                <p className="text-sm text-zinc-400 font-medium leading-relaxed">
-                                    카드의 분위기를 결정할 차분하고 세련된 톤의 팔레트입니다.
-                                </p>
-                            </div>
 
-                            <div className="grid grid-cols-4 gap-y-7 gap-x-5 px-8 py-8 pb-32 max-h-[55vh] overflow-y-auto hide-scrollbar">
-                                {COLORS.map((color) => {
-                                    const isSelected = selectedColor.class === color.class;
-                                    return (
-                                        <div key={color.name} className="flex flex-col items-center gap-2">
-                                            <button
-                                                onClick={() => handleColorSelect(color)}
-                                                className={cn(
-                                                    "size-16 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-inner",
-                                                    color.class,
-                                                    isSelected ? "ring-2 ring-offset-2 ring-primary scale-110" : "hover:scale-105"
-                                                )}
-                                            >
-                                                {isSelected && <Check className={cn("size-6", isColorDark(color.hex) ? "text-white" : "text-zinc-900")} />}
-                                            </button>
-                                            <span className="text-[10px] text-zinc-400 font-medium whitespace-nowrap">{color.name}</span>
-                                        </div>
-                                    );
-                                })}
+                                <div className="grid grid-cols-4 gap-y-7 gap-x-5 px-8 pt-4 pb-10">
+                                    {COLORS.map((color) => {
+                                        const isSelected = selectedColor.class === color.class;
+                                        return (
+                                            <div key={color.name} className="flex flex-col items-center gap-2">
+                                                <button
+                                                    onClick={() => handleColorSelect(color)}
+                                                    className={cn(
+                                                        "size-16 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-inner",
+                                                        color.class,
+                                                        isSelected ? "ring-2 ring-offset-2 ring-primary scale-110" : "hover:scale-105"
+                                                    )}
+                                                >
+                                                    {isSelected && <Check className={cn("size-6", isColorDark(color.hex) ? "text-white" : "text-zinc-900")} />}
+                                                </button>
+                                                <span className="text-[10px] text-zinc-400 font-medium whitespace-nowrap">{color.name}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                <div className="px-8 pt-10 pb-2 border-t border-zinc-100 bg-zinc-50/30">
+                                    <div className="flex items-center gap-2.5 mb-2">
+                                        <h3 className="text-xl font-bold text-zinc-900 tracking-tight">배경 테마</h3>
+                                    </div>
+                                    <p className="text-xs text-zinc-400 font-medium mb-6">
+                                        심플 모드 전체에 적용되는 프리미엄 배경 스타일입니다.
+                                    </p>
+
+                                    <div className="flex gap-4 pb-12">
+                                        {BG_THEMES.map((theme) => {
+                                            const isSelected = activeBgTheme === theme.name;
+                                            return (
+                                                <button
+                                                    key={theme.name}
+                                                    onClick={() => handleBgThemeSelect(theme.name)}
+                                                    className={cn(
+                                                        "flex-1 py-4 rounded-[20px] flex flex-col items-center gap-2 border-2 transition-all active:scale-95",
+                                                        isSelected ? "border-primary bg-primary/5" : "border-zinc-200 bg-white"
+                                                    )}
+                                                >
+                                                    <div
+                                                        className="size-10 rounded-full shadow-inner ring-1 ring-black/10"
+                                                        style={{ backgroundColor: theme.hex }}
+                                                    />
+                                                    <span className={cn(
+                                                        "text-[13px] font-bold",
+                                                        isSelected ? "text-primary" : "text-zinc-500"
+                                                    )}>
+                                                        {theme.label}
+                                                    </span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="absolute top-2 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-zinc-100 rounded-full" />
@@ -356,6 +435,19 @@ export default function SimpleModeCard({
                     </div>
                 </div>
             </Card>
+
+            {/* Asset Breakdown Sheet */}
+            {(id === 'total' || id === 1) && initialAssets && (
+                <AssetBreakdownSheet
+                    isOpen={isBreakdownOpen}
+                    onClose={() => setIsBreakdownOpen(false)}
+                    assets={initialAssets}
+                    marketPrices={marketPrices}
+                    totalNetWorth={netWorth || 0}
+                    bgColor={selectedColor.hex}
+                    isDark={isDark}
+                />
+            )}
         </motion.div>
     );
 }
