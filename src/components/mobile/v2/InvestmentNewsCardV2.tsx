@@ -46,8 +46,8 @@ export default function InvestmentNewsCardV2({ myStocks }: InvestmentNewsCardV2P
         setError(null);
 
         try {
-            // Take top 4 stocks
-            const fetchPromises = myStocks.slice(0, 4).map(async (stock) => {
+            // Fetch news for ALL stocks in the list
+            const fetchPromises = myStocks.map(async (stock) => {
                 const keyword = stock.name?.split('(')[0]?.trim();
                 if (!keyword) return [];
                 const timestamp = Date.now();

@@ -25,6 +25,27 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
     const [activeTag, setActiveTag] = useState('all');
     const [currentPage, setCurrentPage] = useState(0);
     const [myStocks, setMyStocks] = useState<MarketAsset[]>(INITIAL_STOCKS);
+
+    // Persistence: Load stocks from localStorage on mount
+    useEffect(() => {
+        const saved = localStorage.getItem('v2-my-stocks');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    setMyStocks(parsed);
+                }
+            } catch (e) {
+                console.error("Failed to load v2-my-stocks from localStorage:", e);
+            }
+        }
+    }, []);
+
+    // Persistence: Save stocks to localStorage on change
+    useEffect(() => {
+        localStorage.setItem('v2-my-stocks', JSON.stringify(myStocks));
+    }, [myStocks]);
+
     const containerRef = React.useRef<HTMLDivElement>(null);
     const dragX = useMotionValue(0);
 
