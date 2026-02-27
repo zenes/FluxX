@@ -6,6 +6,7 @@ export const ko = {
         accounts: "계좌 현황",
         dividends: "배당 내역",
         intelligence: "인텔리전스",
+        simple_mode: "심플 모드",
         settings: "설정",
     },
 

@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Pretendard 폰트 임포트 - 부드럽고 세련된 한글 폰트 */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css");
+
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
@@ -187,8 +191,12 @@
 
 /* Global font inheritance enforcement */
 body {
-  font-family: var(--font-geist-sans), sans-serif;
+  font-family: "Pretendard Variable", Pretendard, var(--font-geist-sans), -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
 
 /* Ensure mono is used where explicitly requested */
 .font-mono,

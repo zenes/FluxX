@@ -6,6 +6,7 @@ export const en = {
         accounts: "Accounts",
         dividends: "Dividends",
         intelligence: "Intelligence",
+        simple_mode: "Simple Mode",
         settings: "Settings",
     },
 

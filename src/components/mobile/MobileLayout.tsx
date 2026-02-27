@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, ShoppingBag, Landmark, DollarSign, Zap, Sun, Moon, Globe, Monitor } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Landmark, DollarSign, Zap, Sun, Moon, Globe, Monitor, Layout } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
@@ -14,6 +14,7 @@ const NAV_ITEMS = [
     { href: '/account', icon: Landmark, labelKey: 'nav.accounts' },
     { href: '/dividends', icon: DollarSign, labelKey: 'nav.dividends' },
     { href: '/intelligence', icon: Zap, labelKey: 'nav.intelligence' },
+    { href: '/m/simple', icon: Layout, labelKey: 'nav.simple_mode' },
 ];
 
 export function MobileHeader() {
