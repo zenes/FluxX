@@ -1,36 +1,23 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { RefreshCw, ChevronDown, ChevronUp, Plus, Minus, X, Search, Loader2 } from 'lucide-react';
+import { RefreshCw, ChevronDown, ChevronUp, Plus, Minus, X, Search, Loader2, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
-
-// --- DATA SCHEMA & CONSTANTS ---
-type AssetType = 'KR' | 'US' | 'INDEX' | 'FX';
-
-interface MarketAsset {
-    id: string | number;
-    type: AssetType;
-    name: string;
-    ticker: string;
-    currentPrice: number;
-    changeAmount: number;
-    changeRate: number; // Percentage
-}
+import { motion, AnimatePresence, Reorder, useDragControls } from 'framer-motion';
+import { AssetType, MarketAsset } from './typesV2';
+import {
+    AreaChart,
+    Area,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    Bar,
+    ComposedChart
+} from 'recharts';
 
 const TABS = ['주요', 'MY종목', 'MY지수', '환율', '주가지수', '원자재', '국채수익률'];
-
-// Pre-configured initial dummy data
-const INITIAL_STOCKS: MarketAsset[] = [
-    { id: 'kr-1', type: 'KR', name: 'KODEX 미국배당커버드콜액티브', ticker: '476830', currentPrice: 12770, changeAmount: 85, changeRate: 0.67 },
-    { id: 'us-1', type: 'US', name: 'Apple Inc.', ticker: 'AAPL', currentPrice: 182.52, changeAmount: 1.2, changeRate: 0.66 },
-    { id: 'kr-2', type: 'KR', name: 'SOL 미국배당다우존스', ticker: '446720', currentPrice: 13085, changeAmount: 25, changeRate: 0.19 },
-    { id: 'us-2', type: 'US', name: 'NVIDIA Corporation', ticker: 'NVDA', currentPrice: 880.08, changeAmount: 25.1, changeRate: 2.94 },
-    { id: 'idx-1', type: 'INDEX', name: 'S&P 500', ticker: '^SPX', currentPrice: 5123.69, changeAmount: 15.2, changeRate: 0.30 },
-    { id: 'us-3', type: 'US', name: 'Tesla, Inc.', ticker: 'TSLA', currentPrice: 175.22, changeAmount: -1.5, changeRate: -0.85 },
-    { id: 'fx-1', type: 'FX', name: 'USD/KRW', ticker: 'USDKRW=X', currentPrice: 1335.50, changeAmount: 2.5, changeRate: 0.19 },
-    { id: 'kr-3', type: 'KR', name: '삼성전자', ticker: '005930', currentPrice: 73000, changeAmount: 500, changeRate: 0.69 },
-];
 
 const Sparkline = ({ isUp }: { isUp: boolean }) => {
     const color = isUp ? "#FF4F60" : "#2684FE";
@@ -49,18 +36,137 @@ const Sparkline = ({ isUp }: { isUp: boolean }) => {
     );
 };
 
-export default function MarketQuoteWidgetV2() {
+interface MarketQuoteWidgetV2Props {
+    myStocks: MarketAsset[];
+    setMyStocks: React.Dispatch<React.SetStateAction<MarketAsset[]>>;
+}
+
+const StockReorderItem = ({
+    stock,
+    onDelete
+}: {
+    stock: MarketAsset;
+    onDelete: (id: string | number) => void;
+}) => {
+    const dragControls = useDragControls();
+    const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+    const dragBg = isDark ? '#27272a' : '#f4f4f5';
+
+    return (
+        <Reorder.Item
+            value={stock}
+            id={String(stock.id)}
+            dragListener={false}
+            dragControls={dragControls}
+            className="flex items-center justify-between p-4 bg-white dark:bg-[#1A1A1E] rounded-2xl border border-zinc-100 dark:border-white/5 touch-none"
+            whileDrag={{
+                scale: 1.02,
+                backgroundColor: dragBg,
+                boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+                zIndex: 10
+            }}
+            transition={{ duration: 0 }}
+        >
+            <div className="flex items-center gap-3">
+                <div
+                    className="p-1 cursor-grab active:cursor-grabbing text-zinc-400 dark:text-zinc-600 hover:text-zinc-900 dark:hover:text-white transition-colors"
+                    onPointerDown={(e) => dragControls.start(e)}
+                >
+                    <GripVertical className="size-5" />
+                </div>
+                <div className="size-10 rounded-xl bg-zinc-50 dark:bg-white/5 flex items-center justify-center font-black text-[10px] text-zinc-400">
+                    {stock.type}
+                </div>
+                <div className="flex flex-col">
+                    <span className="font-bold text-[14px] text-zinc-900 dark:text-white truncate max-w-[150px]">
+                        {stock.name}
+                    </span>
+                    <span className="text-[11px] font-bold text-zinc-400 tracking-tight">
+                        {stock.ticker}
+                    </span>
+                </div>
+            </div>
+            <button
+                onClick={() => onDelete(stock.id)}
+                className="size-9 bg-zinc-100 dark:bg-white/10 rounded-xl flex items-center justify-center text-zinc-900 dark:text-white transition-colors active:scale-90"
+            >
+                <Minus className="size-5" />
+            </button>
+        </Reorder.Item>
+    );
+};
+
+export default function MarketQuoteWidgetV2({ myStocks, setMyStocks }: MarketQuoteWidgetV2Props) {
     const [activeTab, setActiveTab] = useState('MY종목');
     const [isExpanded, setIsExpanded] = useState(false);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
-    const [myStocks, setMyStocks] = useState<MarketAsset[]>(INITIAL_STOCKS);
+    const [selectedAsset, setSelectedAsset] = useState<MarketAsset | null>(null);
+    const [selectedRange, setSelectedRange] = useState('1일');
 
     // --- SEARCH & BOTTOM SHEET STATE ---
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [pendingAsset, setPendingAsset] = useState<any | null>(null);
-    const searchRef = useRef<HTMLDivElement>(null);
+
+    // --- CHART DATA GENERATION ---
+    const chartData = React.useMemo(() => {
+        if (!selectedAsset) return [];
+        const data = [];
+        const baseline = 100;
+
+        const ranges: Record<string, { steps: number, vol: number, trendFactor: number }> = {
+            '1일': { steps: 80, vol: 0.8, trendFactor: 0.5 },
+            '1주': { steps: 80, vol: 1.5, trendFactor: 1.0 },
+            '1개월': { steps: 80, vol: 2.5, trendFactor: 1.5 },
+            '3개월': { steps: 100, vol: 4.0, trendFactor: 2.5 },
+            '6개월': { steps: 100, vol: 5.5, trendFactor: 3.5 },
+            'YTD': { steps: 120, vol: 7.5, trendFactor: 4.5 },
+            '1년': { steps: 120, vol: 10.0, trendFactor: 5.5 }
+        };
+
+        const config = ranges[selectedRange] || ranges['1일'];
+        const steps = config.steps;
+        const volatility = config.vol;
+        const trend = selectedAsset.changeRate * config.trendFactor;
+
+        let currentPrice = baseline - (trend * 0.4);
+        const startTime = new Date();
+        startTime.setHours(9, 0, 0, 0);
+
+        for (let i = 0; i <= steps; i++) {
+            const drift = (baseline + trend - currentPrice) / (steps - i + 1) * 0.15;
+            currentPrice += drift + (Math.random() - 0.5) * volatility;
+
+            const time = new Date(startTime.getTime() + i * (6.5 * 60 * 60 * 1000 / steps));
+            const timeStr = time.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+            data.push({
+                time: timeStr,
+                price: parseFloat(currentPrice.toFixed(2)),
+                volume: Math.floor(Math.random() * 2000) + 1000
+            });
+        }
+
+        return data;
+    }, [selectedAsset, selectedRange]);
+
+    const isUp = selectedAsset?.changeAmount ? selectedAsset.changeAmount >= 0 : true;
+    const chartColor = isUp ? "#FF4F60" : "#2684FE";
+
+    const CustomTooltip = ({ active, payload }: any) => {
+        if (active && payload && payload.length) {
+            return (
+                <div className="bg-zinc-900/90 backdrop-blur-md border border-white/10 p-3 rounded-xl shadow-2xl">
+                    <p className="text-[10px] font-black text-zinc-500 mb-1 uppercase tracking-widest">{payload[0].payload.time}</p>
+                    <p className="text-sm font-black text-white">
+                        {formatPrice(selectedAsset!.type, payload[0].value)}
+                    </p>
+                </div>
+            );
+        }
+        return null;
+    };
 
     // --- DEBOUNCE & API CALL ---
     useEffect(() => {
@@ -140,7 +246,9 @@ export default function MarketQuoteWidgetV2() {
     const displayedStocks = isExpanded ? myStocks : myStocks.slice(0, 4);
 
     return (
-        <div className="bg-white dark:bg-[#1A1A1E] rounded-[24px] shadow-sm border border-zinc-100 dark:border-white/5 overflow-hidden flex flex-col pt-4 relative">
+        <div
+            className="bg-white dark:bg-[#1A1A1E] rounded-[24px] shadow-sm border border-zinc-100 dark:border-white/5 overflow-hidden flex flex-col pt-4 relative"
+        >
             {/* Top Navigation */}
             <div className="flex overflow-x-auto hide-scrollbar px-4 gap-2 mb-3">
                 {TABS.map((tab) => (
@@ -167,10 +275,11 @@ export default function MarketQuoteWidgetV2() {
                     const themeColorClass = isUp ? "bg-[#FF4F60]" : "bg-[#2684FE]";
 
                     return (
-                        <div
+                        <button
                             key={item.id}
+                            onClick={() => setSelectedAsset(item)}
                             className={cn(
-                                "flex items-center justify-between py-4",
+                                "flex items-center justify-between py-4 w-full text-left active:opacity-60 transition-opacity",
                                 index !== displayedStocks.length - 1 && "border-b border-zinc-100 dark:border-white/5"
                             )}
                         >
@@ -199,7 +308,7 @@ export default function MarketQuoteWidgetV2() {
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </button>
                     );
                 })}
             </div>
@@ -335,32 +444,192 @@ export default function MarketQuoteWidgetV2() {
                                                 등록된 자산이 없습니다.
                                             </div>
                                         ) : (
-                                            <ul className="space-y-3">
+                                            <Reorder.Group
+                                                axis="y"
+                                                values={myStocks}
+                                                onReorder={setMyStocks}
+                                                className="space-y-3"
+                                            >
                                                 {myStocks.map((stock) => (
-                                                    <li key={stock.id} className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-white/5 rounded-2xl border border-transparent">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="size-10 rounded-xl bg-white dark:bg-zinc-800 flex items-center justify-center font-black text-[10px] text-zinc-400">
-                                                                {stock.type}
-                                                            </div>
-                                                            <div className="flex flex-col">
-                                                                <span className="font-bold text-[14px] text-zinc-900 dark:text-white truncate max-w-[150px]">
-                                                                    {stock.name}
-                                                                </span>
-                                                                <span className="text-[11px] font-bold text-zinc-400 tracking-tight">
-                                                                    {stock.ticker}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        <button
-                                                            onClick={() => handleDeleteStock(stock.id)}
-                                                            className="size-9 bg-zinc-100 dark:bg-white/10 rounded-xl flex items-center justify-center text-zinc-900 dark:text-white transition-colors active:scale-90"
-                                                        >
-                                                            <Minus className="size-5" />
-                                                        </button>
-                                                    </li>
+                                                    <StockReorderItem
+                                                        key={stock.id}
+                                                        stock={stock}
+                                                        onDelete={handleDeleteStock}
+                                                    />
                                                 ))}
-                                            </ul>
+                                            </Reorder.Group>
                                         )}
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+            {/* --- ASSET DETAIL BOTTOM SHEET --- */}
+            <AnimatePresence>
+                {selectedAsset && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[120]"
+                            onClick={() => setSelectedAsset(null)}
+                        />
+                        <motion.div
+                            initial={{ y: "100%" }}
+                            animate={{ y: 0 }}
+                            exit={{ y: "100%" }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                            className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#1A1A1E] rounded-t-[32px] shadow-2xl z-[130] max-h-[90vh] flex flex-col"
+                        >
+                            {/* Handle & Close */}
+                            <div className="relative pt-3 pb-2 flex justify-center shrink-0">
+                                <div className="w-12 h-1 bg-zinc-200 dark:bg-zinc-800 rounded-full" />
+                                <button
+                                    onClick={() => setSelectedAsset(null)}
+                                    className="absolute right-6 top-4 p-2 rounded-full bg-zinc-100 dark:bg-white/5 text-zinc-500 dark:text-zinc-400"
+                                >
+                                    <X className="size-5" />
+                                </button>
+                            </div>
+
+                            <div className="overflow-y-auto hide-scrollbar pb-10">
+                                {/* Header Info */}
+                                <div className="px-6 pt-4 mb-6">
+                                    <div className="flex flex-col gap-1 mb-4">
+                                        <span className="text-[13px] font-black text-zinc-400 uppercase tracking-widest">
+                                            {selectedAsset.ticker}
+                                        </span>
+                                        <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">
+                                            {selectedAsset.name}
+                                        </h2>
+                                    </div>
+                                    <div className="flex items-end gap-3">
+                                        <span className="text-3xl font-black text-zinc-900 dark:text-white">
+                                            {formatPrice(selectedAsset.type, selectedAsset.currentPrice)}
+                                        </span>
+                                        <div className={cn(
+                                            "flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-black text-white mb-1",
+                                            selectedAsset.changeAmount >= 0 ? "bg-[#FF4F60]" : "bg-[#2684FE]"
+                                        )}>
+                                            {selectedAsset.changeAmount >= 0 ? "+" : ""}{selectedAsset.changeRate.toFixed(2)}%
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Range Selectors */}
+                                <div className="px-6 mb-4">
+                                    <div className="flex items-center justify-between bg-zinc-50 dark:bg-white/5 p-1 rounded-xl gap-0.5">
+                                        {['1일', '1주', '1개월', '3개월', '6개월', 'YTD', '1년'].map((range) => (
+                                            <button
+                                                key={range}
+                                                onClick={() => setSelectedRange(range)}
+                                                className={cn(
+                                                    "flex-1 py-1.5 text-[11px] font-black rounded-lg transition-all",
+                                                    selectedRange === range
+                                                        ? "bg-zinc-800 text-white dark:bg-white dark:text-zinc-900 shadow-lg"
+                                                        : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+                                                )}
+                                            >
+                                                {range}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Detailed Chart (Recharts Upgrade) */}
+                                <div className="px-4 mb-8">
+                                    <div className="w-full h-72 bg-white dark:bg-[#1A1A1E] rounded-[32px] border border-zinc-100 dark:border-white/5 relative overflow-hidden flex flex-col pt-8 pb-4">
+                                        <div className="flex-1 w-full px-2">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                                                    <defs>
+                                                        <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
+                                                            <stop offset="5%" stopColor={chartColor} stopOpacity={0.15} />
+                                                            <stop offset="95%" stopColor={chartColor} stopOpacity={0} />
+                                                        </linearGradient>
+                                                    </defs>
+                                                    <CartesianGrid vertical={false} strokeDasharray="3 3" strokeOpacity={0.1} />
+                                                    <XAxis
+                                                        dataKey="time"
+                                                        hide
+                                                    />
+                                                    <YAxis
+                                                        yAxisId="price"
+                                                        domain={['auto', 'auto']}
+                                                        orientation="right"
+                                                        axisLine={false}
+                                                        tickLine={false}
+                                                        tick={{ fontSize: 10, fontWeight: 'bold', fill: '#A1A1AA' }}
+                                                        mirror
+                                                    />
+                                                    <YAxis
+                                                        yAxisId="volume"
+                                                        orientation="left"
+                                                        domain={[0, (dataMax: number) => dataMax * 3.5]}
+                                                        hide={true}
+                                                    />
+                                                    <Tooltip content={<CustomTooltip />} />
+
+                                                    <Bar
+                                                        yAxisId="volume"
+                                                        dataKey="volume"
+                                                        fill="#A1A1AA"
+                                                        opacity={0.12}
+                                                        barSize={2}
+                                                    />
+
+                                                    <Area
+                                                        yAxisId="price"
+                                                        type="monotone"
+                                                        dataKey="price"
+                                                        stroke={chartColor}
+                                                        strokeWidth={2.5}
+                                                        fillOpacity={1}
+                                                        fill="url(#colorPrice)"
+                                                        animationDuration={1000}
+                                                        dot={false}
+                                                        activeDot={{ r: 6, strokeWidth: 0, fill: chartColor }}
+                                                    />
+                                                </ComposedChart>
+                                            </ResponsiveContainer>
+                                        </div>
+
+                                        {/* Time Labels Overlay */}
+                                        <div className="mt-2 px-8 flex justify-between text-[10px] font-black text-zinc-300 dark:text-zinc-600 tracking-tighter">
+                                            <span>{chartData[0]?.time}</span>
+                                            <span>{chartData[Math.floor(chartData.length / 2)]?.time}</span>
+                                            <span>{chartData[chartData.length - 1]?.time}</span>
+                                        </div>
+
+                                        <div className="absolute top-4 left-6 flex items-center gap-2">
+                                            <div className="size-1.5 rounded-full bg-red-500 animate-pulse" />
+                                            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+                                                {selectedRange === '1일' ? 'REALTIME 1D' : `${selectedRange} TREND`}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Key Statistics Grid */}
+                                <div className="px-6">
+                                    <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-4 px-1">주요 통계</h3>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {[
+                                            { label: '시가', value: formatPrice(selectedAsset.type, selectedAsset.currentPrice * 0.98) },
+                                            { label: '고가', value: formatPrice(selectedAsset.type, selectedAsset.currentPrice * 1.02) },
+                                            { label: '저가', value: formatPrice(selectedAsset.type, selectedAsset.currentPrice * 0.97) },
+                                            { label: '거래량', value: selectedAsset.type === 'KR' ? '1.2M' : '45.8M' },
+                                            { label: '52주 최고', value: formatPrice(selectedAsset.type, selectedAsset.currentPrice * 1.5) },
+                                            { label: '52주 최저', value: formatPrice(selectedAsset.type, selectedAsset.currentPrice * 0.6) },
+                                        ].map((stat) => (
+                                            <div key={stat.label} className="bg-zinc-50 dark:bg-white/5 p-4 rounded-2xl flex flex-col gap-1">
+                                                <span className="text-[11px] font-bold text-zinc-400">{stat.label}</span>
+                                                <span className="text-[15px] font-black text-zinc-900 dark:text-white">{stat.value}</span>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             </div>

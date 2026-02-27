@@ -3,13 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import MarketQuoteWidgetV2 from './MarketQuoteWidgetV2';
 import SimpleModeV2Card from './SimpleModeV2Card';
-import NewsSectionV2 from './NewsSectionV2';
+import InvestmentNewsCardV2 from './InvestmentNewsCardV2';
 import { AssetItem } from '@/lib/actions';
 import { cn } from '@/lib/utils';
 import { motion, animate, useMotionValue } from 'framer-motion';
 import { Wallet, PieChart, TrendingUp, Landmark } from 'lucide-react';
 import V2AuthProfileIcon from './V2AuthProfileIcon';
 import Link from 'next/link';
+import { MarketAsset, INITIAL_STOCKS } from './typesV2';
 
 interface SimpleModeV2ContainerProps {
     assets: AssetItem[];
@@ -23,6 +24,7 @@ interface SimpleModeV2ContainerProps {
 export default function SimpleModeV2Container({ assets, marketData }: SimpleModeV2ContainerProps) {
     const [activeTag, setActiveTag] = useState('all');
     const [currentPage, setCurrentPage] = useState(0);
+    const [myStocks, setMyStocks] = useState<MarketAsset[]>(INITIAL_STOCKS);
     const containerRef = React.useRef<HTMLDivElement>(null);
     const dragX = useMotionValue(0);
 
@@ -92,11 +94,16 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
             <motion.div
                 className="flex"
                 drag="x"
+                dragDirectionLock={true}
                 dragConstraints={{ left: -width * 3, right: 0 }}
                 dragElastic={0.05}
                 dragMomentum={false}
                 onDragEnd={handleDragEnd}
-                style={{ x: dragX, width: '400%' }}
+                style={{
+                    x: dragX,
+                    width: '400%',
+                    touchAction: 'pan-y'
+                }}
             >
                 {/* Page 1: Dashboard (Net Worth & News) */}
                 <div className={cn("w-[100vw] shrink-0 px-4 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)] pb-24 transition-opacity duration-300", currentPage !== 0 && "opacity-40 pointer-events-none")}>
@@ -148,9 +155,9 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                         />
 
                         {/* New Stock Quotes Widget */}
-                        <MarketQuoteWidgetV2 />
+                        <MarketQuoteWidgetV2 myStocks={myStocks} setMyStocks={setMyStocks} />
 
-                        <NewsSectionV2 />
+                        <InvestmentNewsCardV2 myStocks={myStocks} />
                     </div>
                 </div>
 
