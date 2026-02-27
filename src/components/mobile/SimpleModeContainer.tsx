@@ -73,7 +73,7 @@ export default function SimpleModeContainer({ assets, marketData }: SimpleModeCo
             className="fixed inset-0 overflow-y-auto transition-colors duration-700 ease-in-out px-4 pt-[calc(env(safe-area-inset-top,0px)+5rem)] pb-8"
             style={{ backgroundColor: bgTheme.hex }}
         >
-            <div className="max-w-md mx-auto space-y-4 pb-24">
+            <div className="max-w-md mx-auto space-y-4 pb-40">
                 <div className="flex items-center justify-between mb-6 px-1">
                     <div>
                         <h1 className={cn(
@@ -158,6 +158,7 @@ export default function SimpleModeContainer({ assets, marketData }: SimpleModeCo
                     카드를 드래그하여 순서를 변경하세요
                 </div>
             )}
+
         </div>
     );
 }

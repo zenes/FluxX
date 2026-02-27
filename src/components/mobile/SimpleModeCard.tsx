@@ -370,7 +370,7 @@ export default function SimpleModeCard({
 
                 <div className="relative p-8 pt-10">
                     {/* Header Section */}
-                    <div className="flex items-center gap-4 mb-8">
+                    <div className="flex items-center gap-4 mb-2">
                         {stockAsset ? (
                             <div className="flex items-center gap-4">
                                 <div className={cn(
@@ -380,15 +380,16 @@ export default function SimpleModeCard({
                                     {stockAsset.assetSymbol?.charAt(0)}
                                 </div>
                                 <div>
+                                    {/* 티커를 주 타이틀로, 수량을 보조로 */}
                                     <p className={cn(
-                                        "text-lg font-bold tracking-tight mb-0.5",
+                                        "text-2xl font-black tracking-tight leading-tight",
                                         isDark ? "text-white" : "text-zinc-900"
                                     )}>
                                         {stockAsset.assetSymbol}
                                     </p>
                                     <p className={cn(
-                                        "text-[13px] font-semibold opacity-50",
-                                        isDark ? "text-white" : "text-zinc-500"
+                                        "text-[12px] font-semibold mt-0.5",
+                                        isDark ? "text-white/60" : "text-zinc-500"
                                     )}>
                                         {stockAsset.amount.toLocaleString()}주 보유
                                     </p>
@@ -406,9 +407,14 @@ export default function SimpleModeCard({
                             </div>
                         )}
                     </div>
+                    {/* Divider */}
+                    <div className={cn(
+                        "h-px w-full mb-4",
+                        isDark ? "bg-white/10" : "bg-black/[0.06]"
+                    )} />
 
                     {/* Content Section */}
-                    <div className="space-y-1.5 mt-auto">
+                    <div className="space-y-1.5">
                         {isLoading ? (
                             <div className={cn("h-12 w-56 rounded-2xl animate-pulse", isDark ? "bg-white/10" : "bg-black/5")} />
                         ) : (
@@ -423,6 +429,16 @@ export default function SimpleModeCard({
                                     </p>
                                 </div>
 
+                                {/* USD 원래 가격 보조 표기 */}
+                                {stockAsset && stockPriceInfo && stockPriceInfo.currency === 'USD' && (
+                                    <p className={cn(
+                                        "text-sm font-semibold mt-0.5 ml-0.5",
+                                        isDark ? "text-white/50" : "text-zinc-500"
+                                    )}>
+                                        ${(stockAsset.amount * stockPriceInfo.price).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                    </p>
+                                )}
+
                                 {stockAsset && stockPriceInfo && (
                                     <div className={cn(
                                         "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold mt-2",
@@ -431,8 +447,7 @@ export default function SimpleModeCard({
                                             : (isDark ? "bg-rose-500/20 text-rose-400" : "bg-rose-50 text-rose-600")
                                     )}>
                                         {(stockPriceInfo.changePercent || 0) >= 0 ? <TrendingUp className="size-3.5" /> : <TrendingDown className="size-3.5" />}
-                                        {Math.abs(stockPriceInfo.changePercent || 0).toFixed(2)}%
-                                        <span className="opacity-40 font-medium ml-0.5">({stockPriceInfo.currency})</span>
+                                        {(stockPriceInfo.changePercent || 0) >= 0 ? '+' : ''}{(stockPriceInfo.changePercent || 0).toFixed(2)}%
                                     </div>
                                 )}
                             </>
