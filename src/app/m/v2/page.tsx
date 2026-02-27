@@ -1,24 +1,21 @@
-import { getAssets } from "@/lib/actions";
-import yahooFinanceDefault from 'yahoo-finance2';
+import { getAssets, getPredefinedAccounts } from "@/lib/actions";
+import yahooFinance from 'yahoo-finance2';
 import SimpleModeV2Container from '@/components/mobile/v2/SimpleModeV2Container';
-
-const yahooFinance = typeof yahooFinanceDefault === 'function'
-    // @ts-ignore
-    ? new yahooFinanceDefault()
-    : yahooFinanceDefault;
 
 async function getInitialMarketData() {
     try {
-        const [fxQuote, goldQuote] = await Promise.all([
+        const [fxQuote, goldQuote, accounts] = await Promise.all([
             yahooFinance.quote('KRW=X'),
-            yahooFinance.quote('GC=F')
+            yahooFinance.quote('GC=F'),
+            getPredefinedAccounts()
         ]);
         return {
-            exchange: fxQuote ? { rate: fxQuote.regularMarketPrice } : null,
-            gold: goldQuote ? { price: goldQuote.regularMarketPrice } : null
+            exchange: fxQuote ? { rate: (fxQuote as any).regularMarketPrice } : null,
+            gold: goldQuote ? { price: (goldQuote as any).regularMarketPrice } : null,
+            accounts
         };
     } catch (e) {
-        return { exchange: null, gold: null };
+        return { exchange: null, gold: null, accounts: [] };
     }
 }
 
@@ -28,13 +25,8 @@ export default async function SimpleModeV2Page() {
         getInitialMarketData()
     ]);
 
-    console.log('SimpleModeV2Page [Server]: Fetched', assets.length, 'assets');
-    if (assets.length > 0) {
-        console.log('SimpleModeV2Page [Server]: First asset sample:', assets[0]);
-    }
-
     return (
-        <div className="min-h-screen bg-[#F5F5F5] dark:bg-[#121214]">
+        <div className="min-h-screen bg-[#edf0f4] dark:bg-[#0D0D0E]">
             <SimpleModeV2Container
                 assets={assets}
                 marketData={marketData}

@@ -12,22 +12,26 @@ export async function GET(request: Request) {
 
     try {
         const result = await yahooFinance.search(query, {
-            quotesCount: 5,
+            quotesCount: 10,
             newsCount: 0,
         });
 
-        // Assert the result type as yahoo-finance2 search returns a mixed object
-        // The type provided by the library can be complex, so we safely handle the quotes array
         const quotes = (result.quotes || []) as any[];
 
-        // Filter for equities to avoid mutual funds or indices if possible
-        const equities = quotes.filter((q: any) => q.quoteType === 'EQUITY' || q.quoteType === 'ETF');
+        // Filter for relevant types
+        const relevantQuotes = quotes.filter((q: any) =>
+            q.quoteType === 'EQUITY' ||
+            q.quoteType === 'ETF' ||
+            q.quoteType === 'INDEX' ||
+            q.quoteType === 'CURRENCY'
+        );
 
         return NextResponse.json({
-            results: equities.map((q: any) => ({
+            results: relevantQuotes.map((q: any) => ({
                 symbol: q.symbol,
-                shortname: q.shortname || q.longname,
+                shortname: q.shortname || q.longname || q.symbol,
                 exchange: q.exchange,
+                quoteType: q.quoteType
             }))
         });
     } catch (error) {
