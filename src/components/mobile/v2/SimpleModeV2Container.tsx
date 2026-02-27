@@ -26,7 +26,7 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
     const [currentPage, setCurrentPage] = useState(0);
     const [myStocks, setMyStocks] = useState<MarketAsset[]>(INITIAL_STOCKS);
     const [isAnyModalOpen, setIsAnyModalOpen] = useState(false);
-    const isInitialized = React.useRef(false);
+    const [isHydrated, setIsHydrated] = useState(false);
 
     // Persistence: Load stocks from localStorage on mount
     useEffect(() => {
@@ -41,14 +41,14 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                 console.error("Failed to load v2-my-stocks from localStorage:", e);
             }
         }
-        isInitialized.current = true;
+        setIsHydrated(true);
     }, []);
 
     // Persistence: Save stocks to localStorage on change
     useEffect(() => {
-        if (!isInitialized.current) return;
+        if (!isHydrated) return;
         localStorage.setItem('v2-my-stocks', JSON.stringify(myStocks));
-    }, [myStocks]);
+    }, [myStocks, isHydrated]);
 
     const containerRef = React.useRef<HTMLDivElement>(null);
     const dragX = useMotionValue(0);
@@ -185,7 +185,7 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                             setMyStocks={setMyStocks}
                             onModalToggle={setIsAnyModalOpen}
                         />
-                        +
+
                         <InvestmentNewsCardV2
                             myStocks={myStocks}
                             onModalToggle={setIsAnyModalOpen}
