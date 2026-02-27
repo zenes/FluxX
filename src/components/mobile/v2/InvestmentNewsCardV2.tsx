@@ -52,63 +52,57 @@ export default function InvestmentNewsCardV2({ myStocks, onModalToggle }: Invest
         setError(null);
 
         try {
-            // Fetch news for ALL stocks in the list
-            const fetchPromises = myStocks.map(async (stock) => {
-                const keyword = stock.name?.split('(')[0]?.trim();
-                if (!keyword) return [];
-                const timestamp = Date.now();
-                const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(keyword)}&hl=ko&gl=KR&ceid=KR:ko&t=${timestamp}`;
-                const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&t=${timestamp}`;
+            // Combine all keywords into a single search query with OR operators
+            const keywords = myStocks
+                .map(s => s.name?.split('(')[0]?.trim())
+                .filter(Boolean);
 
-                try {
-                    const response = await fetch(proxyUrl);
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            if (keywords.length === 0) {
+                setNewsList([]);
+                setIsLoading(false);
+                return;
+            }
 
-                    const data = await response.json();
-                    if (data?.status === 'ok' && Array.isArray(data?.items)) {
-                        // Filter items older than 7 days immediately
-                        const sevenDaysAgo = new Date();
-                        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            // Group keywords for the query (Google News search supports OR)
+            const query = keywords.join(' OR ');
+            const timestamp = Date.now();
+            const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=ko&gl=KR&ceid=KR:ko&t=${timestamp}`;
+            const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&t=${timestamp}`;
 
-                        return data.items
-                            .filter((item: any) => new Date(item.pubDate) >= sevenDaysAgo)
-                            .map((item: any) => ({
-                                ...item,
-                                thumbnail: item?.thumbnail || item?.enclosure?.link || (item?.description?.match(/<img[^>]+src="([^">]+)"/)?.[1] || ''),
-                                sourceName: keyword,
-                                ticker: stock.ticker
-                            }));
-                    }
-                    return [];
-                } catch (err) {
-                    console.error(`Failed to fetch news for ${keyword}:`, err);
-                    return [];
-                }
-            });
+            const response = await fetch(proxyUrl);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-            const results = await Promise.all(fetchPromises);
+            const data = await response.json();
+            if (data?.status === 'ok' && Array.isArray(data?.items)) {
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-            // Logic: 3 items per stock preference, but fill shortfall from active stocks
-            const targetTotal = results.length * 3;
-            let fairList: NewsItem[] = [];
-            let overflowList: NewsItem[] = [];
+                const finalCombined = data.items
+                    .filter((item: any) => new Date(item.pubDate) >= sevenDaysAgo)
+                    .map((item: any) => {
+                        // Find matching ticker based on content/title
+                        const matchedStock = myStocks.find(s =>
+                            item.title.includes(s.name) ||
+                            item.description?.includes(s.name) ||
+                            item.title.includes(s.ticker)
+                        );
 
-            results.forEach(stockNews => {
-                fairList.push(...stockNews.slice(0, 3));
-                overflowList.push(...stockNews.slice(3));
-            });
+                        return {
+                            ...item,
+                            thumbnail: item?.thumbnail || item?.enclosure?.link || (item?.description?.match(/<img[^>]+src="([^">]+)"/)?.[1] || ''),
+                            sourceName: matchedStock?.name || '관심종목',
+                            ticker: matchedStock?.ticker || ''
+                        };
+                    });
 
-            // Sort overflow to take the freshest ones if we have a shortfall
-            overflowList.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
+                // Final sort by latest time
+                finalCombined.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
 
-            const shortfall = Math.max(0, targetTotal - fairList.length);
-            const finalCombined = [...fairList, ...overflowList.slice(0, shortfall)];
-
-            // Final sort by latest time
-            finalCombined.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
-
-            // Limit to 15 items total for the expanded view
-            setNewsList(finalCombined.slice(0, 15));
+                // Limit to 15 items total
+                setNewsList(finalCombined.slice(0, 15));
+            } else {
+                setNewsList([]);
+            }
         } catch (err) {
             console.error('Total news fetch failed:', err);
             setError('뉴스를 불러올 수 없습니다.');
@@ -285,6 +279,8 @@ export default function InvestmentNewsCardV2({ myStocks, onModalToggle }: Invest
                             animate={{ y: 0 }}
                             exit={{ y: '100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                            onTouchStart={(e) => e.stopPropagation()}
+                            onTouchMove={(e) => e.stopPropagation()}
                             className="fixed inset-x-0 bottom-0 bg-white dark:bg-[#1A1A1E] rounded-t-[32px] z-[101] max-h-[90vh] overflow-hidden flex flex-col"
                         >
                             {/* Handle & Close */}
