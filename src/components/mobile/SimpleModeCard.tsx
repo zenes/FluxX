@@ -18,41 +18,57 @@ import { AssetItem } from '@/lib/actions';
 
 // 톤다운되고 안정된 느낌의 세련된 색상 팔레트
 const COLORS = [
-    { name: '웜 그레이', class: 'bg-[#F5F5F7]', isDark: false },
-    { name: '소프트 슬레이트', class: 'bg-[#EBEDF0]', isDark: false },
-    { name: '딥 슬레이트', class: 'bg-[#3A3F47]', isDark: true },
-    { name: '차콜', class: 'bg-[#2C2C2E]', isDark: true },
+    { name: '웜 그레이', class: 'bg-[#F5F5F7]', hex: '#F5F5F7' },
+    { name: '소프트 슬레이트', class: 'bg-[#EBEDF0]', hex: '#EBEDF0' },
+    { name: '딥 슬레이트', class: 'bg-[#3A3F47]', hex: '#3A3F47' },
+    { name: '차콜', class: 'bg-[#2C2C2E]', hex: '#2C2C2E' },
 
-    { name: '뮤트 블루', class: 'bg-[#6B8EAD]', isDark: true },
-    { name: '더스티 블루', class: 'bg-[#8E9AAF]', isDark: true },
-    { name: '미드나잇 블루', class: 'bg-[#1C2A3A]', isDark: true },
-    { name: '딥 로얄', class: 'bg-[#2E3A59]', isDark: true },
+    { name: '뮤트 블루', class: 'bg-[#6B8EAD]', hex: '#6B8EAD' },
+    { name: '더스티 블루', class: 'bg-[#8E9AAF]', hex: '#8E9AAF' },
+    { name: '미드나잇 블루', class: 'bg-[#1C2A3A]', hex: '#1C2A3A' },
+    { name: '딥 로얄', class: 'bg-[#2E3A59]', hex: '#2E3A59' },
 
-    { name: '세이지 그린', class: 'bg-[#84A59D]', isDark: true },
-    { name: '올리브 드랍', class: 'bg-[#6B705C]', isDark: true },
-    { name: '딥 포레스트', class: 'bg-[#2D3A3A]', isDark: true },
-    { name: '뮤트 모스', class: 'bg-[#A5A58D]', isDark: true },
+    { name: '세이지 그린', class: 'bg-[#84A59D]', hex: '#84A59D' },
+    { name: '올리브 드랍', class: 'bg-[#6B705C]', hex: '#6B705C' },
+    { name: '딥 포레스트', class: 'bg-[#2D3A3A]', hex: '#2D3A3A' },
+    { name: '뮤트 모스', class: 'bg-[#A5A58D]', hex: '#A5A58D' },
 
-    { name: '더스티 로즈', class: 'bg-[#B5838D]', isDark: true },
-    { name: '뮤트 테라코타', class: 'bg-[#A26769]', isDark: true },
-    { name: '올드 로즈', class: 'bg-[#6D597A]', isDark: true },
-    { name: '버건디', class: 'bg-[#5F0F40]', isDark: true },
+    { name: '더스티 로즈', class: 'bg-[#B5838D]', hex: '#B5838D' },
+    { name: '뮤트 테라코타', class: 'bg-[#A26769]', hex: '#A26769' },
+    { name: '올드 로즈', class: 'bg-[#6D597A]', hex: '#6D597A' },
+    { name: '버건디', class: 'bg-[#5F0F40]', hex: '#5F0F40' },
 
-    { name: '파우더 블루', class: 'bg-[#DDE5ED]', isDark: false },
-    { name: '미스트', class: 'bg-[#F2F4F7]', isDark: false },
-    { name: '티 그린', class: 'bg-[#F0F4EF]', isDark: false },
-    { name: '샌드', class: 'bg-[#EAE2B7]/30', isDark: false },
+    { name: '파우더 블루', class: 'bg-[#DDE5ED]', hex: '#DDE5ED' },
+    { name: '미스트', class: 'bg-[#F2F4F7]', hex: '#F2F4F7' },
+    { name: '티 그린', class: 'bg-[#F0F4EF]', hex: '#F0F4EF' },
+    { name: '샌드', class: 'bg-[#EAE2B7]', hex: '#EAE2B7' },
 
-    { name: '에스프레소', class: 'bg-[#3D3131]', isDark: true },
-    { name: '네이비', class: 'bg-[#002147]', isDark: true },
-    { name: '아이언', class: 'bg-[#434343]', isDark: true },
-    { name: '옵시디언', class: 'bg-[#1A1A1A]', isDark: true },
+    { name: '에스프레소', class: 'bg-[#3D3131]', hex: '#3D3131' },
+    { name: '네이비', class: 'bg-[#002147]', hex: '#002147' },
+    { name: '아이언', class: 'bg-[#434343]', hex: '#434343' },
+    { name: '옵시디언', class: 'bg-[#1A1A1A]', hex: '#1A1A1A' },
 
-    { name: '화이트 실크', class: 'bg-white border-zinc-100', isDark: false },
-    { name: '아이보리', class: 'bg-[#FFFFF0]', isDark: false },
-    { name: '클라우드', class: 'bg-[#F8F9FA]', isDark: false },
-    { name: '페블', class: 'bg-[#D1D5DB]/30', isDark: false },
+    { name: '화이트 실크', class: 'bg-white border-zinc-100', hex: '#FFFFFF' },
+    { name: '아이보리', class: 'bg-[#FFFFF0]', hex: '#FFFFF0' },
+    { name: '클라우드', class: 'bg-[#F8F9FA]', hex: '#F8F9FA' },
+    { name: '페블', class: 'bg-[#D1D5DB]', hex: '#D1D5DB' },
 ];
+
+/**
+ * 색상의 밝기를 계산하여 어두운 색상인지 여부를 반환합니다. (WCAG 기준 상대적 밝기 수준 적용)
+ * @param hex Hex 색상 코드 (예: #FFFFFF)
+ * @returns 어두운 색상이면 true, 밝은 색상이면 false (Threshold: 0.5)
+ */
+const isColorDark = (hex: string): boolean => {
+    const color = hex.replace('#', '');
+    const r = parseInt(color.substring(0, 2), 16);
+    const g = parseInt(color.substring(2, 4), 16);
+    const b = parseInt(color.substring(4, 6), 16);
+
+    // YIQ formula (https://en.wikipedia.org/wiki/YIQ)
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness < 128; // 128 is the middle point (0-255)
+};
 
 interface SimpleModeCardProps {
     id: string | number;
@@ -95,7 +111,7 @@ export default function SimpleModeCard({
         setTimeout(() => setIsOpen(false), 300);
     };
 
-    const isDark = selectedColor.isDark;
+    const isDark = isColorDark(selectedColor.hex);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -255,7 +271,7 @@ export default function SimpleModeCard({
                                                     isSelected ? "ring-2 ring-offset-2 ring-primary scale-110" : "hover:scale-105"
                                                 )}
                                             >
-                                                {isSelected && <Check className={cn("size-6", color.isDark ? "text-white" : "text-zinc-900")} />}
+                                                {isSelected && <Check className={cn("size-6", isColorDark(color.hex) ? "text-white" : "text-zinc-900")} />}
                                             </button>
                                             <span className="text-[10px] text-zinc-400 font-medium whitespace-nowrap">{color.name}</span>
                                         </div>
@@ -298,10 +314,10 @@ export default function SimpleModeCard({
                             <div className="flex items-center gap-2">
                                 <div className={cn("size-2 rounded-full", isDark ? "bg-white/40" : "bg-zinc-400")} />
                                 <CardTitle className={cn(
-                                    "text-xs font-bold tracking-[0.1em] opacity-40 uppercase",
-                                    isDark ? "text-white" : "text-zinc-500"
+                                    "text-xs font-bold tracking-[0.1em] uppercase",
+                                    isDark ? "text-white/80" : "text-zinc-600"
                                 )}>
-                                    {id === 'total' || id === 1 ? "통합 포트폴리오" : `테스트 모듈 #${id}`}
+                                    {id === 'total' || id === 1 || id === 'total' ? "통합 포트폴리오" : `테스트 모듈 #${id}`}
                                 </CardTitle>
                             </div>
                         )}
@@ -335,11 +351,6 @@ export default function SimpleModeCard({
                                         <span className="opacity-40 font-medium ml-0.5">({stockPriceInfo.currency})</span>
                                     </div>
                                 )}
-
-                                <div className="flex items-center gap-2 mt-6">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
-                                    <span className={cn("text-[10px] font-black tracking-widest uppercase", isDark ? "text-white/30" : "text-zinc-300")}>보안 실시간 동기화</span>
-                                </div>
                             </>
                         )}
                     </div>
