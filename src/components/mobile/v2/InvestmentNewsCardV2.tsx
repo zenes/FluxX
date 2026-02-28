@@ -50,17 +50,18 @@ export default function InvestmentNewsCardV2({ myStocks, onModalToggle, isHydrat
             return;
         }
 
-        const keywords = myStocks
-            .map(s => s.name?.split('(')[0]?.trim())
-            .filter(Boolean);
+        const tickers = myStocks
+            .map(s => s.ticker)
+            .filter(Boolean)
+            .slice(0, 5); // Limit tickers to avoid long internal URLs
 
-        if (keywords.length === 0) {
+        if (tickers.length === 0) {
             setNewsList([]);
             setIsLoading(false);
             return;
         }
 
-        const query = keywords.join(' OR ');
+        const query = tickers.join(',');
 
         // Prevent redundant fetches if the query hasn't changed
         if (query === lastFetchedQuery.current) {
@@ -73,51 +74,33 @@ export default function InvestmentNewsCardV2({ myStocks, onModalToggle, isHydrat
         setError(null);
 
         try {
-            const timestamp = Date.now();
-            const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=ko&gl=KR&ceid=KR:ko&t=${timestamp}`;
-            const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}&t=${timestamp}`;
-
-            const response = await fetch(proxyUrl);
+            const response = await fetch(`/api/news?tickers=${encodeURIComponent(query)}`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
             const data = await response.json();
-            if (data?.status === 'ok' && Array.isArray(data?.items)) {
-                const sevenDaysAgo = new Date();
-                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            if (Array.isArray(data?.items)) {
+                const finalCombined = data.items.map((item: any) => {
+                    // Match with local stock name if possible
+                    const matchedStock = myStocks.find(s => s.ticker === item.ticker);
 
-                const finalCombined = data.items
-                    .filter((item: any) => new Date(item.pubDate) >= sevenDaysAgo)
-                    .map((item: any) => {
-                        // Find matching ticker based on content/title
-                        const matchedStock = myStocks.find(s =>
-                            item.title.includes(s.name) ||
-                            item.description?.includes(s.name) ||
-                            item.title.includes(s.ticker)
-                        );
+                    return {
+                        ...item,
+                        sourceName: matchedStock?.name || item.sourceName || '야후 파이낸스',
+                        thumbnail: '' // Yahoo RSS doesn't provide easy thumbnails, using ticker box tier-3
+                    };
+                });
 
-                        return {
-                            ...item,
-                            thumbnail: item?.thumbnail || item?.enclosure?.link || (item?.description?.match(/<img[^>]+src="([^">]+)"/)?.[1] || ''),
-                            sourceName: matchedStock?.name || '관심종목',
-                            ticker: matchedStock?.ticker || ''
-                        };
-                    });
-
-                // Final sort by latest time
-                finalCombined.sort((a: any, b: any) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
-
-                // Limit to 15 items total
-                setNewsList(finalCombined.slice(0, 15));
+                setNewsList(finalCombined);
             } else {
                 setNewsList([]);
             }
         } catch (err) {
-            console.error('Total news fetch failed:', err);
+            console.error('Yahoo news fetch failed:', err);
             setError('뉴스를 불러올 수 없습니다.');
         } finally {
             setIsLoading(false);
         }
-    }, [myStocks]);
+    }, [myStocks, isHydrated]);
 
     useEffect(() => {
         if (isHydrated) {
@@ -128,12 +111,18 @@ export default function InvestmentNewsCardV2({ myStocks, onModalToggle, isHydrat
     const formatTime = (dateStr: string) => {
         const date = new Date(dateStr);
         const now = new Date();
-        const diffMs = now.getTime() - date.getTime();
-        const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
 
-        if (diffHrs < 1) return '방금 전';
+        // Ensure we're comparing correct timestamps
+        const diffMs = now.getTime() - date.getTime();
+        const diffMins = Math.floor(diffMs / (1000 * 60));
+        const diffHrs = Math.floor(diffMins / 60);
+
+        if (diffMins < 5) return '방금 전';
+        if (diffMins < 60) return `${diffMins}분 전`;
         if (diffHrs < 24) return `${diffHrs}시간 전`;
-        return `${Math.floor(diffHrs / 24)}일 전`;
+
+        // For older dates, show MM.DD (KST is implicit in browser's local time)
+        return `${date.getMonth() + 1}.${date.getDate()}`;
     };
 
     const displayedNews = isExpanded ? newsList : newsList.slice(0, 3);
