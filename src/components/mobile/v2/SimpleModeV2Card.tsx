@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { calculateNetWorth, MarketPrices } from '@/lib/calculations';
 import { AssetItem } from '@/lib/actions';
 import StockDetailSheetV2 from './StockDetailSheetV2';
+import AssetGrowthDetailSheetV2 from './AssetGrowthDetailSheetV2';
 
 interface SimpleModeV2CardProps {
     id: string | number;
@@ -29,6 +30,7 @@ export default function SimpleModeV2Card({
     const [stockPriceInfo, setStockPriceInfo] = useState<{ price: number; currency: string; change?: number; changePercent?: number } | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
+    const [marketPrices, setMarketPrices] = useState<MarketPrices | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -64,6 +66,7 @@ export default function SimpleModeV2Card({
                         goldUsd: initialGold?.price || 2600,
                         stockPrices: stockPrices as any,
                     };
+                    setMarketPrices(prices);
                     const calculatedValue = calculateNetWorth(initialAssets, prices);
                     setNetWorth(calculatedValue);
                 }
@@ -129,7 +132,9 @@ export default function SimpleModeV2Card({
     return (
         <>
             <Card
-                onClick={() => isStock && setIsDetailOpen(true)}
+                onClick={() => {
+                    if (isStock || isTotal) setIsDetailOpen(true);
+                }}
                 className={cn(
                     "relative overflow-hidden bg-white dark:bg-[#1A1A1E] border-none rounded-[24px] shadow-sm active:scale-[0.98] transition-all cursor-pointer p-6",
                     isTotal ? "ring-1 ring-zinc-100 dark:ring-white/5" : ""
@@ -206,6 +211,16 @@ export default function SimpleModeV2Card({
                     currentPrice={stockPriceInfo?.price ?? null}
                     changePercent={stockPriceInfo?.changePercent ?? null}
                     exchangeRate={initialExchange?.rate || 1400}
+                />
+            )}
+
+            {isTotal && initialAssets && marketPrices && (
+                <AssetGrowthDetailSheetV2
+                    isOpen={isDetailOpen}
+                    onClose={() => setIsDetailOpen(false)}
+                    assets={initialAssets}
+                    marketPrices={marketPrices}
+                    totalNetWorth={netWorth || 0}
                 />
             )}
         </>
