@@ -1,5 +1,10 @@
 # Project Progress Log
 
+## [2026-02-28 10:48] 티커 검색 자동완성 엔드포인트 수정
+
+- **API 엔드포인트 명칭 동기화**: 프론트엔드(`MarketQuoteWidgetV2.tsx`, `StockEntryForm.tsx`)에서 기대하는 `/api/search` 경로와 실제 서버 측 디렉토리명(`/api/ticker-search`) 사이의 불일치를 발견하여, 서버 측 디렉토리를 `src/app/api/search`로 변경하였습니다.
+- **자동완성 기능 복구**: 엔드포인트 변경을 통해 자산 추가 시 종목명 및 티커 검색 결과가 자동완성 리스트에 정상적으로 노출되도록 수정했습니다.
+
 ## [2026-02-28 02:40] 종목 검색 구조 개편 및 한국어 종목명 폴백 시스템 구축
 
 - **검색 API 백엔드 집중화**: 클라이언트 사이드의 `yahoo-finance2` 의존성을 제거하고, Next.js 내부 API(`/api/search`)를 신설하여 야후 파이낸스 검색 파라미터(`lang`, `region`, `quotesCount`)를 서버 단에서 엄격하게 제어하도록 개편했습니다.
