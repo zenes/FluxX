@@ -35,37 +35,54 @@ export async function GET(request: Request) {
 
         const { range: yahooRange, interval: yahooInterval } = rangeMap[range.toLowerCase()] || rangeMap['1mo'];
 
-        // Convert range to period1
-        let period1 = new Date();
-        switch (yahooRange) {
-            case '1d': period1.setDate(period1.getDate() - 1); break;
-            case '5d': period1.setDate(period1.getDate() - 5); break;
-            case '1mo': period1.setMonth(period1.getMonth() - 1); break;
-            case '3mo': period1.setMonth(period1.getMonth() - 3); break;
-            case '6mo': period1.setMonth(period1.getMonth() - 6); break;
-            case 'ytd': period1 = new Date(new Date().getFullYear(), 0, 1); break;
-            case '1y': period1.setFullYear(period1.getFullYear() - 1); break;
-            case '5y': period1.setFullYear(period1.getFullYear() - 5); break;
+        // Helper to fetch data
+        const fetchData = async (r: string, i: string) => {
+            let p1 = new Date();
+            switch (r) {
+                case '1d': p1.setDate(p1.getDate() - 2); break; // Fetch at least 2 days to be safe
+                case '5d': p1.setDate(p1.getDate() - 7); break;
+                case '1mo': p1.setMonth(p1.getMonth() - 1); break;
+                case '3mo': p1.setMonth(p1.getMonth() - 3); break;
+                case '6mo': p1.setMonth(p1.getMonth() - 6); break;
+                case 'ytd': p1 = new Date(new Date().getFullYear(), 0, 1); break;
+                case '1y': p1.setFullYear(p1.getFullYear() - 1); break;
+                case '5y': p1.setFullYear(p1.getFullYear() - 5); break;
+                default: p1.setMonth(p1.getMonth() - 1);
+            }
+            // @ts-ignore
+            return await yahooFinance.chart(symbol, {
+                period1: p1,
+                period2: new Date(),
+                interval: i as any,
+            });
+        };
+
+        let result = await fetchData(yahooRange, yahooInterval);
+        let quotes = result.quotes || [];
+
+        // FALLBACK: If 1d is requested but empty (weekend/holiday), try 5d to find the last trading day
+        if (range.toLowerCase() === '1d' && quotes.length === 0) {
+            result = await fetchData('5d', '15m'); // Use 15m for detailed intraday fallback
+            quotes = result.quotes || [];
         }
 
-        // @ts-ignore
-        const result = await yahooFinance.chart(symbol, {
-            period1,
-            period2: new Date(),
-            interval: yahooInterval as any,
-        });
+        let finalQuotes = quotes;
+        if (range.toLowerCase() === '1d' && quotes.length > 0) {
+            // Find the most recent day in the quotes
+            const lastQuoteDate = new Date(quotes[quotes.length - 1].date);
+            const lastDateStr = lastQuoteDate.toDateString();
 
-        const quotes = result.quotes || [];
+            // Filter only quotes from that specific last trading day
+            finalQuotes = quotes.filter((q: any) => new Date(q.date).toDateString() === lastDateStr);
+        }
 
-        const formattedData = quotes.map((item: any) => {
+        const formattedData = finalQuotes.map((item: any) => {
             const date = new Date(item.date);
             let timeStr = '';
 
-            if (range === '1d') {
-                // For 1 day, show time (HH:mm)
+            if (range.toLowerCase() === '1d') {
                 timeStr = date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
             } else {
-                // For 1 week and longer, show date (MM/DD)
                 const month = String(date.getMonth() + 1).padStart(2, '0');
                 const day = String(date.getDate()).padStart(2, '0');
                 timeStr = `${month}/${day}`;
