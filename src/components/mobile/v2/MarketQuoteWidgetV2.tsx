@@ -22,7 +22,7 @@ import { koreanNameMap } from '@/lib/koreanNameMap';
 const TABS = ['주요', 'MY종목', 'MY지수', '환율', '주가지수', '원자재', '국채수익률'];
 
 const Sparkline = ({ isUp }: { isUp: boolean }) => {
-    const color = isUp ? "#FF4F60" : "#2684FE";
+    const color = isUp ? "#FF3B2F" : "#35C759";
     return (
         <svg width="56" height="20" viewBox="0 0 56 20" fill="none" className="opacity-80">
             <path
@@ -179,7 +179,7 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
     }, [selectedAsset?.ticker, selectedRange]);
 
     const isUp = selectedAsset?.changeAmount ? selectedAsset.changeAmount >= 0 : true;
-    const chartColor = isUp ? "#FF4F60" : "#2684FE";
+    const chartColor = isUp ? "#FF3B2F" : "#35C759";
 
     const CustomTooltip = ({ active, payload }: any) => {
         if (active && payload && payload.length) {
@@ -227,9 +227,10 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
 
     // --- HELPERS ---
     const formatPrice = (type: AssetType, price: number) => {
-        if (type === 'US') return `US$${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        if (type === 'FX') return price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        return price.toLocaleString();
+        return price.toLocaleString(undefined, {
+            minimumFractionDigits: type === 'KR' ? 0 : 2,
+            maximumFractionDigits: 2
+        });
     };
 
     const inferAssetType = (result: any): AssetType => {
@@ -314,7 +315,7 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
                 {displayedStocks.map((item, index) => {
                     const isUp = item.changeAmount >= 0;
                     const sign = isUp ? "+" : "";
-                    const themeColorClass = isUp ? "bg-[#FF4F60]" : "bg-[#2684FE]";
+                    const themeColorClass = isUp ? "bg-[#FF3B2F]" : "bg-[#35C759]";
 
                     return (
                         <button
@@ -343,7 +344,7 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
                                         {formatPrice(item.type, item.currentPrice)}
                                     </span>
                                     <div className={cn(
-                                        "px-2 py-0.5 rounded-md text-[11px] font-bold text-white min-w-[60px] text-center",
+                                        "px-2 py-0.5 rounded-[6px] text-[11px] font-bold text-white min-w-[60px] text-center",
                                         themeColorClass
                                     )}>
                                         {sign}{item.changeRate.toFixed(2)}%
@@ -558,7 +559,7 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
                                         </span>
                                         <div className={cn(
                                             "flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-black text-white mb-1",
-                                            selectedAsset.changeAmount >= 0 ? "bg-[#FF4F60]" : "bg-[#2684FE]"
+                                            selectedAsset.changeAmount >= 0 ? "bg-[#FF3B2F]" : "bg-[#35C759]"
                                         )}>
                                             {selectedAsset.changeAmount >= 0 ? "+" : ""}{selectedAsset.changeRate.toFixed(2)}%
                                         </div>
@@ -628,8 +629,8 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
                                                             yAxisId="volume"
                                                             dataKey="volume"
                                                             fill="#A1A1AA"
-                                                            opacity={0.12}
-                                                            barSize={2}
+                                                            opacity={0.3}
+                                                            barSize={1.5}
                                                         />
 
                                                         <Area
