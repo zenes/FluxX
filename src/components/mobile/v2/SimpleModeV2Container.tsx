@@ -3,15 +3,19 @@
 import React, { useState, useEffect } from 'react';
 import MarketQuoteWidgetV2 from './MarketQuoteWidgetV2';
 import SimpleModeV2Card from './SimpleModeV2Card';
+import AssetListGroupCard from './AssetListGroupCard';
 import InvestmentNewsCardV2 from './InvestmentNewsCardV2';
+import StockDetailSheetV2 from './StockDetailSheetV2';
+import AssetGrowthDetailSheetV2 from './AssetGrowthDetailSheetV2';
 import prisma from '@/lib/prisma';
 import { encrypt, decrypt } from '@/lib/encryption';
 import { revalidatePath } from 'next/cache';
 import { bulkInsertTestData, bulkDeleteTestData } from '@/lib/test-actions';
 import { AssetItem } from '@/lib/actions';
+import { calculateNetWorth, MarketPrices } from '@/lib/calculations';
 import { cn } from '@/lib/utils';
 import { motion, animate, useMotionValue } from 'framer-motion';
-import { Wallet, PieChart, TrendingUp, Landmark } from 'lucide-react';
+import { Wallet, PieChart, TrendingUp, Landmark, Coins, Briefcase } from 'lucide-react';
 import V2AuthProfileIcon from './V2AuthProfileIcon';
 import Link from 'next/link';
 import { MarketAsset, INITIAL_STOCKS } from './typesV2';
@@ -31,6 +35,13 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
     const [myStocks, setMyStocks] = useState<MarketAsset[]>(INITIAL_STOCKS);
     const [isAnyModalOpen, setIsAnyModalOpen] = useState(false);
     const [isHydrated, setIsHydrated] = useState(false);
+
+    // Detail Sheet States
+    const [selectedAsset, setSelectedAsset] = useState<AssetItem | null>(null);
+    const [isTotalDetailOpen, setIsTotalDetailOpen] = useState(false);
+    const [totalNetWorth, setTotalNetWorth] = useState<number>(0);
+    const [marketPrices, setMarketPrices] = useState<MarketPrices | null>(null);
+    const [isLoadingTotal, setIsLoadingTotal] = useState(false);
 
     // Persistence: Load stocks from localStorage on mount
     useEffect(() => {
@@ -100,8 +111,40 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
     useEffect(() => {
         if (isHydrated) {
             refreshAllQuotes();
+
+            // Calculate Total Net Worth
+            const fetchTotalData = async () => {
+                setIsLoadingTotal(true);
+                try {
+                    const symbols = assets
+                        .filter(a => a.assetType === 'stock' && a.assetSymbol)
+                        .map(a => a.assetSymbol)
+                        .join(',');
+
+                    let stockPrices = {};
+                    if (symbols) {
+                        const res = await fetch(`/api/stock-price?symbols=${symbols}`);
+                        const data = await res.json();
+                        stockPrices = data.quotes || {};
+                    }
+
+                    const prices: MarketPrices = {
+                        usdKrw: marketData.exchange?.rate || 1400,
+                        goldUsd: marketData.gold?.price || 2600,
+                        stockPrices: stockPrices as any,
+                    };
+                    setMarketPrices(prices);
+                    const calculatedValue = calculateNetWorth(assets, prices);
+                    setTotalNetWorth(calculatedValue);
+                } catch (err) {
+                    console.error("Failed to fetch total net worth data:", err);
+                } finally {
+                    setIsLoadingTotal(false);
+                }
+            };
+            fetchTotalData();
         }
-    }, [isHydrated]);
+    }, [isHydrated, assets, marketData]);
 
     const containerRef = React.useRef<HTMLDivElement>(null);
     const dragX = useMotionValue(0);
@@ -276,12 +319,14 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                     </header>
 
                     <div className="space-y-4">
-                        <SimpleModeV2Card
-                            id="total"
-                            initialAssets={displayAssets}
-                            initialExchange={marketData.exchange || undefined}
-                            initialGold={marketData.gold || undefined}
-                        />
+                        <div onClick={() => setIsTotalDetailOpen(true)}>
+                            <SimpleModeV2Card
+                                id="total"
+                                initialAssets={displayAssets}
+                                initialExchange={marketData.exchange || undefined}
+                                initialGold={marketData.gold || undefined}
+                            />
+                        </div>
 
                         {/* New Stock Quotes Widget */}
                         <MarketQuoteWidgetV2
@@ -299,7 +344,7 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                     </div>
                 </div>
 
-                {/* Page 2: Asset Detail List (KRW, USD, GOLD, STOCKS) */}
+                {/* Page 2: Asset Detail List (Redesigned with Grouping) */}
                 <div className={cn("w-[100vw] shrink-0 px-4 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)] pb-24 transition-opacity duration-300", currentPage !== 1 && "opacity-40 pointer-events-none")}>
                     <header className="mb-6 flex items-center justify-between">
                         <div>
@@ -307,27 +352,38 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                                 <span className="bg-zinc-900 dark:bg-zinc-800 text-white text-xs px-2 py-0.5 rounded-md">#02</span>
                                 자산현황상세
                             </h1>
-                            <p className="text-sm text-zinc-400 font-medium">전체 보유 자산 리스트</p>
+                            <p className="text-sm text-zinc-400 font-medium">전체 보유 자산 분석</p>
                         </div>
                         <div className="size-10 rounded-full bg-white dark:bg-zinc-800 shadow-sm border border-zinc-100 dark:border-zinc-700 flex items-center justify-center">
                             <PieChart className="size-5 text-zinc-900 dark:text-white" />
                         </div>
                     </header>
 
-                    <div className="space-y-3 pb-10">
-                        {sortedAssets.length > 0 ? (
-                            sortedAssets.map((asset, idx) => (
-                                <SimpleModeV2Card
-                                    key={asset.id || `asset-${idx}`}
-                                    id={asset.id || idx}
-                                    stockAsset={asset.assetType === 'stock' ? asset : undefined}
-                                    assetItem={asset.assetType !== 'stock' ? asset : undefined}
-                                    initialExchange={marketData.exchange || undefined}
-                                    initialGold={marketData.gold || undefined}
-                                />
-                            ))
-                        ) : (
-                            <div className="py-20 text-center text-zinc-400 font-medium">보유 중인 자산이 없습니다.</div>
+                    <div className="space-y-4 pb-10">
+                        {/* Group 1: Stock Assets */}
+                        <AssetListGroupCard
+                            title="STOCKS"
+                            icon={Briefcase}
+                            assets={displayAssets.filter(a => a.assetType === 'stock')}
+                            onAssetClick={(asset) => setSelectedAsset(asset)}
+                            exchangeRate={marketData.exchange?.rate || 1400}
+                            type="stock"
+                            marketPrices={marketPrices}
+                        />
+
+                        {/* Group 2: Cash & Commodities */}
+                        <AssetListGroupCard
+                            title="CASH & COMMODITIES"
+                            icon={Coins}
+                            assets={displayAssets.filter(a => a.assetType !== 'stock')}
+                            onAssetClick={(asset) => setSelectedAsset(asset)}
+                            exchangeRate={marketData.exchange?.rate || 1400}
+                            type="other"
+                            marketPrices={marketPrices}
+                        />
+
+                        {displayAssets.length === 0 && (
+                            <div className="py-20 text-center text-zinc-400 font-medium font-black italic">보유 중인 자산 데이터가 없습니다.</div>
                         )}
                     </div>
                 </div>
@@ -420,6 +476,30 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                     />
                 ))}
             </div>
+
+            {/* Asset Detail Sheet V2 (Opened from Container) */}
+            {selectedAsset && (
+                <StockDetailSheetV2
+                    isOpen={!!selectedAsset}
+                    onClose={() => setSelectedAsset(null)}
+                    stockAsset={selectedAsset}
+                    currentPrice={marketPrices?.stockPrices?.[selectedAsset.assetSymbol || '']?.price || selectedAsset.avgPrice || 0}
+                    changePercent={marketPrices?.stockPrices?.[selectedAsset.assetSymbol || '']?.changePercent || 0}
+                    exchangeRate={marketData.exchange?.rate || 1400}
+                    totalNetWorth={totalNetWorth}
+                />
+            )}
+
+            {/* Total Analysis Sheet */}
+            {marketPrices && (
+                <AssetGrowthDetailSheetV2
+                    isOpen={isTotalDetailOpen}
+                    onClose={() => setIsTotalDetailOpen(false)}
+                    assets={displayAssets}
+                    marketPrices={marketPrices}
+                    totalNetWorth={totalNetWorth}
+                />
+            )}
         </div>
     );
 }
