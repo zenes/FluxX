@@ -16,7 +16,6 @@ import {
     Bar,
     ComposedChart
 } from 'recharts';
-import ChartTooltipV2 from './ChartTooltipV2';
 import { koreanNameMap } from '@/lib/koreanNameMap';
 
 const TABS = ['주요', 'MY종목', 'MY지수', '환율', '주가지수', '원자재', '국채수익률'];
@@ -168,6 +167,7 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
     const [selectedAsset, setSelectedAsset] = useState<MarketAsset | null>(null);
     const [selectedRange, setSelectedRange] = useState('1일');
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [hoveredData, setHoveredData] = useState<{ price: number; time: string } | null>(null);
 
     // --- SEARCH & BOTTOM SHEET STATE ---
     const [searchQuery, setSearchQuery] = useState('');
@@ -244,11 +244,14 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
 
     const CustomTooltip = ({ active, payload }: any) => {
         if (active && payload && payload.length) {
+            const priceData = payload.find((p: any) => p.dataKey === 'price');
+            if (!priceData) return null;
+
             return (
                 <div className="bg-zinc-900/90 backdrop-blur-md border border-white/10 p-3 rounded-xl shadow-2xl">
-                    <p className="text-[10px] font-black text-zinc-500 mb-1 uppercase tracking-widest">{payload[0].payload.time}</p>
+                    <p className="text-[10px] font-black text-zinc-500 mb-1 uppercase tracking-widest">{priceData.payload.time}</p>
                     <p className="text-sm font-black text-white">
-                        {formatPrice(selectedAsset!.type, payload[0].value)}
+                        {formatPrice(selectedAsset!.type, priceData.value)}
                     </p>
                 </div>
             );
@@ -615,15 +618,25 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
                                         </h2>
                                     </div>
                                     <div className="flex items-end gap-3">
-                                        <span className="text-3xl font-black text-zinc-900 dark:text-white">
-                                            {formatPrice(selectedAsset.type, selectedAsset.currentPrice)}
-                                        </span>
-                                        <div className={cn(
-                                            "flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-black text-white mb-1",
-                                            selectedAsset.changeAmount >= 0 ? "bg-[#FF3B2F]" : "bg-[#35C759]"
+                                        <span className={cn(
+                                            "text-3xl font-black transition-colors",
+                                            hoveredData ? "text-[#38C798]" : "text-zinc-900 dark:text-white"
                                         )}>
-                                            {selectedAsset.changeAmount >= 0 ? "+" : ""}{selectedAsset.changeRate.toFixed(2)}%
-                                        </div>
+                                            {formatPrice(selectedAsset.type, hoveredData ? hoveredData.price : selectedAsset.currentPrice)}
+                                        </span>
+                                        {!hoveredData && (
+                                            <div className={cn(
+                                                "flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-black text-white mb-1",
+                                                selectedAsset.changeAmount >= 0 ? "bg-[#FF3B2F]" : "bg-[#35C759]"
+                                            )}>
+                                                {selectedAsset.changeAmount >= 0 ? "+" : ""}{selectedAsset.changeRate.toFixed(2)}%
+                                            </div>
+                                        )}
+                                        {hoveredData && (
+                                            <div className="text-[11px] font-bold text-zinc-500 mb-1.5 uppercase tracking-wider">
+                                                {hoveredData.time}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -657,7 +670,19 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
                                                 </div>
                                             ) : chartData.length > 0 ? (
                                                 <ResponsiveContainer width="100%" height="100%">
-                                                    <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                                                    <ComposedChart
+                                                        data={chartData}
+                                                        margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+                                                        onMouseMove={(e: any) => {
+                                                            if (e.activePayload && e.activePayload.length > 0) {
+                                                                const priceItem = e.activePayload.find((p: any) => p.dataKey === 'price');
+                                                                if (priceItem) {
+                                                                    setHoveredData({ price: priceItem.value, time: priceItem.payload.time });
+                                                                }
+                                                            }
+                                                        }}
+                                                        onMouseLeave={() => setHoveredData(null)}
+                                                    >
                                                         <defs>
                                                             <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
                                                                 <stop offset="5%" stopColor={chartColor} stopOpacity={0.15} />

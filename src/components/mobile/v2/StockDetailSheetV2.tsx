@@ -16,6 +16,16 @@ import {
 } from 'lucide-react';
 import { AssetItem } from '@/lib/actions';
 import { cn } from '@/lib/utils';
+import {
+    AreaChart,
+    Area,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+} from 'recharts';
+import { useEffect } from 'react';
 
 interface StockDetailSheetV2Props {
     isOpen: boolean;
@@ -37,12 +47,50 @@ export default function StockDetailSheetV2({
     exchangeRate,
 }: StockDetailSheetV2Props) {
     const [activeRange, setActiveRange] = useState('1M');
+    const [chartData, setChartData] = useState<any[]>([]);
+    const [isLoadingChart, setIsLoadingChart] = useState(false);
+    const [hoveredData, setHoveredData] = useState<{ price: number; time: string } | null>(null);
 
-    const isUSD = stockAsset.currency !== 'KRW';
-    const priceInKrw = currentPrice
+    useEffect(() => {
+        if (!isOpen || !stockAsset.assetSymbol) return;
+
+        const fetchHistory = async () => {
+            setIsLoadingChart(true);
+            try {
+                // Map range to API format
+                const rangeMap: Record<string, string> = {
+                    '1D': '1d', '1W': '1w', '1M': '1mo', '3M': '3mo',
+                    '6M': '6mo', 'YTD': 'ytd', '1Y': '1y', 'MAX': '5y'
+                };
+                const res = await fetch(`/api/stock-history?symbol=${stockAsset.assetSymbol}&range=${rangeMap[activeRange]}`);
+                const data = await res.json();
+                if (data.chartData) {
+                    setChartData(data.chartData);
+                }
+            } catch (err) {
+                console.error("Failed to fetch stock history:", err);
+            } finally {
+                setIsLoadingChart(false);
+            }
+        };
+
+        fetchHistory();
+    }, [isOpen, stockAsset.assetSymbol, activeRange]);
+
+    // Robust Currency Detection
+    const isKRStock = stockAsset.assetSymbol?.endsWith('.KS') || stockAsset.assetSymbol?.endsWith('.KQ') || stockAsset.currency === 'KRW';
+    const isUSD = !isKRStock;
+
+    const currentPriceInKrw = currentPrice
         ? (isUSD ? currentPrice * exchangeRate : currentPrice)
         : 0;
-    const totalValueKrw = priceInKrw * stockAsset.amount;
+
+    // Display price: if hovering, show that. Otherwise show current.
+    const displayPriceKrw = hoveredData
+        ? (isUSD ? hoveredData.price * exchangeRate : hoveredData.price)
+        : currentPriceInKrw;
+
+    const totalValueKrw = currentPriceInKrw * stockAsset.amount;
 
     const computedAvgPrice = (() => {
         if (stockAsset.entries && stockAsset.entries.length > 0) {
@@ -92,14 +140,23 @@ export default function StockDetailSheetV2({
                         <div className="text-right">
                             <div className="flex items-baseline gap-1 justify-end">
                                 <span className="text-sm font-bold text-zinc-300">₩</span>
-                                <span className="text-3xl font-black text-[#2B364B] dark:text-white tracking-tighter leading-none">
-                                    {priceInKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                <span className={cn(
+                                    "text-3xl font-black tracking-tighter leading-none transition-colors",
+                                    hoveredData ? "text-[#38C798]" : "text-[#2B364B] dark:text-white"
+                                )}>
+                                    {displayPriceKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                 </span>
                             </div>
-                            {changePercent !== null && (
-                                <div className="flex items-center gap-1 justify-end font-bold text-sm mt-1" style={{ color: changePercent >= 0 ? COLOR_UP : COLOR_DOWN }}>
-                                    {changePercent >= 0 ? '+' : ''}{changePercent.toFixed(2)}%
+                            {hoveredData ? (
+                                <div className="text-[10px] font-bold text-zinc-400 mt-1 uppercase tracking-wider">
+                                    {hoveredData.time} 가격
                                 </div>
+                            ) : (
+                                changePercent !== null && (
+                                    <div className="flex items-center gap-1 justify-end font-bold text-sm mt-1" style={{ color: changePercent >= 0 ? COLOR_UP : COLOR_DOWN }}>
+                                        {changePercent >= 0 ? '+' : ''}{changePercent.toFixed(2)}%
+                                    </div>
+                                )
                             )}
                         </div>
                     </div>
@@ -125,27 +182,63 @@ export default function StockDetailSheetV2({
                         ))}
                     </div>
 
-                    {/* Placeholder Chart with Gradient Fill */}
-                    <div className="absolute inset-x-0 bottom-0 top-10 pointer-events-none px-2">
-                        <svg viewBox="0 0 400 120" className="w-full h-full preserve-3d" preserveAspectRatio="none">
-                            <defs>
-                                <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor={PRIMARY_ACCENT} stopOpacity="0.2" />
-                                    <stop offset="100%" stopColor={PRIMARY_ACCENT} stopOpacity="0" />
-                                </linearGradient>
-                            </defs>
-                            <path
-                                d="M0 80 Q 50 85, 100 40 T 200 60 T 300 10 T 400 45 L 400 120 L 0 120 Z"
-                                fill="url(#chartGradient)"
-                            />
-                            <path
-                                d="M0 80 Q 50 85, 100 40 T 200 60 T 300 10 T 400 45"
-                                fill="none"
-                                stroke={PRIMARY_ACCENT}
-                                strokeWidth="3"
-                                strokeLinecap="round"
-                            />
-                        </svg>
+                    {/* Real Chart */}
+                    <div className="absolute inset-x-0 bottom-0 top-10 px-2">
+                        {isLoadingChart ? (
+                            <div className="w-full h-full flex items-center justify-center">
+                                <div className="w-6 h-6 border-2 border-[#38C798] border-t-transparent rounded-full animate-spin" />
+                            </div>
+                        ) : (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart
+                                    data={chartData}
+                                    onMouseMove={(e: any) => {
+                                        if (e.activePayload && e.activePayload.length > 0) {
+                                            const entry = e.activePayload[0].payload;
+                                            setHoveredData({ price: entry.price, time: entry.time });
+                                        }
+                                    }}
+                                    onMouseLeave={() => setHoveredData(null)}
+                                >
+                                    <defs>
+                                        <linearGradient id="stockGradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor={PRIMARY_ACCENT} stopOpacity={0.2} />
+                                            <stop offset="100%" stopColor={PRIMARY_ACCENT} stopOpacity="0" />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#88888810" />
+                                    <XAxis hide dataKey="time" />
+                                    <YAxis hide domain={['auto', 'auto']} />
+                                    <Tooltip
+                                        trigger="hover"
+                                        contentStyle={{
+                                            borderRadius: '20px',
+                                            border: 'none',
+                                            boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                                            fontSize: '12px',
+                                            fontWeight: 'bold',
+                                            padding: '8px 12px'
+                                        }}
+                                        formatter={(value: number | undefined) => {
+                                            if (value === undefined) return ['', ''];
+                                            const price = isUSD ? value * exchangeRate : value;
+                                            return [`₩${price.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, '가격'];
+                                        }}
+                                        labelStyle={{ display: 'none' }}
+                                    />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="price"
+                                        stroke={PRIMARY_ACCENT}
+                                        strokeWidth={3}
+                                        fillOpacity={1}
+                                        fill="url(#stockGradient)"
+                                        animationDuration={1000}
+                                        activeDot={{ r: 6, fill: PRIMARY_ACCENT, stroke: '#fff', strokeWidth: 2 }}
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        )}
                     </div>
                 </div>
 
