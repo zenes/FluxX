@@ -43,15 +43,46 @@ export async function GET(request: Request) {
 
         const quotesArray = Array.isArray(results) ? results : [results];
 
+        // Fetch sparkline data (1d history) for each symbol in parallel
+        const sparklinesResults = await Promise.all(
+            symbolsToFetch.map(async (sym) => {
+                try {
+                    const period1 = new Date();
+                    period1.setDate(period1.getDate() - 1);
+
+                    const chartData = await yahooFinance.chart(sym, {
+                        period1,
+                        period2: new Date(),
+                        interval: '30m', // Roughly 13-15 points for a trading day
+                    });
+
+                    const quotes = chartData.quotes || [];
+                    const prices = quotes
+                        .map((q: any) => q.close || q.open)
+                        .filter((p: number | undefined): p is number => !!p);
+
+                    return { symbol: sym, sparkline: prices };
+                } catch (e) {
+                    console.error(`Sparkline fetch failed for ${sym}:`, e);
+                    return { symbol: sym, sparkline: [] };
+                }
+            })
+        );
+
+        const sparklineMap: Record<string, number[]> = {};
+        sparklinesResults.forEach(r => {
+            sparklineMap[r.symbol] = r.sparkline;
+        });
+
         quotesArray.forEach(q => {
             if (q && q.symbol) {
                 const data = {
                     price: q.regularMarketPrice || 0,
                     change: q.regularMarketChange || 0,
                     changePercent: q.regularMarketChangePercent || 0,
-                    // Prioritize longName for localized (Korean) names
                     shortName: q.longName || q.shortName || q.symbol,
                     currency: q.currency || 'USD',
+                    sparkline: sparklineMap[q.symbol] || []
                 };
                 resultsMap[q.symbol] = data;
                 cache[q.symbol] = { data, timestamp: now };

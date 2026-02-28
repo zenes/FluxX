@@ -80,7 +80,8 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                             ...s,
                             currentPrice: qData.price,
                             changeAmount: qData.change || 0,
-                            changeRate: qData.changePercent || 0
+                            changeRate: qData.changePercent || 0,
+                            sparkline: qData.sparkline
                         };
                     }
                     return s;

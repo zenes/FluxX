@@ -8,6 +8,7 @@ export interface MarketAsset {
     currentPrice: number;
     changeAmount: number;
     changeRate: number; // Percentage
+    sparkline?: number[];
 }
 
 export const INITIAL_STOCKS: MarketAsset[] = [
