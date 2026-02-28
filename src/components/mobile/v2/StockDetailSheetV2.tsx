@@ -197,8 +197,9 @@ export default function StockDetailSheetV2({
                     {/* Header Info */}
                     <div className="px-6 pt-4 mb-6">
                         <div className="flex flex-col gap-1 mb-4">
-                            <span className="text-[13px] font-black text-zinc-400 uppercase tracking-widest">
+                            <span className="text-[13px] font-black text-zinc-400 uppercase tracking-widest flex items-center gap-1">
                                 {stockAsset.assetSymbol}
+                                <span className="text-[10px] font-black opacity-30">[F]</span>
                             </span>
                             <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">
                                 {stockAsset.assetSymbol}

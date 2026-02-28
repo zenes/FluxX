@@ -369,6 +369,7 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                             exchangeRate={marketData.exchange?.rate || 1400}
                             type="stock"
                             marketPrices={marketPrices}
+                            debugLabel="D"
                         />
 
                         {/* Group 2: Cash & Commodities */}
@@ -380,6 +381,7 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                             exchangeRate={marketData.exchange?.rate || 1400}
                             type="other"
                             marketPrices={marketPrices}
+                            debugLabel="E"
                         />
 
                         {displayAssets.length === 0 && (

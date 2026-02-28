@@ -16,6 +16,7 @@ interface AssetListGroupCardProps {
     exchangeRate: number;
     type: 'stock' | 'other';
     marketPrices?: MarketPrices | null;
+    debugLabel?: string;
 }
 
 export default function AssetListGroupCard({
@@ -25,7 +26,8 @@ export default function AssetListGroupCard({
     onAssetClick,
     exchangeRate,
     type,
-    marketPrices
+    marketPrices,
+    debugLabel
 }: AssetListGroupCardProps) {
     if (assets.length === 0) return null;
 
@@ -43,7 +45,10 @@ export default function AssetListGroupCard({
                     <div className="p-1.5 rounded-lg bg-zinc-100 dark:bg-white/5 text-zinc-500 dark:text-zinc-400">
                         <Icon className="size-4" />
                     </div>
-                    <span className="text-xs font-black text-zinc-400 uppercase tracking-widest">{title}</span>
+                    <span className="text-xs font-black text-zinc-400 uppercase tracking-widest">
+                        {title}
+                        {debugLabel && <span className="text-[10px] font-black opacity-30 ml-1">[{debugLabel}]</span>}
+                    </span>
                 </div>
                 <span className="text-[10px] font-black text-zinc-300 dark:text-zinc-600 bg-zinc-50 dark:bg-white/5 px-2 py-0.5 rounded-full">
                     {assets.length} ITEMS

@@ -134,8 +134,9 @@ export default function InvestmentNewsCardV2({ myStocks, onModalToggle, isHydrat
             {/* Header */}
             <div className="px-5 mb-4 flex items-center justify-between">
                 <div className="flex flex-col gap-0.5">
-                    <h2 className="text-[17px] font-black text-zinc-900 dark:text-white tracking-tight">
+                    <h2 className="text-[17px] font-black text-zinc-900 dark:text-white tracking-tight flex items-center gap-1">
                         최신 투자 뉴스
+                        <span className="text-[10px] font-black opacity-30">[C]</span>
                     </h2>
                     <div className="flex items-center gap-1 mt-2">
                         {[

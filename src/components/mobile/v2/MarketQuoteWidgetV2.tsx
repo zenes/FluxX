@@ -271,21 +271,24 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
         >
             {/* Top Navigation */}
             <div className="flex items-center justify-between px-4 mb-3">
-                <div className="flex overflow-x-auto hide-scrollbar gap-2 flex-1 mr-2">
-                    {TABS.map((tab) => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={cn(
-                                "px-4 py-1.5 rounded-full text-[13px] font-bold whitespace-nowrap transition-colors",
-                                activeTab === tab
-                                    ? "bg-zinc-800 text-white dark:bg-white dark:text-zinc-900"
-                                    : "bg-zinc-100 text-zinc-600 dark:bg-white/5 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-white/10"
-                            )}
-                        >
-                            {tab}
-                        </button>
-                    ))}
+                <div className="flex items-center gap-1">
+                    <div className="flex overflow-x-auto hide-scrollbar gap-2 flex-1">
+                        {TABS.map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                className={cn(
+                                    "px-4 py-1.5 rounded-full text-[13px] font-bold whitespace-nowrap transition-colors",
+                                    activeTab === tab
+                                        ? "bg-zinc-800 text-white dark:bg-white dark:text-zinc-900"
+                                        : "bg-zinc-100 text-zinc-600 dark:bg-white/5 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-white/10"
+                                )}
+                            >
+                                {tab}
+                            </button>
+                        ))}
+                    </div>
+                    <span className="text-[10px] font-black opacity-30 ml-1">[B]</span>
                 </div>
                 {onRefresh && (
                     <button

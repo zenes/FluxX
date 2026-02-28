@@ -144,8 +144,9 @@ export default function SimpleModeV2Card({
                     <div className="flex items-center gap-3">
                         {icon}
                         <div>
-                            <p className="text-[16px] font-bold text-[#2B364B] dark:text-white/90 leading-tight">
+                            <p className="text-[16px] font-bold text-[#2B364B] dark:text-white/90 leading-tight flex items-center gap-1">
                                 {title}
+                                {isTotal && <span className="text-[9px] font-black opacity-30">[A]</span>}
                             </p>
                             {subtitle && (
                                 <p className="text-[12px] text-zinc-400 font-medium pb-0.5">
@@ -211,6 +212,7 @@ export default function SimpleModeV2Card({
                     currentPrice={stockPriceInfo?.price ?? null}
                     changePercent={stockPriceInfo?.changePercent ?? null}
                     exchangeRate={initialExchange?.rate || 1400}
+                    totalNetWorth={isTotal ? (netWorth || 0) : 0}
                 />
             )}
 
