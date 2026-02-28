@@ -304,13 +304,13 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                     <header className="mb-6 flex items-center justify-between">
                         <div>
                             <h1 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight flex items-center gap-2">
-                                <span className="bg-[#38C798] text-white text-xs px-2 py-0.5 rounded-md">#02</span>
+                                <span className="bg-zinc-900 dark:bg-zinc-800 text-white text-xs px-2 py-0.5 rounded-md">#02</span>
                                 자산현황상세
                             </h1>
                             <p className="text-sm text-zinc-400 font-medium">전체 보유 자산 리스트</p>
                         </div>
                         <div className="size-10 rounded-full bg-white dark:bg-zinc-800 shadow-sm border border-zinc-100 dark:border-zinc-700 flex items-center justify-center">
-                            <PieChart className="size-5 text-[#38C798]" />
+                            <PieChart className="size-5 text-zinc-900 dark:text-white" />
                         </div>
                     </header>
 
@@ -337,13 +337,13 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                     <header className="mb-6 flex items-center justify-between">
                         <div>
                             <h1 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight flex items-center gap-2">
-                                <span className="bg-[#FF4F60] text-white text-xs px-2 py-0.5 rounded-md">#03</span>
+                                <span className="bg-zinc-900 dark:bg-zinc-800 text-white text-xs px-2 py-0.5 rounded-md">#03</span>
                                 배당 인사이트
                             </h1>
                             <p className="text-sm text-zinc-400 font-medium">월별 배당금 흐름 및 전망</p>
                         </div>
                         <div className="size-10 rounded-full bg-white dark:bg-zinc-800 shadow-sm border border-zinc-100 dark:border-zinc-700 flex items-center justify-center">
-                            <TrendingUp className="size-5 text-[#FF4F60]" />
+                            <TrendingUp className="size-5 text-zinc-900 dark:text-white" />
                         </div>
                     </header>
 
@@ -370,13 +370,13 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                     <header className="mb-6 flex items-center justify-between">
                         <div>
                             <h1 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight flex items-center gap-2">
-                                <span className="bg-[#2684FE] text-white text-xs px-2 py-0.5 rounded-md">#04</span>
+                                <span className="bg-zinc-900 dark:bg-zinc-800 text-white text-xs px-2 py-0.5 rounded-md">#04</span>
                                 계좌현황
                             </h1>
                             <p className="text-sm text-zinc-400 font-medium">연동된 증권 계좌 정보</p>
                         </div>
                         <div className="size-10 rounded-full bg-white dark:bg-zinc-800 shadow-sm border border-zinc-100 dark:border-zinc-700 flex items-center justify-center">
-                            <Landmark className="size-5 text-[#2684FE]" />
+                            <Landmark className="size-5 text-zinc-900 dark:text-white" />
                         </div>
                     </header>
 
@@ -414,10 +414,7 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                         className={cn(
                             "size-2 rounded-full transition-all duration-300",
                             currentPage === idx
-                                ? idx === 0 ? "bg-zinc-900 dark:bg-white w-6" :
-                                    idx === 1 ? "bg-[#38C798] w-6" :
-                                        idx === 2 ? "bg-[#FF4F60] w-6" :
-                                            "bg-[#2684FE] w-6"
+                                ? "bg-zinc-900 dark:bg-white w-6"
                                 : "bg-zinc-300 dark:bg-zinc-700"
                         )}
                     />
