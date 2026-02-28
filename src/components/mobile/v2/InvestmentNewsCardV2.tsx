@@ -36,6 +36,7 @@ export default function InvestmentNewsCardV2({ myStocks, onModalToggle, isHydrat
     const [error, setError] = useState<string | null>(null);
     const [isExpanded, setIsExpanded] = useState(false);
     const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
+    const [activeRegion, setActiveRegion] = useState<'ALL' | 'KR' | 'US'>('ALL');
     const lastFetchedQuery = React.useRef<string>('');
 
     // Synchronize modal state with parent
@@ -62,19 +63,20 @@ export default function InvestmentNewsCardV2({ myStocks, onModalToggle, isHydrat
         }
 
         const query = tickers.join(',');
+        const fetchKey = `${query}-${activeRegion}`;
 
-        // Prevent redundant fetches if the query hasn't changed
-        if (query === lastFetchedQuery.current) {
+        // Prevent redundant fetches if the query and region hasn't changed
+        if (fetchKey === lastFetchedQuery.current) {
             setIsLoading(false);
             return;
         }
 
-        lastFetchedQuery.current = query;
+        lastFetchedQuery.current = fetchKey;
         setIsLoading(true);
         setError(null);
 
         try {
-            const response = await fetch(`/api/news?tickers=${encodeURIComponent(query)}`);
+            const response = await fetch(`/api/news?tickers=${encodeURIComponent(query)}&region=${activeRegion}`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
             const data = await response.json();
@@ -86,7 +88,7 @@ export default function InvestmentNewsCardV2({ myStocks, onModalToggle, isHydrat
                     return {
                         ...item,
                         sourceName: matchedStock?.name || item.sourceName || '야후 파이낸스',
-                        thumbnail: '' // Yahoo RSS doesn't provide easy thumbnails, using ticker box tier-3
+                        thumbnail: '' // Yahoo/Google RSS doesn't provide easy thumbnails
                     };
                 });
 
@@ -100,7 +102,7 @@ export default function InvestmentNewsCardV2({ myStocks, onModalToggle, isHydrat
         } finally {
             setIsLoading(false);
         }
-    }, [myStocks, isHydrated]);
+    }, [myStocks, isHydrated, activeRegion]);
 
     useEffect(() => {
         if (isHydrated) {
@@ -131,9 +133,31 @@ export default function InvestmentNewsCardV2({ myStocks, onModalToggle, isHydrat
         <div className="bg-white dark:bg-[#1A1A1E] rounded-[24px] shadow-sm border border-zinc-100 dark:border-white/5 overflow-hidden flex flex-col pt-5">
             {/* Header */}
             <div className="px-5 mb-4 flex items-center justify-between">
-                <h2 className="text-[17px] font-black text-zinc-900 dark:text-white tracking-tight">
-                    최신 투자 뉴스
-                </h2>
+                <div className="flex flex-col gap-0.5">
+                    <h2 className="text-[17px] font-black text-zinc-900 dark:text-white tracking-tight">
+                        최신 투자 뉴스
+                    </h2>
+                    <div className="flex items-center gap-1 mt-2">
+                        {[
+                            { id: 'ALL', label: '전체' },
+                            { id: 'KR', label: '국내' },
+                            { id: 'US', label: '해외' }
+                        ].map((btn) => (
+                            <button
+                                key={btn.id}
+                                onClick={() => setActiveRegion(btn.id as any)}
+                                className={cn(
+                                    "px-3 py-1 rounded-full text-[11px] font-bold transition-all",
+                                    activeRegion === btn.id
+                                        ? "bg-zinc-900 dark:bg-white text-white dark:text-black shadow-sm"
+                                        : "bg-zinc-50 dark:bg-white/5 text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100"
+                                )}
+                            >
+                                {btn.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
                 <button
                     onClick={fetchNews}
                     disabled={isLoading}
