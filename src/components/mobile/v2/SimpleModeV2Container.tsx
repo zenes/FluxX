@@ -4,6 +4,10 @@ import React, { useState, useEffect } from 'react';
 import MarketQuoteWidgetV2 from './MarketQuoteWidgetV2';
 import SimpleModeV2Card from './SimpleModeV2Card';
 import InvestmentNewsCardV2 from './InvestmentNewsCardV2';
+import prisma from '@/lib/prisma';
+import { encrypt, decrypt } from '@/lib/encryption';
+import { revalidatePath } from 'next/cache';
+import { bulkInsertTestData, bulkDeleteTestData } from '@/lib/test-actions';
 import { AssetItem } from '@/lib/actions';
 import { cn } from '@/lib/utils';
 import { motion, animate, useMotionValue } from 'framer-motion';
@@ -124,6 +128,39 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
         return (order[a.assetType] || 99) - (order[b.assetType] || 99);
     });
 
+    const [isPending, setIsPending] = useState(false);
+
+    const handleInsertTestData = async () => {
+        if (isPending) return;
+        setIsPending(true);
+        try {
+            await bulkInsertTestData();
+            // Refresh market data if needed, but revalidatePath should handle it
+            window.location.reload(); // Force reload to see changes clearly
+        } catch (e) {
+            console.error(e);
+            alert("입력 실패: " + e);
+        } finally {
+            setIsPending(false);
+        }
+    };
+
+    const handleDeleteTestData = async () => {
+        if (isPending) return;
+        if (!window.confirm("정말로 모든 투자 데이터를 삭제하시겠습니까? 계좌, 주식, 현금 자산 정보가 모두 삭제됩니다.")) return;
+
+        setIsPending(true);
+        try {
+            await bulkDeleteTestData();
+            window.location.reload();
+        } catch (e) {
+            console.error(e);
+            alert("삭제 실패: " + e);
+        } finally {
+            setIsPending(false);
+        }
+    };
+
     const handleDragEnd = (event: any, info: any) => {
         const width = window.innerWidth;
         const velocity = info.velocity.x;
@@ -182,14 +219,32 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                 {/* Page 1: Dashboard (Net Worth & News) */}
                 <div className={cn("w-[100vw] shrink-0 px-4 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)] pb-24 transition-opacity duration-300", currentPage !== 0 && "opacity-40 pointer-events-none")}>
                     <header className="mb-6 flex items-center justify-between">
-                        {/* Left: Menu Icon (2D, Soft Black) */}
-                        <button className="p-2 -ml-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#2B364B] dark:text-white">
-                                <line x1="4" y1="12" x2="20" y2="12"></line>
-                                <line x1="4" y1="6" x2="20" y2="6"></line>
-                                <line x1="4" y1="18" x2="20" y2="18"></line>
-                            </svg>
-                        </button>
+                        <div className="flex items-center gap-1">
+                            <button className="p-2 -ml-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#2B364B] dark:text-white">
+                                    <line x1="4" y1="12" x2="20" y2="12"></line>
+                                    <line x1="4" y1="6" x2="20" y2="6"></line>
+                                    <line x1="4" y1="18" x2="20" y2="18"></line>
+                                </svg>
+                            </button>
+
+                            <div className="flex gap-1 ml-1">
+                                <button
+                                    onClick={handleInsertTestData}
+                                    disabled={isPending}
+                                    className="px-2 py-1 text-[10px] font-bold bg-[#38C798]/10 text-[#38C798] rounded-md border border-[#38C798]/20 active:scale-95 transition-all disabled:opacity-50"
+                                >
+                                    {isPending ? "..." : "데이터 입력"}
+                                </button>
+                                <button
+                                    onClick={handleDeleteTestData}
+                                    disabled={isPending}
+                                    className="px-2 py-1 text-[10px] font-bold bg-[#FF4F60]/10 text-[#FF4F60] rounded-md border border-[#FF4F60]/20 active:scale-95 transition-all disabled:opacity-50"
+                                >
+                                    {isPending ? "..." : "데이터 삭제"}
+                                </button>
+                            </div>
+                        </div>
 
                         {/* Right: Theme Toggle, Settings, Profile */}
                         <div className="flex items-center gap-1">
