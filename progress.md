@@ -1,5 +1,15 @@
 # Project Progress - 2026-03-01
 
+## [2026-03-01 17:30] 종목 상세 내 '자산 추가' 기능 고도화 (Add Asset with Pre-filling)
+
+- **원클릭 자산 추가 구현**: 
+    - 종목 상세 시트(`StockDetailSheetV2`) 하단에 '자산 추가' 버튼을 신설하여, 현재 보고 있는 종목을 즉시 추가 등록할 수 있는 동선을 구축했습니다.
+    - **종목 자동 완성 (Pre-filling)**: 상세 화면에서 '자산 추가' 진입 시, 해당 종목의 티커와 이름이 입력 폼(`StockEntryFormV2`)에 자동으로 채워지도록 로직을 고도화했습니다.
+- **컴포넌트 간 통신 최적화**:
+    - `SimpleModeV2Container`, `AssetEntrySheetV2`, `StockEntryFormV2` 간의 프롭 전달 체계를 개선하여 `initialSymbol` 데이터를 안정적으로 전달하도록 수정했습니다.
+    - 상세 시트 종료와 추가 시트 오픈 사이의 애니메이션 간섭을 해결하기 위해 지연 실행(setTimeout) 로직을 적용했습니다.
+
+
 ## [2026-03-01 17:21] 자산 삭제 프로세스 PIN 입력으로 일원화 (Standardize Asset Deletion to PIN)
 
 - **삭제 UI 일원화**: 

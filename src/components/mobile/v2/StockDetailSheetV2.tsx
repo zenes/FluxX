@@ -14,6 +14,7 @@ import {
     BarChart2,
     Percent,
     Trash2,
+    Plus,
 } from 'lucide-react';
 import { AssetItem, deleteStockAssetAllEntries, deleteStockEntry } from '@/lib/actions';
 import { cn } from '@/lib/utils';
@@ -152,6 +153,7 @@ interface StockDetailSheetV2Props {
     isOpen: boolean;
     onClose: () => void;
     onNavigate?: (page: number) => void;
+    onAddAsset?: (symbol?: string) => void;
     stockAsset: AssetItem | null;
     currentPrice: number | null;
     changePercent: number | null;
@@ -166,6 +168,7 @@ export default function StockDetailSheetV2({
     isOpen,
     onClose,
     onNavigate,
+    onAddAsset,
     stockAsset,
     currentPrice,
     changePercent,
@@ -627,10 +630,25 @@ export default function StockDetailSheetV2({
                         </div>
                     )}
 
-                    <div className="px-6 mt-10 mb-20">
+                    <div className="px-6 mt-10 mb-20 grid grid-cols-2 gap-3">
+                        <button
+                            onClick={() => {
+                                onClose();
+                                setTimeout(() => {
+                                    onAddAsset?.(stockAsset?.assetSymbol || undefined);
+                                }, 300);
+                            }}
+                            className="py-4 rounded-2xl bg-[#38C798]/10 border border-dashed border-[#38C798]/30 flex items-center justify-center gap-2 group active:scale-[0.98] transition-all hover:bg-[#38C798]/20"
+                        >
+                            <div className="size-6 rounded-full bg-[#38C798] text-white flex items-center justify-center">
+                                <Plus className="size-3.5" />
+                            </div>
+                            <span className="text-[13px] font-black text-[#38C798] uppercase tracking-tight">자산 추가</span>
+                        </button>
+
                         <button
                             onClick={handleDelete}
-                            className="w-full py-4 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-dashed border-zinc-200 dark:border-white/10 flex items-center justify-center gap-2 group active:scale-[0.98] transition-all hover:bg-red-50 dark:hover:bg-red-900/10 hover:border-red-200 dark:hover:border-red-900/20"
+                            className="py-4 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-dashed border-zinc-200 dark:border-white/10 flex items-center justify-center gap-2 group active:scale-[0.98] transition-all hover:bg-red-50 dark:hover:bg-red-900/10 hover:border-red-200 dark:hover:border-red-900/20"
                         >
                             <div className="size-6 rounded-full bg-zinc-200 dark:bg-white/10 text-zinc-500 group-hover:bg-red-500 group-hover:text-white transition-all flex items-center justify-center">
                                 <Trash2 className="size-3.5" />

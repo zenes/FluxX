@@ -41,6 +41,12 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
     const [selectedAsset, setSelectedAsset] = useState<AssetItem | null>(null);
     const [isTotalDetailOpen, setIsTotalDetailOpen] = useState(false);
     const [isAssetEntryOpen, setIsAssetEntryOpen] = useState(false);
+    const [prefilledSymbol, setPrefilledSymbol] = useState<string | undefined>(undefined);
+
+    const handleAddAssetEntry = (symbol?: string) => {
+        setPrefilledSymbol(symbol);
+        setIsAssetEntryOpen(true);
+    };
     const [totalNetWorth, setTotalNetWorth] = useState<number>(0);
     const [marketPrices, setMarketPrices] = useState<MarketPrices | null>(null);
     const [isLoadingTotal, setIsLoadingTotal] = useState(false);
@@ -541,6 +547,7 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                 isOpen={!!selectedAsset}
                 onClose={() => setSelectedAsset(null)}
                 onNavigate={goToPage}
+                onAddAsset={handleAddAssetEntry}
                 stockAsset={selectedAsset}
                 currentPrice={selectedAsset ? (marketPrices?.stockPrices?.[selectedAsset.assetSymbol || '']?.price || selectedAsset.avgPrice || 0) : 0}
                 changePercent={selectedAsset ? (marketPrices?.stockPrices?.[selectedAsset.assetSymbol || '']?.changePercent || 0) : 0}
@@ -560,7 +567,11 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
             {/* Asset Entry Sheet V2 */}
             <AssetEntrySheetV2
                 isOpen={isAssetEntryOpen}
-                onClose={() => setIsAssetEntryOpen(false)}
+                onClose={() => {
+                    setIsAssetEntryOpen(false);
+                    setPrefilledSymbol(undefined);
+                }}
+                initialSymbol={prefilledSymbol}
             />
         </div>
     );

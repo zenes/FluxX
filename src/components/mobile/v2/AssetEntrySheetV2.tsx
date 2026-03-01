@@ -14,9 +14,10 @@ import StockEntryFormV2 from '@/components/StockEntryFormV2';
 interface AssetEntrySheetV2Props {
     isOpen: boolean;
     onClose: () => void;
+    initialSymbol?: string;
 }
 
-export default function AssetEntrySheetV2({ isOpen, onClose }: AssetEntrySheetV2Props) {
+export default function AssetEntrySheetV2({ isOpen, onClose, initialSymbol }: AssetEntrySheetV2Props) {
     return (
         <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <SheetContent
@@ -49,6 +50,7 @@ export default function AssetEntrySheetV2({ isOpen, onClose }: AssetEntrySheetV2
                 {/* Form Content Area */}
                 <div className="flex-1 overflow-y-auto px-6 pb-10 mt-4 custom-scrollbar">
                     <StockEntryFormV2
+                        initialSymbol={initialSymbol}
                         onSuccess={() => {
                             onClose();
                             window.location.reload();
