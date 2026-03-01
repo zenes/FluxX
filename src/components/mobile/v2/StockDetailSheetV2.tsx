@@ -381,8 +381,8 @@ export default function StockDetailSheetV2({
 
     const formatPriceLocal = (value: number) => {
         return value.toLocaleString(undefined, {
-            minimumFractionDigits: isKRStock ? 0 : 2,
-            maximumFractionDigits: 2
+            minimumFractionDigits: 0,
+            maximumFractionDigits: isKRStock ? 0 : 2
         });
     };
 
@@ -576,38 +576,35 @@ export default function StockDetailSheetV2({
                         </div>
                     </div>
 
-                    {/* Unrealized PNL / Avg Price Cards (Kept from V2 but matched to style) */}
-                    <div className="px-6 mb-8 grid grid-cols-2 gap-3">
-                        <div className="bg-zinc-50 dark:bg-white/5 p-4 rounded-2xl flex flex-col gap-1">
-                            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">평가 손익</span>
-                            <span className={cn("text-[17px] font-black", unrealizedPnl >= 0 ? "text-[#FF4F60]" : "text-[#2684FE]")}>
-                                ₩{unrealizedPnl.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                                <span className="text-[11px] ml-1 opacity-60">({returnRate.toFixed(2)}%)</span>
-                            </span>
-                        </div>
-                        <div className="bg-zinc-50 dark:bg-white/5 p-4 rounded-2xl flex flex-col gap-1">
-                            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">평균 단가</span>
-                            <span className="text-[17px] font-black text-zinc-900 dark:text-white">
-                                {isUSD ? '$' : '₩'}{computedAvgPrice.toLocaleString()}
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Key Statistics Grid (Exact match from MarketQuoteWidgetV2) */}
+                    {/* Key Statistics Grid */}
                     <div className="px-6">
                         <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-4 px-1">주요 통계</h3>
                         <div className="grid grid-cols-2 gap-3">
                             {[
                                 { label: '보유 수량', value: `${(stockAsset?.amount || 0).toLocaleString()}주` },
                                 { label: '평가 금액', value: `₩${totalValueKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}` },
-                                { label: '시가', value: `${isUSD ? '$' : '₩'}${formatPriceLocal((currentPrice || 0) * 0.98)}` },
-                                { label: '고가', value: `${isUSD ? '$' : '₩'}${formatPriceLocal((currentPrice || 0) * 1.02)}` },
-                                { label: '저가', value: `${isUSD ? '$' : '₩'}${formatPriceLocal((currentPrice || 0) * 0.97)}` },
-                                { label: '거래량', value: isKRStock ? '1.2M' : '45.8M' },
+                                { label: '평균 단가', value: `${isUSD ? '$' : '₩'}${formatPriceLocal(computedAvgPrice)}` },
+                                { label: '현재가', value: `${isUSD ? '$' : '₩'}${formatPriceLocal(currentPrice || computedAvgPrice || 0)}` },
+                                { label: '보유 기간', value: '1일' },
+                                {
+                                    label: '평가 손익',
+                                    value: (
+                                        <span className={cn(unrealizedPnl >= 0 ? "text-[#FF4F60]" : "text-[#2684FE]")}>
+                                            ₩{unrealizedPnl.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                            <span className="text-[10px] ml-1 opacity-60 font-bold">({returnRate.toFixed(2)}%)</span>
+                                        </span>
+                                    ),
+                                    isCustomValue: true
+                                },
                             ].map((stat) => (
                                 <div key={stat.label} className="bg-zinc-50 dark:bg-white/5 p-4 rounded-2xl flex flex-col gap-1">
                                     <span className="text-[11px] font-bold text-zinc-400">{stat.label}</span>
-                                    <span className="text-[15px] font-black text-zinc-900 dark:text-white">{stat.value}</span>
+                                    <span className={cn(
+                                        "text-[15px] font-black",
+                                        !(stat as any).isCustomValue && "text-zinc-900 dark:text-white"
+                                    )}>
+                                        {stat.value}
+                                    </span>
                                 </div>
                             ))}
                         </div>

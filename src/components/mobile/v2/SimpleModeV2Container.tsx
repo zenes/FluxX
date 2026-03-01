@@ -178,7 +178,7 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                 try {
                     const symbols = assets
                         .filter(a => a.assetType === 'stock' && a.assetSymbol)
-                        .map(a => a.assetSymbol)
+                        .map(a => a.assetSymbol?.toUpperCase())
                         .join(',');
 
                     let stockPrices = {};
@@ -228,10 +228,48 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
     });
 
     // Sort assets: Cash/USD/Gold first, then Stocks
-    const sortedAssets = mergedAssets.sort((a, b) => {
-        const order: Record<string, number> = { krw: 1, usd: 2, gold: 3, stock: 4 };
-        return (order[a.assetType] || 99) - (order[b.assetType] || 99);
+    const sortedAssets = [...mergedAssets].sort((a, b) => {
+        const order = { krw: 0, usd: 1, gold: 2, stock: 3 };
+        return (order[a.assetType as keyof typeof order] ?? 4) - (order[b.assetType as keyof typeof order] ?? 4);
     });
+
+    const totalStockValueKrw = React.useMemo(() => {
+        if (!marketPrices) return 0;
+        return displayAssets
+            .filter(a => a.assetType === 'stock')
+            .reduce((sum, asset) => {
+                const priceData = marketPrices.stockPrices[asset.assetSymbol?.toUpperCase() || ''];
+                const currentPrice = priceData?.price || asset.avgPrice || 0;
+                const value = asset.amount * currentPrice;
+                const isUSD = asset.currency === 'USD';
+                return sum + (isUSD ? value * marketPrices.usdKrw : value);
+            }, 0);
+    }, [displayAssets, marketPrices]);
+
+    const totalStockPnLInfo = React.useMemo(() => {
+        if (!marketPrices) return { pnl: 0, rate: 0 };
+        let totalCostKrw = 0;
+        let totalMarketKrw = 0;
+
+        displayAssets
+            .filter(a => a.assetType === 'stock')
+            .forEach(asset => {
+                const priceData = marketPrices.stockPrices[asset.assetSymbol?.toUpperCase() || ''];
+                const currentPrice = priceData?.price || asset.avgPrice || 0;
+                const avgPrice = asset.avgPrice || 0;
+                const isUSD = asset.currency === 'USD';
+
+                const cost = asset.amount * avgPrice;
+                const market = asset.amount * currentPrice;
+
+                totalCostKrw += isUSD ? cost * marketPrices.usdKrw : cost;
+                totalMarketKrw += isUSD ? market * marketPrices.usdKrw : market;
+            });
+
+        const pnl = totalMarketKrw - totalCostKrw;
+        const rate = totalCostKrw > 0 ? (pnl / totalCostKrw) * 100 : 0;
+        return { pnl, rate };
+    }, [displayAssets, marketPrices]);
 
     const [isPending, setIsPending] = useState(false);
 
@@ -432,6 +470,11 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                             marketPrices={marketPrices}
                             debugLabel="D"
                             onAddClick={() => setIsAssetEntryOpen(true)}
+                            summary={{
+                                totalValue: totalStockValueKrw,
+                                pnl: totalStockPnLInfo.pnl,
+                                returnRate: totalStockPnLInfo.rate
+                            }}
                         />
 
                         {/* Group 2: Cash & Commodities */}
@@ -548,8 +591,8 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                 onNavigate={goToPage}
                 onAddAsset={handleAddAssetEntry}
                 stockAsset={selectedAsset}
-                currentPrice={selectedAsset ? (marketPrices?.stockPrices?.[selectedAsset.assetSymbol || '']?.price || selectedAsset.avgPrice || 0) : 0}
-                changePercent={selectedAsset ? (marketPrices?.stockPrices?.[selectedAsset.assetSymbol || '']?.changePercent || 0) : 0}
+                currentPrice={selectedAsset ? (marketPrices?.stockPrices?.[selectedAsset.assetSymbol?.toUpperCase() || '']?.price || (selectedAsset.avgPrice ?? 0)) : 0}
+                changePercent={selectedAsset ? (marketPrices?.stockPrices?.[selectedAsset.assetSymbol?.toUpperCase() || '']?.changePercent || 0) : 0}
                 exchangeRate={marketData.exchange?.rate || 1400}
                 totalNetWorth={totalNetWorth}
             />

@@ -175,7 +175,7 @@ export default function MobileOperations({ assets, predefinedAccounts }: { asset
                                                                 {entry.owner || ''} {entry.predefinedAccountAlias ? `· ${entry.predefinedAccountAlias}` : ''}
                                                             </p>
                                                             <p className="text-[11px] text-muted-foreground">
-                                                                {entry.qty?.toLocaleString()} shares · {currency === 'KRW' ? '₩' : '$'}{entry.totalCost?.toLocaleString()}
+                                                                {entry.qty?.toLocaleString()} shares · {currency === 'KRW' ? '₩' : '$'}{Math.round(entry.totalCost || 0).toLocaleString()}
                                                             </p>
                                                         </div>
                                                         <div className="flex items-center gap-1.5 ml-3">

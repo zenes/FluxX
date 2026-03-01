@@ -17,7 +17,7 @@ export default function MonthlyDividendChart({ data, onMonthClick }: MonthlyDivi
     const formatYAxis = (tickItem: number) => {
         if (tickItem === 0) return '0';
         if (tickItem >= 1000) {
-            return `₩${(tickItem / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })}k`;
+            return `₩${Math.round(tickItem / 1000).toLocaleString()}k`;
         }
         return `₩${tickItem.toLocaleString()}`;
     };
@@ -28,7 +28,7 @@ export default function MonthlyDividendChart({ data, onMonthClick }: MonthlyDivi
                 <div className="bg-background/95 border border-primary/20 p-3 rounded-md shadow-lg backdrop-blur-sm">
                     <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">{label}</p>
                     <p className="text-lg font-black text-primary tracking-tighter">
-                        ₩{payload[0].value.toLocaleString()}
+                        ₩{Math.round(payload[0].value).toLocaleString()}
                     </p>
                 </div>
             );

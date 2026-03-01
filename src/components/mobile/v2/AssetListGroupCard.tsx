@@ -5,7 +5,6 @@ import { cn } from '@/lib/utils';
 import { AssetItem } from '@/lib/actions';
 import { Building2, Plus, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Sparkline } from './Sparkline';
 import { MarketPrices } from '@/lib/calculations';
 import { koreanNameMap } from '@/lib/koreanNameMap';
 
@@ -19,6 +18,11 @@ interface AssetListGroupCardProps {
     marketPrices?: MarketPrices | null;
     debugLabel?: string;
     onAddClick?: () => void;
+    summary?: {
+        totalValue: number;
+        pnl: number;
+        returnRate: number;
+    };
 }
 
 export default function AssetListGroupCard({
@@ -30,14 +34,15 @@ export default function AssetListGroupCard({
     type,
     marketPrices,
     debugLabel,
-    onAddClick
+    onAddClick,
+    summary
 }: AssetListGroupCardProps) {
     if (assets.length === 0) return null;
 
     const formatPrice = (currency: string, price: number) => {
         return price.toLocaleString(undefined, {
-            minimumFractionDigits: currency === 'KRW' ? 0 : 2,
-            maximumFractionDigits: 2
+            minimumFractionDigits: 0,
+            maximumFractionDigits: currency === 'KRW' ? 0 : 2
         });
     };
 
@@ -57,6 +62,28 @@ export default function AssetListGroupCard({
                     {assets.length}개 종목
                 </span>
             </header>
+
+            {summary && (
+                <div className="px-6 py-6 border-b border-zinc-100 dark:border-white/5">
+                    <div className="flex flex-col gap-1 mb-4">
+                        <span className="text-[11px] font-black text-zinc-400 uppercase tracking-widest">
+                            STOCK PORTFOLIO
+                        </span>
+                        <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">주식 자산 합계</h2>
+                    </div>
+                    <div className="flex items-end gap-3">
+                        <span className="text-3xl font-black text-zinc-900 dark:text-white">
+                            ₩{Math.round(summary.totalValue).toLocaleString()}
+                        </span>
+                        <div className={cn(
+                            "flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-black text-white mb-1",
+                            summary.pnl >= 0 ? "bg-[#FF3B2F]" : "bg-[#35C759]"
+                        )}>
+                            {summary.pnl >= 0 ? "+" : ""}{summary.returnRate.toFixed(2)}%
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="flex flex-col px-2 pb-2">
                 {assets.map((asset, index) => {
@@ -100,13 +127,12 @@ export default function AssetListGroupCard({
                                             : asset.assetSymbol}
                                     </span>
                                     <span className="text-[12px] text-zinc-500 dark:text-zinc-400 line-clamp-1 break-all uppercase font-bold tracking-tighter">
-                                        {asset.amount.toLocaleString()}주 보유
+                                        {asset.amount.toLocaleString()}주 보유 • {isUSD ? '$' : '₩'}{formatPrice(asset.currency || 'USD', marketValue)}
                                     </span>
                                 </div>
 
-                                {/* Right Group: Sparkline + Profit & ROI Badge */}
+                                {/* Right Group: Profit & ROI Badge */}
                                 <div className="flex items-center gap-4">
-                                    <Sparkline isUp={isUp} data={(priceData as any)?.sparkline} />
                                     <div className="flex flex-col items-end gap-1.5 min-w-[80px]">
                                         <span className={cn(
                                             "text-[14px] font-bold",

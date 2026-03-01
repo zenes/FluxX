@@ -114,7 +114,7 @@ export default function MobileIntelligence({ initialData }: { initialData: any }
                     >
                         <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider">Net Worth</span>
                         <span className="text-base font-black text-foreground">
-                            ₩{totalNetWorth > 0 ? (totalNetWorth >= 100000000 ? `${(totalNetWorth / 100000000).toFixed(1)}억` : totalNetWorth.toLocaleString()) : '0'}
+                            ₩{totalNetWorth > 0 ? (totalNetWorth >= 100000000 ? `${(totalNetWorth / 100000000).toFixed(1)}억` : Math.round(totalNetWorth).toLocaleString()) : '0'}
                         </span>
                     </button>
                 )}
@@ -124,8 +124,8 @@ export default function MobileIntelligence({ initialData }: { initialData: any }
                     <button
                         key={acc.id}
                         className={`absolute rounded-full flex items-center justify-center z-10 border-2 transition-all ${selectedNode === acc.id
-                                ? 'border-primary bg-primary/10 shadow-lg scale-110'
-                                : 'border-border bg-background/80 shadow-sm'
+                            ? 'border-primary bg-primary/10 shadow-lg scale-110'
+                            : 'border-border bg-background/80 shadow-sm'
                             }`}
                         style={{
                             left: acc.x, top: acc.y,

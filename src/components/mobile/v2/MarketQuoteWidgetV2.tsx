@@ -216,8 +216,8 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
     // --- HELPERS ---
     const formatPrice = (type: AssetType, price: number) => {
         return price.toLocaleString(undefined, {
-            minimumFractionDigits: type === 'KR' ? 0 : 2,
-            maximumFractionDigits: 2
+            minimumFractionDigits: 0,
+            maximumFractionDigits: type === 'KR' ? 0 : 2
         });
     };
 

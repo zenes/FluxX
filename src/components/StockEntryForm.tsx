@@ -345,7 +345,7 @@ export default function StockEntryForm({
                 <div className="mt-2 bg-purple-500/5 border border-purple-500/20 rounded-md p-4 flex justify-between items-center text-xs">
                     <span className="text-[10px] font-bold text-purple-500 tracking-widest uppercase">Live Avg Cost Preview</span>
                     <span className="font-bold text-foreground font-mono">
-                        {currency === 'KRW' ? '₩' : '$'}{avgCost > 0 ? avgCost.toLocaleString(undefined, { minimumFractionDigits: currency === 'KRW' ? 0 : 2, maximumFractionDigits: currency === 'KRW' ? 2 : 4 }) : '0.00'} / share
+                        {currency === 'KRW' ? '₩' : '$'}{avgCost > 0 ? avgCost.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: currency === 'KRW' ? 0 : 2 }) : '0.00'} / share
                     </span>
                 </div>
             </div>

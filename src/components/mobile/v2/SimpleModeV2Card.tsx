@@ -173,7 +173,9 @@ export default function SimpleModeV2Card({
                         <div className="flex items-baseline gap-1">
                             <span className="text-lg font-bold text-[#2B364B]/30 dark:text-white/20">₩</span>
                             <h2 className="text-[32px] font-black tracking-tighter text-[#2B364B] dark:text-white leading-none">
-                                {displayValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                {displayValue.toLocaleString(undefined, {
+                                    maximumFractionDigits: (isStock && !stockAsset?.assetSymbol?.endsWith('.KS') && !stockAsset?.assetSymbol?.endsWith('.KQ')) ? 2 : 0
+                                })}
                             </h2>
                         </div>
 

@@ -120,7 +120,7 @@ export default function MonthlyDividendCalendar({ monthIndex, year, records }: M
                                 </div>
                                 <div className="text-right">
                                     <p className="text-[10px] font-bold text-profit">
-                                        {r.currency === 'KRW' ? '₩' : '$'}{r.amount.toLocaleString()}
+                                        {r.currency === 'KRW' ? '₩' : '$'}{r.amount.toLocaleString(undefined, { maximumFractionDigits: r.currency === 'KRW' ? 0 : 2 })}
                                     </p>
                                 </div>
                             </div>

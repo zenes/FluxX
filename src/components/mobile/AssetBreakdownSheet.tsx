@@ -128,7 +128,7 @@ export default function AssetBreakdownSheet({
                         </div>
                         <div className="flex items-baseline gap-1">
                             <h2 className="text-3xl font-black tracking-tighter transition-colors duration-500 text-zinc-900">
-                                {totalNetWorth.toLocaleString()}
+                                {Math.round(totalNetWorth).toLocaleString()}
                             </h2>
                             <span className="text-xl font-bold transition-colors duration-500 text-zinc-900 opacity-30">원</span>
                         </div>

@@ -363,7 +363,7 @@ export default function DashboardClient({ initialAssets, initialExchange, initia
                         ) : (
                             <>
                                 <span className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tighter text-foreground mt-2">
-                                    {exchangeRate ? `₩${exchangeRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A'}
+                                    {exchangeRate ? `₩${exchangeRate.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` : 'N/A'}
                                 </span>
 
                                 <div className="flex items-center gap-2 mt-2 flex-wrap">
