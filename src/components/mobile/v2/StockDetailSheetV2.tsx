@@ -247,7 +247,11 @@ export default function StockDetailSheetV2({
             if (res.success) {
                 setVerification({ isOpen: false, mode: 'asset', entryId: null, targetPin: '', currentInput: '', isDeleting: false });
                 onClose();
-                window.location.reload();
+                // Navigate to Page 2 and refresh data
+                setTimeout(() => {
+                    onNavigate?.(1); // Page 2 is index 1
+                    router.refresh();
+                }, 300);
             } else {
                 setVerification(prev => ({ ...prev, isDeleting: false }));
                 alert("자산 삭제에 실패했습니다.");

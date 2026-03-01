@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/sheet";
 import { Plus, X } from 'lucide-react';
 import StockEntryFormV2 from '@/components/StockEntryFormV2';
+import { useRouter } from 'next/navigation';
 
 interface AssetEntrySheetV2Props {
     isOpen: boolean;
@@ -18,6 +19,8 @@ interface AssetEntrySheetV2Props {
 }
 
 export default function AssetEntrySheetV2({ isOpen, onClose, initialSymbol }: AssetEntrySheetV2Props) {
+    const router = useRouter();
+
     return (
         <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <SheetContent
@@ -53,7 +56,7 @@ export default function AssetEntrySheetV2({ isOpen, onClose, initialSymbol }: As
                         initialSymbol={initialSymbol}
                         onSuccess={() => {
                             onClose();
-                            window.location.reload();
+                            router.refresh();
                         }}
                     />
                 </div>
