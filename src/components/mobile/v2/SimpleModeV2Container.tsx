@@ -479,29 +479,25 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                 ))}
             </div>
 
-            {/* Asset Detail Sheet V2 (Opened from Container) */}
-            {selectedAsset && (
-                <StockDetailSheetV2
-                    isOpen={!!selectedAsset}
-                    onClose={() => setSelectedAsset(null)}
-                    stockAsset={selectedAsset}
-                    currentPrice={marketPrices?.stockPrices?.[selectedAsset.assetSymbol || '']?.price || selectedAsset.avgPrice || 0}
-                    changePercent={marketPrices?.stockPrices?.[selectedAsset.assetSymbol || '']?.changePercent || 0}
-                    exchangeRate={marketData.exchange?.rate || 1400}
-                    totalNetWorth={totalNetWorth}
-                />
-            )}
+            {/* Asset Detail Sheet V2 (Always rendered for exit animation) */}
+            <StockDetailSheetV2
+                isOpen={!!selectedAsset}
+                onClose={() => setSelectedAsset(null)}
+                stockAsset={selectedAsset}
+                currentPrice={selectedAsset ? (marketPrices?.stockPrices?.[selectedAsset.assetSymbol || '']?.price || selectedAsset.avgPrice || 0) : 0}
+                changePercent={selectedAsset ? (marketPrices?.stockPrices?.[selectedAsset.assetSymbol || '']?.changePercent || 0) : 0}
+                exchangeRate={marketData.exchange?.rate || 1400}
+                totalNetWorth={totalNetWorth}
+            />
 
-            {/* Total Analysis Sheet */}
-            {marketPrices && (
-                <AssetGrowthDetailSheetV2
-                    isOpen={isTotalDetailOpen}
-                    onClose={() => setIsTotalDetailOpen(false)}
-                    assets={displayAssets}
-                    marketPrices={marketPrices}
-                    totalNetWorth={totalNetWorth}
-                />
-            )}
+            {/* Total Analysis Sheet (Always rendered for exit animation) */}
+            <AssetGrowthDetailSheetV2
+                isOpen={isTotalDetailOpen}
+                onClose={() => setIsTotalDetailOpen(false)}
+                assets={displayAssets}
+                marketPrices={marketPrices || { usdKrw: 1400, goldUsd: 2600, stockPrices: {} }}
+                totalNetWorth={totalNetWorth}
+            />
         </div>
     );
 }

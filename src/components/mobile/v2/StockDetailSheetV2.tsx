@@ -32,7 +32,7 @@ import { useEffect } from 'react';
 interface StockDetailSheetV2Props {
     isOpen: boolean;
     onClose: () => void;
-    stockAsset: AssetItem;
+    stockAsset: AssetItem | null;
     currentPrice: number | null;
     changePercent: number | null;
     exchangeRate: number;
@@ -56,11 +56,11 @@ export default function StockDetailSheetV2({
     const [hoveredData, setHoveredData] = useState<{ price: number; time: string } | null>(null);
 
     // Robust Currency Detection
-    const isKRStock = stockAsset.assetSymbol?.endsWith('.KS') || stockAsset.assetSymbol?.endsWith('.KQ') || stockAsset.currency === 'KRW';
+    const isKRStock = stockAsset?.assetSymbol?.endsWith('.KS') || stockAsset?.assetSymbol?.endsWith('.KQ') || stockAsset?.currency === 'KRW';
     const isUSD = !isKRStock;
 
     useEffect(() => {
-        if (!isOpen || !stockAsset.assetSymbol) return;
+        if (!isOpen || !stockAsset?.assetSymbol) return;
 
         const fetchHistory = async () => {
             setIsLoadingChart(true);
@@ -102,7 +102,7 @@ export default function StockDetailSheetV2({
         };
 
         fetchHistory();
-    }, [isOpen, stockAsset.assetSymbol, activeRange, isKRStock]);
+    }, [isOpen, stockAsset?.assetSymbol, activeRange, isKRStock]);
 
 
     const currentPriceInKrw = currentPrice
@@ -114,19 +114,19 @@ export default function StockDetailSheetV2({
         ? (isUSD ? hoveredData.price * exchangeRate : hoveredData.price)
         : currentPriceInKrw;
 
-    const totalValueKrw = currentPriceInKrw * stockAsset.amount;
+    const totalValueKrw = currentPriceInKrw * (stockAsset?.amount || 0);
 
     const computedAvgPrice = (() => {
-        if (stockAsset.entries && stockAsset.entries.length > 0) {
+        if (stockAsset?.entries && stockAsset.entries.length > 0) {
             const totalCost = stockAsset.entries.reduce((s, e) => s + e.totalCost, 0);
             const totalQty = stockAsset.entries.reduce((s, e) => s + e.qty, 0);
             return totalQty > 0 ? totalCost / totalQty : (stockAsset.avgPrice || 0);
         }
-        return stockAsset.avgPrice || 0;
+        return stockAsset?.avgPrice || 0;
     })();
 
     const avgPriceKrw = isUSD ? computedAvgPrice * exchangeRate : computedAvgPrice;
-    const bookValue = avgPriceKrw * stockAsset.amount;
+    const bookValue = avgPriceKrw * (stockAsset?.amount || 0);
     const unrealizedPnl = totalValueKrw - bookValue;
     const returnRate = bookValue > 0 ? (unrealizedPnl / bookValue) * 100 : 0;
     const isPositive = returnRate >= 0;
@@ -198,11 +198,11 @@ export default function StockDetailSheetV2({
                     <div className="px-6 pt-4 mb-6">
                         <div className="flex flex-col gap-1 mb-4">
                             <span className="text-[13px] font-black text-zinc-400 uppercase tracking-widest flex items-center gap-1">
-                                {stockAsset.assetSymbol}
+                                {stockAsset?.assetSymbol || '---'}
                                 <span className="text-[10px] font-black opacity-30">[F]</span>
                             </span>
                             <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">
-                                {stockAsset.assetSymbol}
+                                {stockAsset?.assetSymbol || '---'}
                             </h2>
                         </div>
                         <div className="flex items-end gap-3">
@@ -352,7 +352,7 @@ export default function StockDetailSheetV2({
                         <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-4 px-1">주요 통계</h3>
                         <div className="grid grid-cols-2 gap-3">
                             {[
-                                { label: '보유 수량', value: `${stockAsset.amount.toLocaleString()}주` },
+                                { label: '보유 수량', value: `${(stockAsset?.amount || 0).toLocaleString()}주` },
                                 { label: '평가 금액', value: `₩${totalValueKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}` },
                                 { label: '시가', value: `${isUSD ? '$' : '₩'}${formatPriceLocal((currentPrice || 0) * 0.98)}` },
                                 { label: '고가', value: `${isUSD ? '$' : '₩'}${formatPriceLocal((currentPrice || 0) * 1.02)}` },

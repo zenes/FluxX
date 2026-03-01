@@ -353,7 +353,7 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
                     onClick={() => setIsSheetOpen(true)}
                     className="flex items-center gap-1 text-[13px] font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/5 px-2 py-1 rounded-lg transition-colors"
                 >
-                    <Plus className="size-4" /> 자산 추가
+                    관심종목 추가
                 </button>
 
                 <button
@@ -707,6 +707,6 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
                     </>
                 )}
             </AnimatePresence>
-        </div>
+        </div >
     );
 }

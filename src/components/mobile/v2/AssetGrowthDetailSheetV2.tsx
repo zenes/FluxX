@@ -37,8 +37,8 @@ import {
 interface AssetGrowthDetailSheetV2Props {
     isOpen: boolean;
     onClose: () => void;
-    assets: AssetItem[];
-    marketPrices: MarketPrices;
+    assets: AssetItem[] | null;
+    marketPrices: MarketPrices | null;
     totalNetWorth: number;
 }
 
@@ -57,7 +57,7 @@ export default function AssetGrowthDetailSheetV2({
     totalNetWorth,
 }: AssetGrowthDetailSheetV2Props) {
     const [viewMode, setViewMode] = useState<'growth' | 'distribution'>('growth');
-    const { usdKrw, goldUsd, stockPrices } = marketPrices;
+    const { usdKrw = 1400, goldUsd = 2600, stockPrices = {} } = marketPrices || {};
 
     // Dummy Growth Data (as requested)
     const growthData = useMemo(() => {
@@ -78,6 +78,7 @@ export default function AssetGrowthDetailSheetV2({
 
     // Real Distribution Data
     const distributionData = useMemo(() => {
+        if (!assets) return [];
         const categories = [
             {
                 name: '원화 현금',
@@ -86,12 +87,12 @@ export default function AssetGrowthDetailSheetV2({
             },
             {
                 name: '달러 현금',
-                value: assets.filter(a => a.assetType === 'usd').reduce((sum, a) => sum + a.amount, 0) * usdKrw,
+                value: assets.filter(a => a.assetType === 'usd').reduce((sum, a) => sum + a.amount, 0) * (usdKrw || 0),
                 color: '#4ADE80'
             },
             {
                 name: '금(Gold)',
-                value: (assets.filter(a => a.assetType === 'gold').reduce((sum, a) => sum + a.amount, 0) / 31.1034768) * goldUsd * usdKrw,
+                value: (assets.filter(a => a.assetType === 'gold').reduce((sum, a) => sum + a.amount, 0) / 31.1034768) * (goldUsd || 0) * (usdKrw || 0),
                 color: '#FBBF24'
             },
             {
@@ -103,7 +104,7 @@ export default function AssetGrowthDetailSheetV2({
                         const price = stockPrices[symbol]?.price || a.avgPrice || 0;
                         const currency = a.currency || stockPrices[symbol]?.currency || 'USD';
                         const value = a.amount * price;
-                        return sum + (currency === 'KRW' ? value : value * usdKrw);
+                        return sum + (currency === 'KRW' ? value : value * (usdKrw || 0));
                     }, 0),
                 color: '#38C798'
             }
