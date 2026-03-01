@@ -10,15 +10,17 @@ import {
 } from "@/components/ui/sheet";
 import { Plus, X } from 'lucide-react';
 import StockEntryFormV2 from '@/components/StockEntryFormV2';
+import OtherAssetEntryFormV2 from '@/components/OtherAssetEntryFormV2';
 import { useRouter } from 'next/navigation';
 
 interface AssetEntrySheetV2Props {
     isOpen: boolean;
     onClose: () => void;
     initialSymbol?: string;
+    type?: 'stock' | 'other';
 }
 
-export default function AssetEntrySheetV2({ isOpen, onClose, initialSymbol }: AssetEntrySheetV2Props) {
+export default function AssetEntrySheetV2({ isOpen, onClose, initialSymbol, type = 'stock' }: AssetEntrySheetV2Props) {
     const router = useRouter();
 
     return (
@@ -52,13 +54,22 @@ export default function AssetEntrySheetV2({ isOpen, onClose, initialSymbol }: As
 
                 {/* Form Content Area */}
                 <div className="flex-1 overflow-y-auto px-6 pb-10 mt-4 custom-scrollbar">
-                    <StockEntryFormV2
-                        initialSymbol={initialSymbol}
-                        onSuccess={() => {
-                            onClose();
-                            router.refresh();
-                        }}
-                    />
+                    {type === 'stock' ? (
+                        <StockEntryFormV2
+                            initialSymbol={initialSymbol}
+                            onSuccess={() => {
+                                onClose();
+                                router.refresh();
+                            }}
+                        />
+                    ) : (
+                        <OtherAssetEntryFormV2
+                            onSuccess={() => {
+                                onClose();
+                                router.refresh();
+                            }}
+                        />
+                    )}
                 </div>
             </SheetContent>
         </Sheet>

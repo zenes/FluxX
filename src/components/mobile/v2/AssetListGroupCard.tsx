@@ -67,20 +67,24 @@ export default function AssetListGroupCard({
                 <div className="px-6 py-6 border-b border-zinc-100 dark:border-white/5">
                     <div className="flex flex-col gap-1 mb-4">
                         <span className="text-[11px] font-black text-zinc-400 uppercase tracking-widest">
-                            STOCK PORTFOLIO
+                            {type === 'stock' ? 'STOCK PORTFOLIO' : 'CASH & COMMODITIES'}
                         </span>
-                        <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">주식 자산 합계</h2>
+                        <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">
+                            {title} 합계
+                        </h2>
                     </div>
                     <div className="flex items-end gap-3">
                         <span className="text-3xl font-black text-zinc-900 dark:text-white">
                             ₩{Math.round(summary.totalValue).toLocaleString()}
                         </span>
-                        <div className={cn(
-                            "flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-black text-white mb-1",
-                            summary.pnl >= 0 ? "bg-[#FF3B2F]" : "bg-[#35C759]"
-                        )}>
-                            {summary.pnl >= 0 ? "+" : ""}{summary.returnRate.toFixed(2)}%
-                        </div>
+                        {type === 'stock' && (
+                            <div className={cn(
+                                "flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-black text-white mb-1",
+                                summary.pnl >= 0 ? "bg-[#FF3B2F]" : "bg-[#35C759]"
+                            )}>
+                                {summary.pnl >= 0 ? "+" : ""}{summary.returnRate.toFixed(2)}%
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
@@ -179,23 +183,23 @@ export default function AssetListGroupCard({
                                     <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-tighter truncate">
                                         {asset.amount.toLocaleString()}{isStock ? '주' : (asset.assetType === 'gold' ? 'g' : '')} 보유
                                     </p>
+                                    {!isStock && asset.assetType === 'gold' && marketPrices && (
+                                        <p className="text-[10px] font-bold text-[#38C798] uppercase tracking-tighter">
+                                            ₩{Math.round(marketPrices.goldUsd * marketPrices.usdKrw / 31.1035).toLocaleString()} / g
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
                             <div className="flex flex-col items-end gap-0.5">
-                                <div className="flex items-baseline gap-1">
-                                    <span className="text-[15px] font-black text-zinc-900 dark:text-white">
-                                        {type === 'stock' ? (
-                                            // Real price would come from marketPrices, but here we show estimate or evaluation
-                                            '상세보기'
-                                        ) : (
-                                            asset.amount.toLocaleString()
-                                        )}
-                                    </span>
-                                    {type !== 'stock' && (
-                                        <span className="text-[10px] font-bold text-zinc-400 uppercase">{asset.assetType === 'krw' ? '원' : (asset.assetType === 'usd' ? '$' : 'g')}</span>
-                                    )}
-                                </div>
+                                <span className="text-[15px] font-black text-zinc-900 dark:text-white">
+                                    {(() => {
+                                        const amount = asset.amount || 0;
+                                        if (asset.assetType === 'usd' && marketPrices) return `₩${Math.round(amount * marketPrices.usdKrw).toLocaleString()}`;
+                                        if (asset.assetType === 'gold' && marketPrices) return `₩${Math.round(amount * marketPrices.goldUsd * marketPrices.usdKrw / 31.1035).toLocaleString()}`;
+                                        return `₩${Math.round(amount).toLocaleString()}`;
+                                    })()}
+                                </span>
                                 {type === 'stock' ? (
                                     <div className="flex items-center gap-1 text-[10px] font-bold text-[#38C798]">
                                         <span>구조 분석 완료</span>
@@ -210,7 +214,7 @@ export default function AssetListGroupCard({
                 })}
             </div>
 
-            {type === 'stock' && onAddClick && (
+            {onAddClick && (
                 <div className="px-4 pb-4 mt-2">
                     <button
                         onClick={(e) => {

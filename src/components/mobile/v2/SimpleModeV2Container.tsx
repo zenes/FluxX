@@ -130,13 +130,16 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
 
         try {
             // Yahoo Finance friendly symbols
-            const symbols = myStocks.map(s => {
-                if (s.type === 'KR' && !s.ticker.includes('.')) {
-                    // Try to infer suffix if missing for common KR tickers
-                    return `${s.ticker}.KS`;
-                }
-                return s.ticker;
-            }).join(',');
+            const symbols = [
+                'KRW=X',
+                'GC=F',
+                ...myStocks.map(s => {
+                    if (s.type === 'KR' && !s.ticker.includes('.')) {
+                        return `${s.ticker}.KS`;
+                    }
+                    return s.ticker;
+                })
+            ].filter(Boolean).join(',');
 
             const response = await fetch(`/api/stock-price?symbols=${symbols}`);
             if (!response.ok) throw new Error('Failed to fetch prices');
@@ -145,6 +148,16 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
             const quotes = data.quotes;
 
             if (quotes) {
+                // Update marketPrices if FX/Gold is present
+                const fxRate = (quotes['KRW=X'] as any)?.price || marketPrices?.usdKrw || marketData.exchange?.rate || 1400;
+                const goldPrice = (quotes['GC=F'] as any)?.price || marketPrices?.goldUsd || marketData.gold?.price || 2300;
+
+                setMarketPrices(prev => ({
+                    usdKrw: fxRate,
+                    goldUsd: goldPrice,
+                    stockPrices: { ...(prev?.stockPrices || {}), ...(quotes as any) }
+                }));
+
                 setMyStocks(prev => prev.map(s => {
                     // Match with possible suffixes
                     const ticker = s.ticker;
@@ -176,10 +189,13 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
             const fetchTotalData = async () => {
                 setIsLoadingTotal(true);
                 try {
-                    const symbols = assets
-                        .filter(a => a.assetType === 'stock' && a.assetSymbol)
-                        .map(a => a.assetSymbol?.toUpperCase())
-                        .join(',');
+                    const symbols = [
+                        'KRW=X', // USD/KRW
+                        'GC=F',  // Gold
+                        ...assets
+                            .filter(a => a.assetType === 'stock' && a.assetSymbol)
+                            .map(a => a.assetSymbol?.toUpperCase() || '')
+                    ].filter(Boolean).join(',');
 
                     let stockPrices = {};
                     if (symbols) {
@@ -188,9 +204,12 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                         stockPrices = data.quotes || {};
                     }
 
+                    const fxRate = (stockPrices as any)['KRW=X']?.price || marketData.exchange?.rate || 1400;
+                    const goldPrice = (stockPrices as any)['GC=F']?.price || marketData.gold?.price || 2300;
+
                     const prices: MarketPrices = {
-                        usdKrw: marketData.exchange?.rate || 1400,
-                        goldUsd: marketData.gold?.price || 2600,
+                        usdKrw: fxRate,
+                        goldUsd: goldPrice,
                         stockPrices: stockPrices as any,
                     };
                     setMarketPrices(prices);
@@ -271,7 +290,20 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
         return { pnl, rate };
     }, [displayAssets, marketPrices]);
 
+    const totalOtherValueKrw = React.useMemo(() => {
+        if (!marketPrices) return 0;
+        return displayAssets
+            .filter(a => a.assetType !== 'stock')
+            .reduce((sum, asset) => {
+                const amount = asset.amount || 0;
+                if (asset.assetType === 'usd') return sum + (amount * marketPrices.usdKrw);
+                if (asset.assetType === 'gold') return sum + (amount * marketPrices.goldUsd * marketPrices.usdKrw / 31.1035); // US Pricing is per ounce
+                return sum + amount; // krw
+            }, 0);
+    }, [displayAssets, marketPrices]);
+
     const [isPending, setIsPending] = useState(false);
+    const [entryType, setEntryType] = useState<'stock' | 'other'>('stock');
 
     const handleInsertTestData = async () => {
         if (isPending) return;
@@ -479,14 +511,23 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
 
                         {/* Group 2: Cash & Commodities */}
                         <AssetListGroupCard
-                            title="현금 및 기타"
+                            title="현금성 자산"
                             icon={Coins}
                             assets={displayAssets.filter(a => a.assetType !== 'stock')}
-                            onAssetClick={(asset) => setSelectedAsset(asset)}
+                            onAssetClick={() => { }} // Disable click for cash assets as requested
                             exchangeRate={marketData.exchange?.rate || 1400}
                             type="other"
                             marketPrices={marketPrices}
                             debugLabel="E"
+                            summary={{
+                                totalValue: totalOtherValueKrw,
+                                pnl: 0, // No PNL for cash/gold yet
+                                returnRate: 0
+                            }}
+                            onAddClick={() => {
+                                setEntryType('other');
+                                setIsAssetEntryOpen(true);
+                            }}
                         />
 
                         {displayAssets.length === 0 && (
@@ -612,8 +653,10 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                 onClose={() => {
                     setIsAssetEntryOpen(false);
                     setPrefilledSymbol(undefined);
+                    setEntryType('stock'); // Reset
                 }}
                 initialSymbol={prefilledSymbol}
+                type={entryType}
             />
         </div>
     );
