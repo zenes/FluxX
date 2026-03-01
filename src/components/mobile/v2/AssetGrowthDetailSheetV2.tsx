@@ -117,18 +117,21 @@ export default function AssetGrowthDetailSheetV2({
         <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <SheetContent
                 side="bottom"
-                className="h-auto max-h-[92vh] rounded-t-[40px] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-[#121214]"
+                className="h-auto max-h-[92vh] rounded-t-[40px] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-[#121214] [&>button]:hidden"
             >
-                {/* Handle Bar */}
+                {/* Handle Bar & Close */}
                 <div className="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 rounded-full z-20 bg-zinc-200 dark:bg-white/10" />
+                <button
+                    onClick={onClose}
+                    className="absolute right-6 top-[18px] z-50 p-2 rounded-full bg-zinc-100 dark:bg-white/5 text-zinc-500 dark:text-zinc-400 transition-all active:scale-95"
+                >
+                    <X className="size-5" />
+                </button>
 
                 {/* Header */}
                 <div className="px-6 pt-10 pb-6 border-b border-zinc-100 dark:border-white/5">
                     <div className="flex items-center justify-between uppercase text-[10px] font-black tracking-widest text-[#38C798] mb-2">
                         <span>전체 자산 분석 리포트</span>
-                        <button onClick={onClose} className="p-1 rounded-full bg-zinc-50 dark:bg-white/5 text-zinc-400">
-                            <X className="size-4" />
-                        </button>
                     </div>
                     <div className="flex items-end justify-between">
                         <div>

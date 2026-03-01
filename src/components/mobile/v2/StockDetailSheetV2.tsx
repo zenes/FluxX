@@ -426,14 +426,14 @@ export default function StockDetailSheetV2({
         <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <SheetContent
                 side="bottom"
-                className="h-auto max-h-[92vh] rounded-t-[40px] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-[#121214] flex flex-col"
+                className="h-auto max-h-[92vh] rounded-t-[40px] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-[#121214] flex flex-col [&>button]:hidden"
             >
-                {/* Handle & Close */}
+                {/* Handle */}
                 <div className="relative pt-3 pb-2 flex justify-center shrink-0">
                     <div className="w-12 h-1 bg-zinc-200 dark:bg-zinc-800 rounded-full" />
                     <button
                         onClick={onClose}
-                        className="absolute right-6 top-4 p-2 rounded-full bg-zinc-100 dark:bg-white/5 text-zinc-500 dark:text-zinc-400"
+                        className="absolute right-6 top-[18px] z-50 p-2 rounded-full bg-zinc-100 dark:bg-white/5 text-zinc-500 dark:text-zinc-400 transition-all active:scale-95"
                     >
                         <X className="size-5" />
                     </button>

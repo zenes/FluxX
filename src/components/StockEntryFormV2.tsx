@@ -39,7 +39,9 @@ export default function StockEntryFormV2({ onSuccess, initialSymbol }: StockEntr
         accountNumber: '',
         quantity: '',
         totalPurchaseAmount: '',
-        currency: 'KRW',
+        currency: initialSymbol
+            ? (initialSymbol.endsWith('.KS') || initialSymbol.endsWith('.KQ') ? 'KRW' : 'USD')
+            : 'KRW',
         predefinedAccountId: '',
         dividendPerShare: '',
         dividendFrequency: '4', // Default to quarterly
@@ -58,6 +60,10 @@ export default function StockEntryFormV2({ onSuccess, initialSymbol }: StockEntr
 
         if (initialSymbol) {
             setSelectedName(koreanNameMap[initialSymbol] || initialSymbol);
+            setFormData(prev => ({
+                ...prev,
+                currency: initialSymbol.endsWith('.KS') || initialSymbol.endsWith('.KQ') ? 'KRW' : 'USD'
+            }));
         }
     }, [initialSymbol]);
 
@@ -288,6 +294,7 @@ export default function StockEntryFormV2({ onSuccess, initialSymbol }: StockEntr
                                 <Calculator className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-zinc-300" />
                                 <input
                                     type="text"
+                                    inputMode="decimal"
                                     placeholder="0"
                                     className="w-full h-12 pl-12 pr-4 rounded-xl bg-white dark:bg-zinc-800 border-none text-[15px] font-black focus:ring-2 focus:ring-[#38C798]/20 transition-all"
                                     value={formData.quantity}
@@ -301,11 +308,15 @@ export default function StockEntryFormV2({ onSuccess, initialSymbol }: StockEntr
                                 <Coins className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-zinc-300" />
                                 <input
                                     type="text"
+                                    inputMode="decimal"
                                     placeholder="0"
-                                    className="w-full h-12 pl-12 pr-4 rounded-xl bg-white dark:bg-zinc-800 border-none text-[15px] font-black focus:ring-2 focus:ring-[#38C798]/20 transition-all"
+                                    className="w-full h-12 pl-12 pr-16 rounded-xl bg-white dark:bg-zinc-800 border-none text-[15px] font-black focus:ring-2 focus:ring-[#38C798]/20 transition-all"
                                     value={formData.totalPurchaseAmount}
                                     onChange={(e) => setFormData(prev => ({ ...prev, totalPurchaseAmount: e.target.value }))}
                                 />
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-zinc-400 uppercase bg-zinc-50 dark:bg-zinc-700 px-2 py-1 rounded-md">
+                                    {formData.currency}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -320,6 +331,7 @@ export default function StockEntryFormV2({ onSuccess, initialSymbol }: StockEntr
                                 <Calculator className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-zinc-300" />
                                 <input
                                     type="number"
+                                    inputMode="decimal"
                                     step="0.001"
                                     placeholder="주당 배당금"
                                     className="w-full h-11 pl-12 pr-4 rounded-xl bg-white dark:bg-zinc-800 border-none text-[13px] font-bold focus:ring-2 focus:ring-[#38C798]/20 outline-none transition-all"

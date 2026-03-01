@@ -25,10 +25,10 @@ export default function AssetEntrySheetV2({ isOpen, onClose, initialSymbol }: As
         <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <SheetContent
                 side="bottom"
-                className="h-[92vh] rounded-t-[32px] bg-[#edf0f4] dark:bg-[#0D0D0E] border-none px-0 pb-0 overflow-hidden flex flex-col"
+                className="h-[92vh] rounded-t-[32px] bg-[#edf0f4] dark:bg-[#0D0D0E] border-none px-0 pb-0 overflow-hidden flex flex-col [&>button]:hidden"
             >
                 {/* Custom Header Area */}
-                <div className="px-6 pt-6 pb-2 flex items-center justify-between shrink-0">
+                <div className="px-6 pt-6 pb-2 flex items-center justify-between shrink-0 relative">
                     <div className="flex items-center gap-3">
                         <div className="size-10 rounded-2xl bg-zinc-900 dark:bg-white flex items-center justify-center">
                             <Plus className="size-5 text-white dark:text-zinc-900" />
@@ -44,7 +44,7 @@ export default function AssetEntrySheetV2({ isOpen, onClose, initialSymbol }: As
                     </div>
                     <button
                         onClick={onClose}
-                        className="size-10 rounded-full bg-white dark:bg-zinc-800 shadow-sm border border-zinc-100 dark:border-white/5 flex items-center justify-center text-zinc-900 dark:text-white"
+                        className="p-2 rounded-full bg-white dark:bg-zinc-800 shadow-sm border border-zinc-100 dark:border-white/5 flex items-center justify-center text-zinc-500 dark:text-zinc-400 transition-all active:scale-95"
                     >
                         <X className="size-5" />
                     </button>
