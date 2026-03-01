@@ -211,13 +211,15 @@ export default function StockEntryFormV2({ onSuccess, initialSymbol, editingEntr
                                 <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-tight">{selectedName}</p>
                             </div>
                         </div>
-                        <button
-                            type="button"
-                            onClick={() => handleSelectTicker('', '')}
-                            className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-white/10 text-zinc-400 transition-colors"
-                        >
-                            <X className="size-4" />
-                        </button>
+                        {!isEditMode && (
+                            <button
+                                type="button"
+                                onClick={() => handleSelectTicker('', '')}
+                                className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-white/10 text-zinc-400 transition-colors"
+                            >
+                                <X className="size-4" />
+                            </button>
+                        )}
                     </div>
                 )}
             </section>

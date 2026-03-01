@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, MoreHorizontal, Coins, CreditCard, DollarSign } from 'lucide-react';
+import { TrendingUp, TrendingDown, MoreHorizontal, Coins, CreditCard, DollarSign, Eye, EyeOff } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { calculateNetWorth, MarketPrices } from '@/lib/calculations';
@@ -33,6 +33,7 @@ export default function SimpleModeV2Card({
     const [stockPriceInfo, setStockPriceInfo] = useState<{ price: number; currency: string; change?: number; changePercent?: number; shortName?: string } | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [marketPrices, setMarketPrices] = useState<MarketPrices | null>(null);
+    const [isHidden, setIsHidden] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -137,6 +138,10 @@ export default function SimpleModeV2Card({
     const COLOR_UP = "#FF4F60";
     const COLOR_DOWN = "#35C759";
 
+    const formattedValue = displayValue.toLocaleString(undefined, {
+        maximumFractionDigits: (isStock && !stockAsset?.assetSymbol?.endsWith('.KS') && !stockAsset?.assetSymbol?.endsWith('.KQ')) ? 2 : 0
+    });
+
     return (
         <Card
             onClick={onClick}
@@ -160,9 +165,21 @@ export default function SimpleModeV2Card({
                         )}
                     </div>
                 </div>
-                <button className="p-1 text-zinc-300 pointer-events-none">
-                    <MoreHorizontal className="size-5" />
-                </button>
+                {isTotal ? (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsHidden(!isHidden);
+                        }}
+                        className="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
+                    >
+                        {isHidden ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+                    </button>
+                ) : (
+                    <button className="p-1 text-zinc-300 pointer-events-none">
+                        <MoreHorizontal className="size-5" />
+                    </button>
+                )}
             </div>
 
             <div className="space-y-1">
@@ -171,11 +188,13 @@ export default function SimpleModeV2Card({
                 ) : (
                     <>
                         <div className="flex items-baseline gap-1">
-                            <span className="text-lg font-bold text-[#2B364B]/30 dark:text-white/20">₩</span>
-                            <h2 className="text-[32px] font-black tracking-tighter text-[#2B364B] dark:text-white leading-none">
-                                {displayValue.toLocaleString(undefined, {
-                                    maximumFractionDigits: (isStock && !stockAsset?.assetSymbol?.endsWith('.KS') && !stockAsset?.assetSymbol?.endsWith('.KQ')) ? 2 : 0
-                                })}
+                            {!isHidden && <span className="text-lg font-bold text-[#2B364B]/30 dark:text-white/20">₩</span>}
+                            <h2 className="text-[32px] font-black tracking-tighter text-[#2B364B] dark:text-white leading-none flex items-center">
+                                {isHidden ? (
+                                    <span className="text-[64px] tracking-[0.1em] text-zinc-300 dark:text-white/10 leading-[0] pt-3 select-none">******</span>
+                                ) : (
+                                    formattedValue
+                                )}
                             </h2>
                         </div>
 
