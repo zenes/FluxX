@@ -181,12 +181,14 @@ export default function StockDetailSheetV2({
     // Verification Modal State
     const [verification, setVerification] = useState<{
         isOpen: boolean;
+        mode: 'entry' | 'asset';
         entryId: string | null;
         targetPin: string;
         currentInput: string;
         isDeleting: boolean;
     }>({
         isOpen: false,
+        mode: 'entry',
         entryId: null,
         targetPin: '',
         currentInput: '',
@@ -195,10 +197,11 @@ export default function StockDetailSheetV2({
 
     const router = useRouter();
 
-    const openVerification = (entryId: string) => {
+    const openVerification = (mode: 'entry' | 'asset', entryId: string | null = null) => {
         const pin = Math.floor(1000 + Math.random() * 9000).toString();
         setVerification({
             isOpen: true,
+            mode,
             entryId,
             targetPin: pin,
             currentInput: '',
@@ -215,10 +218,12 @@ export default function StockDetailSheetV2({
         if (newInput.length === 4) {
             console.log(`handlePinInput: PIN complete. Entered: ${newInput}, Target: ${verification.targetPin}`);
             if (newInput === verification.targetPin) {
-                if (verification.entryId) {
+                if (verification.mode === 'entry' && verification.entryId) {
                     confirmDeletion(verification.entryId);
+                } else if (verification.mode === 'asset') {
+                    confirmAssetDeletion();
                 } else {
-                    console.error("handlePinInput: No entryId found in verification state!");
+                    console.error("handlePinInput: Missing parameters for deletion!");
                 }
             } else {
                 console.log("handlePinInput: PIN mismatch.");
@@ -230,6 +235,27 @@ export default function StockDetailSheetV2({
         }
     };
 
+    const confirmAssetDeletion = async () => {
+        if (!stockAsset?.assetSymbol) return;
+        setVerification(prev => ({ ...prev, isDeleting: true }));
+
+        try {
+            const res = await deleteStockAssetAllEntries(stockAsset.assetSymbol);
+            if (res.success) {
+                setVerification({ isOpen: false, mode: 'asset', entryId: null, targetPin: '', currentInput: '', isDeleting: false });
+                onClose();
+                window.location.reload();
+            } else {
+                setVerification(prev => ({ ...prev, isDeleting: false }));
+                alert("자산 삭제에 실패했습니다.");
+            }
+        } catch (err) {
+            console.error("Failed to delete asset:", err);
+            setVerification(prev => ({ ...prev, isDeleting: false }));
+            alert("자산 삭제 중 오류가 발생했습니다.");
+        }
+    };
+
     const confirmDeletion = async (entryId: string) => {
         if (!stockAsset?.assetSymbol) return;
         setVerification(prev => ({ ...prev, isDeleting: true }));
@@ -237,7 +263,7 @@ export default function StockDetailSheetV2({
         try {
             const res = await deleteStockEntry(entryId, stockAsset.assetSymbol);
             if (res.success) {
-                setVerification({ isOpen: false, entryId: null, targetPin: '', currentInput: '', isDeleting: false });
+                setVerification({ isOpen: false, mode: 'entry', entryId: null, targetPin: '', currentInput: '', isDeleting: false });
 
                 // If this was the last entry, close sheet and navigate to Page 2 (D Card view)
                 if (stockAsset.entries && stockAsset.entries.length === 1) {
@@ -260,7 +286,11 @@ export default function StockDetailSheetV2({
     };
 
     const handleDeleteEntry = (entryId: string) => {
-        openVerification(entryId);
+        openVerification('entry', entryId);
+    };
+
+    const handleDelete = () => {
+        openVerification('asset');
     };
 
     // Robust Currency Detection
@@ -312,23 +342,6 @@ export default function StockDetailSheetV2({
         fetchHistory();
     }, [isOpen, stockAsset?.assetSymbol, activeRange, isKRStock]);
 
-    const handleDelete = async () => {
-        if (!stockAsset?.assetSymbol) return;
-
-        const confirmed = window.confirm(`정말 ${title || stockAsset.assetSymbol} 자산의 모든 데이터를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`);
-        if (!confirmed) return;
-
-        try {
-            const res = await deleteStockAssetAllEntries(stockAsset.assetSymbol);
-            if (res.success) {
-                onClose();
-                window.location.reload();
-            }
-        } catch (err) {
-            console.error("Failed to delete asset:", err);
-            alert("자산 삭제 중 오류가 발생했습니다.");
-        }
-    };
 
 
     const currentPriceInKrw = currentPrice
