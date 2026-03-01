@@ -47,15 +47,16 @@ export async function updateUserPrivacy(hideAssets: boolean) {
     if (!session?.user?.id) throw new Error('Unauthorized');
 
     try {
+        console.log(`Attempting to update privacy for user ${session.user.id} to ${hideAssets}`);
         await (prisma.user as any).update({
             where: { id: session.user.id },
             data: { hideAssets }
         });
         revalidatePath('/m/v2');
         return { success: true };
-    } catch (e) {
-        console.error('Failed to update user privacy:', e);
-        throw new Error('Failed to update privacy setting');
+    } catch (e: any) {
+        console.error('Failed to update user privacy. Error detail:', e);
+        throw new Error(`Failed to update privacy setting: ${e.message || 'Unknown error'}`);
     }
 }
 
