@@ -41,10 +41,20 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
     const [selectedAsset, setSelectedAsset] = useState<AssetItem | null>(null);
     const [isTotalDetailOpen, setIsTotalDetailOpen] = useState(false);
     const [isAssetEntryOpen, setIsAssetEntryOpen] = useState(false);
+    const [entryType, setEntryType] = useState<'stock' | 'other'>('stock');
     const [prefilledSymbol, setPrefilledSymbol] = useState<string | undefined>(undefined);
+    const [editingEntry, setEditingEntry] = useState<any | null>(null);
 
     const handleAddAssetEntry = (symbol?: string) => {
+        setEntryType('stock');
         setPrefilledSymbol(symbol);
+        setEditingEntry(null);
+        setIsAssetEntryOpen(true);
+    };
+
+    const handleEditEntry = (entry: any) => {
+        setEntryType('stock');
+        setEditingEntry(entry);
         setIsAssetEntryOpen(true);
     };
     const [totalNetWorth, setTotalNetWorth] = useState<number>(0);
@@ -303,7 +313,6 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
     }, [displayAssets, marketPrices]);
 
     const [isPending, setIsPending] = useState(false);
-    const [entryType, setEntryType] = useState<'stock' | 'other'>('stock');
 
     const handleInsertTestData = async () => {
         if (isPending) return;
@@ -643,6 +652,7 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                 onClose={() => setSelectedAsset(null)}
                 onNavigate={goToPage}
                 onAddAsset={handleAddAssetEntry}
+                onEditEntry={handleEditEntry}
                 stockAsset={selectedAsset}
                 currentPrice={selectedAsset ? (marketPrices?.stockPrices?.[selectedAsset.assetSymbol?.toUpperCase() || '']?.price || (selectedAsset.avgPrice ?? 0)) : 0}
                 changePercent={selectedAsset ? (marketPrices?.stockPrices?.[selectedAsset.assetSymbol?.toUpperCase() || '']?.changePercent || 0) : 0}
@@ -665,9 +675,11 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                 onClose={() => {
                     setIsAssetEntryOpen(false);
                     setPrefilledSymbol(undefined);
+                    setEditingEntry(null);
                     setEntryType('stock'); // Reset
                 }}
                 initialSymbol={prefilledSymbol}
+                editingEntry={editingEntry}
                 type={entryType}
             />
         </div>

@@ -15,15 +15,18 @@ import {
     Calendar,
     Check,
     Loader2,
-    X
+    X,
+    Pencil
 } from 'lucide-react';
+import { editStockEntry } from '@/lib/actions';
 
 interface StockEntryFormV2Props {
     onSuccess: () => void;
     initialSymbol?: string;
+    editingEntry?: any;
 }
 
-export default function StockEntryFormV2({ onSuccess, initialSymbol }: StockEntryFormV2Props) {
+export default function StockEntryFormV2({ onSuccess, initialSymbol, editingEntry }: StockEntryFormV2Props) {
     const [isLoading, setIsLoading] = useState(false);
     const [accounts, setAccounts] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -31,22 +34,24 @@ export default function StockEntryFormV2({ onSuccess, initialSymbol }: StockEntr
     const [debouncedQuery] = useDebounce(searchQuery, 500);
     const [searchResults, setSearchResults] = useState<any[]>([]);
 
+    const isEditMode = !!editingEntry;
+
     // Form State
     const [formData, setFormData] = useState({
-        tickerSymbol: initialSymbol || '',
-        brokerName: '',
-        accountOwner: '',
-        accountNumber: '',
-        quantity: '',
-        totalPurchaseAmount: '',
-        currency: initialSymbol
+        tickerSymbol: editingEntry?.tickerSymbol || initialSymbol || '',
+        brokerName: editingEntry?.broker || editingEntry?.brokerName || '',
+        accountOwner: editingEntry?.owner || editingEntry?.accountOwner || '',
+        accountNumber: editingEntry?.account || editingEntry?.accountNumber || '',
+        quantity: editingEntry?.qty?.toString() || editingEntry?.quantity?.toString() || '',
+        totalPurchaseAmount: editingEntry?.totalCost?.toString() || editingEntry?.totalPurchaseAmount?.toString() || '',
+        currency: editingEntry?.currency || (initialSymbol
             ? (initialSymbol.endsWith('.KS') || initialSymbol.endsWith('.KQ') ? 'KRW' : 'USD')
-            : 'KRW',
-        predefinedAccountId: '',
-        dividendPerShare: '',
-        dividendFrequency: '4', // Default to quarterly
-        dividendMonths: '',
-        initialMemo: ''
+            : 'KRW'),
+        predefinedAccountId: editingEntry?.predefinedAccountId || '',
+        dividendPerShare: editingEntry?.dividendPerShare?.toString() || '',
+        dividendFrequency: editingEntry?.dividendFrequency?.toString() || '4', // Default to quarterly
+        dividendMonths: editingEntry?.dividendMonths || '',
+        initialMemo: editingEntry?.initialMemo || ''
     });
 
     const [selectedName, setSelectedName] = useState('');
@@ -122,13 +127,19 @@ export default function StockEntryFormV2({ onSuccess, initialSymbol }: StockEntr
 
         setIsLoading(true);
         try {
-            await addStockEntry({
+            const dataToSubmit = {
                 ...formData,
                 quantity: parseFloat(formData.quantity.replace(/,/g, '')),
                 totalPurchaseAmount: parseFloat(formData.totalPurchaseAmount.replace(/,/g, '')),
                 dividendPerShare: formData.dividendPerShare ? parseFloat(formData.dividendPerShare) : undefined,
                 dividendFrequency: parseInt(formData.dividendFrequency)
-            });
+            };
+
+            if (isEditMode) {
+                await editStockEntry(editingEntry.id, dataToSubmit, formData.tickerSymbol);
+            } else {
+                await addStockEntry(dataToSubmit);
+            }
             onSuccess();
         } catch (e: any) {
             alert(e.message);
@@ -373,8 +384,8 @@ export default function StockEntryFormV2({ onSuccess, initialSymbol }: StockEntr
                         <Loader2 className="size-5 animate-spin" />
                     ) : (
                         <>
-                            <Check className="size-5" />
-                            <span>자산 등록하기</span>
+                            {isEditMode ? <Pencil className="size-5" /> : <Check className="size-5" />}
+                            <span>{isEditMode ? '기록 수정하기' : '자산 등록하기'}</span>
                         </>
                     )}
                 </button>

@@ -15,6 +15,7 @@ import {
     Percent,
     Trash2,
     Plus,
+    Pencil,
 } from 'lucide-react';
 import { AssetItem, deleteStockAssetAllEntries, deleteStockEntry } from '@/lib/actions';
 import { cn } from '@/lib/utils';
@@ -28,7 +29,8 @@ const PurchaseHistoryItem = ({
     exchangeRate,
     currentPrice,
     isKRStock,
-    handleDeleteEntry
+    handleDeleteEntry,
+    handleEditEntry,
 }: {
     entry: any;
     idx: number;
@@ -37,6 +39,7 @@ const PurchaseHistoryItem = ({
     currentPrice: number | null;
     isKRStock: boolean;
     handleDeleteEntry: (id: string) => void;
+    handleEditEntry: (entry: any) => void;
 }) => {
     const controls = useAnimation();
 
@@ -49,9 +52,10 @@ const PurchaseHistoryItem = ({
     const isEntryPositive = entryPnl >= 0;
 
     const onDragEnd = (event: any, info: any) => {
-        // If dragged more than 40px left, snap to reveal delete button
+        // info.offset.x is the total distance dragged
+        // If dragged more than 40px left, snap to reveal buttons
         if (info.offset.x < -40) {
-            controls.start({ x: -80 });
+            controls.start({ x: -160 }); // Space for two buttons (80px each)
         } else {
             // Otherwise snap back to origin
             controls.start({ x: 0 });
@@ -62,14 +66,24 @@ const PurchaseHistoryItem = ({
         <div key={entry.id || idx} className="relative group overflow-hidden rounded-3xl">
             {/* Swipe Background Layer */}
             <div className="absolute inset-0 bg-zinc-50 dark:bg-white/5 flex justify-end items-center">
-                {/* Delete Action Area (Red only on the right) */}
+                {/* Edit Action Area */}
+                <div className="h-full w-20 bg-[#FF9500] flex items-center justify-center">
+                    <button
+                        onClick={() => handleEditEntry(entry)}
+                        className="flex flex-col items-center gap-1 text-white active:scale-90 transition-transform"
+                    >
+                        <Pencil className="size-5" />
+                        <span className="text-[10px] font-black uppercase tracking-tighter text-white">수정</span>
+                    </button>
+                </div>
+                {/* Delete Action Area */}
                 <div className="h-full w-20 bg-[#FF3B2F] flex items-center justify-center">
                     <button
                         onClick={() => handleDeleteEntry(entry.id)}
                         className="flex flex-col items-center gap-1 text-white active:scale-90 transition-transform"
                     >
-                        <Trash2 className="size-6" />
-                        <span className="text-[10px] font-black uppercase tracking-tighter">삭제</span>
+                        <Trash2 className="size-5" />
+                        <span className="text-[10px] font-black uppercase tracking-tighter text-white">삭제</span>
                     </button>
                 </div>
             </div>
@@ -77,7 +91,7 @@ const PurchaseHistoryItem = ({
             {/* Foreground Item */}
             <motion.div
                 drag="x"
-                dragConstraints={{ left: -80, right: 0 }}
+                dragConstraints={{ left: -160, right: 0 }}
                 dragElastic={{ left: 0.1, right: 0 }}
                 animate={controls}
                 onDragEnd={onDragEnd}
@@ -120,13 +134,13 @@ const PurchaseHistoryItem = ({
                         <span className="text-[10px] font-bold text-zinc-400 uppercase mb-0.5">평가 손익</span>
                         <span className={cn(
                             "text-[13px] font-black",
-                            isEntryPositive ? "text-[#FF4F60]" : "text-[#2684FE]"
+                            isEntryPositive ? "text-[#FF4F60]" : "text-[#35C759]"
                         )}>
                             {isEntryPositive ? '+' : ''}₩{entryPnl.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </span>
                         <span className={cn(
                             "text-[10px] font-bold",
-                            isEntryPositive ? "text-[#FF4F60]/70" : "text-[#2684FE]/70"
+                            isEntryPositive ? "text-[#FF4F60]/70" : "text-[#35C759]/70"
                         )}>
                             ({entryReturnRate.toFixed(2)}%)
                         </span>
@@ -154,6 +168,7 @@ interface StockDetailSheetV2Props {
     onClose: () => void;
     onNavigate?: (page: number) => void;
     onAddAsset?: (symbol?: string) => void;
+    onEditEntry?: (entry: any) => void;
     stockAsset: AssetItem | null;
     currentPrice: number | null;
     changePercent: number | null;
@@ -175,6 +190,7 @@ export default function StockDetailSheetV2({
     exchangeRate,
     totalNetWorth,
     title,
+    onEditEntry,
 }: StockDetailSheetV2Props) {
     const [activeRange, setActiveRange] = useState('1M');
     const [chartData, setChartData] = useState<any[]>([]);
@@ -589,7 +605,7 @@ export default function StockDetailSheetV2({
                                 {
                                     label: '평가 손익',
                                     value: (
-                                        <span className={cn(unrealizedPnl >= 0 ? "text-[#FF4F60]" : "text-[#2684FE]")}>
+                                        <span className={cn(unrealizedPnl >= 0 ? "text-[#FF4F60]" : "text-[#35C759]")}>
                                             ₩{unrealizedPnl.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                             <span className="text-[10px] ml-1 opacity-60 font-bold">({returnRate.toFixed(2)}%)</span>
                                         </span>
@@ -625,6 +641,7 @@ export default function StockDetailSheetV2({
                                         currentPrice={currentPrice}
                                         isKRStock={isKRStock}
                                         handleDeleteEntry={handleDeleteEntry}
+                                        handleEditEntry={(entry) => onEditEntry?.({ ...entry, tickerSymbol: stockAsset.assetSymbol })}
                                     />
                                 ))}
                             </div>
@@ -639,12 +656,12 @@ export default function StockDetailSheetV2({
                                     onAddAsset?.(stockAsset?.assetSymbol || undefined);
                                 }, 300);
                             }}
-                            className="py-4 rounded-2xl bg-[#38C798]/10 border border-dashed border-[#38C798]/30 flex items-center justify-center gap-2 group active:scale-[0.98] transition-all hover:bg-[#38C798]/20"
+                            className="py-4 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-dashed border-zinc-200 dark:border-white/10 flex items-center justify-center gap-2 group active:scale-[0.98] transition-all"
                         >
-                            <div className="size-6 rounded-full bg-[#38C798] text-white flex items-center justify-center">
+                            <div className="size-6 rounded-full bg-zinc-200 dark:bg-white/10 text-zinc-500 group-hover:bg-[#38C798] group-hover:text-white transition-all flex items-center justify-center">
                                 <Plus className="size-3.5" />
                             </div>
-                            <span className="text-[13px] font-black text-[#38C798] uppercase tracking-tight">자산 추가</span>
+                            <span className="text-[13px] font-black text-zinc-400 group-hover:text-[#38C798] transition-colors uppercase tracking-tight">자산 추가</span>
                         </button>
 
                         <button
@@ -657,6 +674,7 @@ export default function StockDetailSheetV2({
                             <span className="text-[13px] font-black text-zinc-400 group-hover:text-red-500 transition-colors uppercase tracking-tight">자산 삭제</span>
                         </button>
                     </div>
+
 
                     {/* Verification Modal Overlay (Moved inside SheetContent for correct event handling) */}
                     {/* Full-screen Keypad Verification Modal */}

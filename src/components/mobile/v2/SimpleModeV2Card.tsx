@@ -135,7 +135,7 @@ export default function SimpleModeV2Card({
     const isUp = changePercent >= 0;
 
     const COLOR_UP = "#FF4F60";
-    const COLOR_DOWN = "#2684FE";
+    const COLOR_DOWN = "#35C759";
 
     return (
         <Card

@@ -8,7 +8,7 @@ import {
     SheetHeader,
     SheetTitle,
 } from "@/components/ui/sheet";
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Pencil } from 'lucide-react';
 import StockEntryFormV2 from '@/components/StockEntryFormV2';
 import OtherAssetEntryFormV2 from '@/components/OtherAssetEntryFormV2';
 import { useRouter } from 'next/navigation';
@@ -18,9 +18,10 @@ interface AssetEntrySheetV2Props {
     onClose: () => void;
     initialSymbol?: string;
     type?: 'stock' | 'other';
+    editingEntry?: any;
 }
 
-export default function AssetEntrySheetV2({ isOpen, onClose, initialSymbol, type = 'stock' }: AssetEntrySheetV2Props) {
+export default function AssetEntrySheetV2({ isOpen, onClose, initialSymbol, type = 'stock', editingEntry }: AssetEntrySheetV2Props) {
     const router = useRouter();
 
     return (
@@ -33,14 +34,14 @@ export default function AssetEntrySheetV2({ isOpen, onClose, initialSymbol, type
                 <div className="px-6 pt-6 pb-2 flex items-center justify-between shrink-0 relative">
                     <div className="flex items-center gap-3">
                         <div className="size-10 rounded-2xl bg-zinc-900 dark:bg-white flex items-center justify-center">
-                            <Plus className="size-5 text-white dark:text-zinc-900" />
+                            {editingEntry ? <Pencil className="size-5 text-white dark:text-zinc-900" /> : <Plus className="size-5 text-white dark:text-zinc-900" />}
                         </div>
                         <div>
                             <SheetTitle className="text-xl font-black text-zinc-900 dark:text-white tracking-tight uppercase">
-                                자산 추가
+                                {editingEntry ? '자산 기록 수정' : '자산 추가'}
                             </SheetTitle>
                             <SheetDescription className="text-xs font-bold text-zinc-400 uppercase tracking-tighter">
-                                새로운 투자 자산 등록
+                                {editingEntry ? '상세 투자 내역 수정' : '새로운 투자 자산 등록'}
                             </SheetDescription>
                         </div>
                     </div>
@@ -57,6 +58,7 @@ export default function AssetEntrySheetV2({ isOpen, onClose, initialSymbol, type
                     {type === 'stock' ? (
                         <StockEntryFormV2
                             initialSymbol={initialSymbol}
+                            editingEntry={editingEntry}
                             onSuccess={() => {
                                 onClose();
                                 router.refresh();
