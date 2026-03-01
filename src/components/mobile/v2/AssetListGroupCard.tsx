@@ -17,6 +17,7 @@ interface AssetListGroupCardProps {
     type: 'stock' | 'other';
     marketPrices?: MarketPrices | null;
     debugLabel?: string;
+    onAddClick?: () => void;
 }
 
 export default function AssetListGroupCard({
@@ -27,7 +28,8 @@ export default function AssetListGroupCard({
     exchangeRate,
     type,
     marketPrices,
-    debugLabel
+    debugLabel,
+    onAddClick
 }: AssetListGroupCardProps) {
     if (assets.length === 0) return null;
 
@@ -174,6 +176,23 @@ export default function AssetListGroupCard({
                     );
                 })}
             </div>
+
+            {type === 'stock' && onAddClick && (
+                <div className="px-4 pb-4 mt-2">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onAddClick();
+                        }}
+                        className="w-full py-4 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-dashed border-zinc-200 dark:border-white/10 flex items-center justify-center gap-2 group active:scale-[0.98] transition-all hover:bg-zinc-100 dark:hover:bg-white/10"
+                    >
+                        <div className="size-6 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Plus className="size-4" />
+                        </div>
+                        <span className="text-[13px] font-black text-zinc-900 dark:text-white uppercase tracking-tight">자산 추가</span>
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

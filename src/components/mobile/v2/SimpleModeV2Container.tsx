@@ -7,15 +7,16 @@ import AssetListGroupCard from './AssetListGroupCard';
 import InvestmentNewsCardV2 from './InvestmentNewsCardV2';
 import StockDetailSheetV2 from './StockDetailSheetV2';
 import AssetGrowthDetailSheetV2 from './AssetGrowthDetailSheetV2';
+import AssetEntrySheetV2 from './AssetEntrySheetV2';
 import prisma from '@/lib/prisma';
 import { encrypt, decrypt } from '@/lib/encryption';
 import { revalidatePath } from 'next/cache';
 import { bulkInsertTestData, bulkDeleteTestData } from '@/lib/test-actions';
-import { AssetItem } from '@/lib/actions';
+import { AssetItem, getAssets, getMemos, getPredefinedAccounts } from '@/lib/actions';
 import { calculateNetWorth, MarketPrices } from '@/lib/calculations';
 import { cn } from '@/lib/utils';
 import { motion, animate, useMotionValue } from 'framer-motion';
-import { Wallet, PieChart, TrendingUp, Landmark, Coins, Briefcase } from 'lucide-react';
+import { Briefcase, Coins, PieChart, TrendingUp, Landmark, Plus } from 'lucide-react';
 import V2AuthProfileIcon from './V2AuthProfileIcon';
 import Link from 'next/link';
 import { MarketAsset, INITIAL_STOCKS } from './typesV2';
@@ -39,9 +40,47 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
     // Detail Sheet States
     const [selectedAsset, setSelectedAsset] = useState<AssetItem | null>(null);
     const [isTotalDetailOpen, setIsTotalDetailOpen] = useState(false);
+    const [isAssetEntryOpen, setIsAssetEntryOpen] = useState(false);
     const [totalNetWorth, setTotalNetWorth] = useState<number>(0);
     const [marketPrices, setMarketPrices] = useState<MarketPrices | null>(null);
     const [isLoadingTotal, setIsLoadingTotal] = useState(false);
+
+    // Merge helper for Stock Assets with same symbol
+    const mergeStockAssets = (items: AssetItem[]): AssetItem[] => {
+        const merged: Record<string, AssetItem> = {};
+        const nonStocks: AssetItem[] = [];
+
+        items.forEach(item => {
+            if (item.assetType !== 'stock' || !item.assetSymbol) {
+                nonStocks.push(item);
+                return;
+            }
+
+            const symbol = item.assetSymbol;
+            if (!merged[symbol]) {
+                merged[symbol] = {
+                    ...item,
+                    entries: item.entries ? [...item.entries] : []
+                };
+            } else {
+                const existing = merged[symbol];
+                const newTotalQty = (existing.amount || 0) + (item.amount || 0);
+
+                // Weighted average price calculation
+                const existingTotalCost = (existing.avgPrice || 0) * (existing.amount || 0);
+                const itemTotalCost = (item.avgPrice || 0) * (item.amount || 0);
+                const newAvgPrice = newTotalQty > 0 ? (existingTotalCost + itemTotalCost) / newTotalQty : 0;
+
+                existing.amount = newTotalQty;
+                existing.avgPrice = newAvgPrice;
+                if (item.entries) {
+                    existing.entries = [...(existing.entries || []), ...item.entries];
+                }
+            }
+        });
+
+        return [...Object.values(merged), ...nonStocks];
+    };
 
     // Persistence: Load stocks from localStorage on mount
     useEffect(() => {
@@ -64,6 +103,8 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
         if (!isHydrated) return;
         localStorage.setItem('v2-my-stocks', JSON.stringify(myStocks));
     }, [myStocks, isHydrated]);
+
+    const displayAssets = mergeStockAssets(assets);
 
     const refreshAllQuotes = async () => {
         if (myStocks.length === 0) return;
@@ -148,8 +189,6 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
 
     const containerRef = React.useRef<HTMLDivElement>(null);
     const dragX = useMotionValue(0);
-
-    const displayAssets = assets && assets.length > 0 ? assets : [];
 
     // Ensure core asset types always exist
     const coreAssetTypes = ['krw', 'usd', 'gold'];
@@ -370,6 +409,7 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                             type="stock"
                             marketPrices={marketPrices}
                             debugLabel="D"
+                            onAddClick={() => setIsAssetEntryOpen(true)}
                         />
 
                         {/* Group 2: Cash & Commodities */}
@@ -497,6 +537,12 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                 assets={displayAssets}
                 marketPrices={marketPrices || { usdKrw: 1400, goldUsd: 2600, stockPrices: {} }}
                 totalNetWorth={totalNetWorth}
+            />
+
+            {/* Asset Entry Sheet V2 */}
+            <AssetEntrySheetV2
+                isOpen={isAssetEntryOpen}
+                onClose={() => setIsAssetEntryOpen(false)}
             />
         </div>
     );

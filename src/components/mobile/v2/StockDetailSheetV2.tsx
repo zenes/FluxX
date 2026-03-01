@@ -366,6 +366,78 @@ export default function StockDetailSheetV2({
                             ))}
                         </div>
                     </div>
+
+                    {/* Purchase History Section */}
+                    {stockAsset?.entries && stockAsset.entries.length > 0 && (
+                        <div className="px-6 mt-10">
+                            <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-4 px-1">매수 이력</h3>
+                            <div className="space-y-3">
+                                {stockAsset.entries.map((entry, idx) => {
+                                    const entryAvgPrice = entry.qty > 0 ? entry.totalCost / entry.qty : 0;
+                                    const entryAvgPriceInKrw = isUSD ? entryAvgPrice * exchangeRate : entryAvgPrice;
+                                    const entryCurrentValueInKrw = (isUSD ? (currentPrice || 0) * exchangeRate : (currentPrice || 0)) * entry.qty;
+                                    const entryTotalCostInKrw = isUSD ? entry.totalCost * exchangeRate : entry.totalCost;
+                                    const entryPnl = entryCurrentValueInKrw - entryTotalCostInKrw;
+                                    const entryReturnRate = entryTotalCostInKrw > 0 ? (entryPnl / entryTotalCostInKrw) * 100 : 0;
+                                    const isEntryPositive = entryPnl >= 0;
+
+                                    return (
+                                        <div key={entry.id || idx} className="bg-zinc-50 dark:bg-white/5 p-4 rounded-3xl border border-zinc-100 dark:border-white/5">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="size-8 rounded-xl bg-zinc-200 dark:bg-white/10 flex items-center justify-center">
+                                                        <Building2 className="size-4 text-zinc-500" />
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[13px] font-black text-zinc-900 dark:text-white">
+                                                            {entry.predefinedAccountAlias || entry.broker}
+                                                        </span>
+                                                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                                                            {entry.owner} {entry.account ? `• ${entry.account}` : ''}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="text-[14px] font-black text-zinc-900 dark:text-white">
+                                                        {entry.qty.toLocaleString()}주
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4 pt-3 border-t border-zinc-100 dark:border-white/5">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] font-bold text-zinc-400 uppercase mb-0.5">매수 평단</span>
+                                                    <span className="text-[13px] font-black text-zinc-900 dark:text-white">
+                                                        {isUSD ? '$' : '₩'}{entryAvgPrice.toLocaleString(undefined, { maximumFractionDigits: isKRStock ? 0 : 2 })}
+                                                    </span>
+                                                    {isUSD && (
+                                                        <span className="text-[10px] font-bold text-zinc-400">
+                                                            ₩{entryAvgPriceInKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-col items-end">
+                                                    <span className="text-[10px] font-bold text-zinc-400 uppercase mb-0.5">평가 손익</span>
+                                                    <span className={cn(
+                                                        "text-[13px] font-black",
+                                                        isEntryPositive ? "text-[#FF4F60]" : "text-[#2684FE]"
+                                                    )}>
+                                                        {isEntryPositive ? '+' : ''}₩{entryPnl.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                                    </span>
+                                                    <span className={cn(
+                                                        "text-[10px] font-bold",
+                                                        isEntryPositive ? "text-[#FF4F60]/70" : "text-[#2684FE]/70"
+                                                    )}>
+                                                        ({entryReturnRate.toFixed(2)}%)
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </SheetContent>
         </Sheet>
