@@ -99,7 +99,12 @@ export default function SimpleModeV2Card({
         displayValue = stockPriceInfo
             ? stockAsset.amount * stockPriceInfo.price * (stockPriceInfo.currency === 'USD' ? (initialExchange?.rate || 1400) : 1)
             : stockAsset.amount * (stockAsset.avgPrice || 0) * (stockAsset.currency === 'USD' ? (initialExchange?.rate || 1400) : 1);
-        title = koreanNameMap[stockAsset.assetSymbol || ''] || stockPriceInfo?.shortName || stockAsset.assetSymbol || "Unknown";
+
+        const isKR = stockAsset.assetSymbol?.endsWith('.KS') || stockAsset.assetSymbol?.endsWith('.KQ');
+        title = isKR
+            ? (koreanNameMap[stockAsset.assetSymbol || ''] || stockPriceInfo?.shortName || stockAsset.assetSymbol || "Unknown")
+            : (stockAsset.assetSymbol || "Unknown");
+
         subtitle = `${stockAsset.amount.toLocaleString()}주 보유`;
         icon = (
             <div className="size-10 rounded-xl bg-[#F5F5F7] dark:bg-white/5 flex items-center justify-center font-black text-[#2B364B] dark:text-white/80">

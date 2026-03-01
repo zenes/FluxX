@@ -368,13 +368,24 @@ export async function deleteStockEntry(entryId: string, tickerSymbol: string) {
     if (!session?.user?.id) throw new Error('Unauthorized');
 
     try {
-        await prisma.stockEntry.delete({
+        console.log(`deleteStockEntry: Attempting to delete entryId: ${entryId} for userId: ${session.user.id}`);
+        const result = await prisma.stockEntry.delete({
             where: { id: entryId, userId: session.user.id }
         });
+        console.log(`deleteStockEntry: Successfully deleted record:`, result);
         await recalculateStockAsset(session.user.id, tickerSymbol);
         revalidatePath('/operations');
+        revalidatePath('/m/v2');
         return { success: true };
-    } catch (e) {
+    } catch (e: any) {
+        if (e.code === 'P2025') {
+            console.warn('deleteStockEntry: Record already deleted or not found:', entryId);
+            // Even if not found, we want the UI to sync, so we still revalidate and return success
+            await recalculateStockAsset(session.user.id, tickerSymbol);
+            revalidatePath('/operations');
+            revalidatePath('/m/v2');
+            return { success: true };
+        }
         console.error('Failed to delete stock entry:', e);
         throw new Error('Failed to delete stock entry');
     }

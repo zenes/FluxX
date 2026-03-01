@@ -98,6 +98,21 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
         setIsHydrated(true);
     }, []);
 
+    // Keep selectedAsset in sync with updated assets prop after router.refresh()
+    useEffect(() => {
+        if (selectedAsset) {
+            const mergedAssets = mergeStockAssets(assets);
+            const updated = mergedAssets.find(a =>
+                (a.id && a.id === selectedAsset.id) ||
+                (a.assetSymbol && a.assetSymbol === selectedAsset.assetSymbol)
+            );
+            if (updated) {
+                // Check if data actually changed to avoid infinite loop (though ref change is enough)
+                setSelectedAsset(updated);
+            }
+        }
+    }, [assets]);
+
     // Persistence: Save stocks to localStorage on change
     useEffect(() => {
         if (!isHydrated) return;

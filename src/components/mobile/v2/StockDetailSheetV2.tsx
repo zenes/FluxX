@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Sheet,
     SheetContent,
@@ -15,8 +15,9 @@ import {
     Percent,
     Trash2,
 } from 'lucide-react';
-import { AssetItem, deleteStockAssetAllEntries } from '@/lib/actions';
+import { AssetItem, deleteStockAssetAllEntries, deleteStockEntry } from '@/lib/actions';
 import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     AreaChart,
     Area,
@@ -28,7 +29,7 @@ import {
     ComposedChart,
     Bar
 } from 'recharts';
-import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface StockDetailSheetV2Props {
     isOpen: boolean;
@@ -57,6 +58,81 @@ export default function StockDetailSheetV2({
     const [chartData, setChartData] = useState<any[]>([]);
     const [isLoadingChart, setIsLoadingChart] = useState(false);
     const [hoveredData, setHoveredData] = useState<{ price: number; time: string } | null>(null);
+
+    // Verification Modal State
+    const [verification, setVerification] = useState<{
+        isOpen: boolean;
+        entryId: string | null;
+        targetPin: string;
+        currentInput: string;
+        isDeleting: boolean;
+    }>({
+        isOpen: false,
+        entryId: null,
+        targetPin: '',
+        currentInput: '',
+        isDeleting: false,
+    });
+
+    const router = useRouter();
+
+    const openVerification = (entryId: string) => {
+        const pin = Math.floor(1000 + Math.random() * 9000).toString();
+        setVerification({
+            isOpen: true,
+            entryId,
+            targetPin: pin,
+            currentInput: '',
+            isDeleting: false,
+        });
+    };
+
+    const handlePinInput = (digit: string) => {
+        if (verification.currentInput.length >= 4) return;
+        const newInput = verification.currentInput + digit;
+
+        setVerification(prev => ({ ...prev, currentInput: newInput }));
+
+        if (newInput.length === 4) {
+            console.log(`handlePinInput: PIN complete. Entered: ${newInput}, Target: ${verification.targetPin}`);
+            if (newInput === verification.targetPin) {
+                if (verification.entryId) {
+                    confirmDeletion(verification.entryId);
+                } else {
+                    console.error("handlePinInput: No entryId found in verification state!");
+                }
+            } else {
+                console.log("handlePinInput: PIN mismatch.");
+                // Reset after a short delay if wrong
+                setTimeout(() => {
+                    setVerification(p => ({ ...p, currentInput: '' }));
+                }, 500);
+            }
+        }
+    };
+
+    const confirmDeletion = async (entryId: string) => {
+        if (!stockAsset?.assetSymbol) return;
+        setVerification(prev => ({ ...prev, isDeleting: true }));
+
+        try {
+            const res = await deleteStockEntry(entryId, stockAsset.assetSymbol);
+            if (res.success) {
+                setVerification({ isOpen: false, entryId: null, targetPin: '', currentInput: '', isDeleting: false });
+                router.refresh();
+            } else {
+                setVerification(prev => ({ ...prev, isDeleting: false }));
+            }
+        } catch (err) {
+            console.error("Failed to delete entry:", err);
+            setVerification(prev => ({ ...prev, isDeleting: false }));
+            alert("기록 삭제 중 오류가 발생했습니다.");
+        }
+    };
+
+    const handleDeleteEntry = (entryId: string) => {
+        openVerification(entryId);
+    };
 
     // Robust Currency Detection
     const isKRStock = stockAsset?.assetSymbol?.endsWith('.KS') || stockAsset?.assetSymbol?.endsWith('.KQ') || stockAsset?.currency === 'KRW';
@@ -403,56 +479,83 @@ export default function StockDetailSheetV2({
                                     const isEntryPositive = entryPnl >= 0;
 
                                     return (
-                                        <div key={entry.id || idx} className="bg-zinc-50 dark:bg-white/5 p-4 rounded-3xl border border-zinc-100 dark:border-white/5">
-                                            <div className="flex items-center justify-between mb-3">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="size-8 rounded-xl bg-zinc-200 dark:bg-white/10 flex items-center justify-center">
-                                                        <Building2 className="size-4 text-zinc-500" />
-                                                    </div>
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[13px] font-black text-zinc-900 dark:text-white">
-                                                            {entry.predefinedAccountAlias || entry.broker}
-                                                        </span>
-                                                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
-                                                            {entry.owner} {entry.account ? `• ${entry.account}` : ''}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <div className="text-right">
-                                                    <span className="text-[14px] font-black text-zinc-900 dark:text-white">
-                                                        {entry.qty.toLocaleString()}주
-                                                    </span>
-                                                </div>
+                                        <div key={entry.id || idx} className="relative group overflow-hidden rounded-3xl">
+                                            {/* Delete Button (Background) */}
+                                            <div className="absolute inset-0 bg-[#FF3B2F] flex justify-end items-center px-6">
+                                                <button
+                                                    onClick={() => handleDeleteEntry(entry.id)}
+                                                    className="flex flex-col items-center gap-1 text-white active:scale-90 transition-transform"
+                                                >
+                                                    <Trash2 className="size-6" />
+                                                    <span className="text-[10px] font-black uppercase tracking-tighter">삭제</span>
+                                                </button>
                                             </div>
 
-                                            <div className="grid grid-cols-2 gap-4 pt-3 border-t border-zinc-100 dark:border-white/5">
-                                                <div className="flex flex-col">
-                                                    <span className="text-[10px] font-bold text-zinc-400 uppercase mb-0.5">매수 평단</span>
-                                                    <span className="text-[13px] font-black text-zinc-900 dark:text-white">
-                                                        {isUSD ? '$' : '₩'}{entryAvgPrice.toLocaleString(undefined, { maximumFractionDigits: isKRStock ? 0 : 2 })}
-                                                    </span>
-                                                    {isUSD && (
-                                                        <span className="text-[10px] font-bold text-zinc-400">
-                                                            ₩{entryAvgPriceInKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                            {/* Foreground Item */}
+                                            <motion.div
+                                                drag="x"
+                                                dragConstraints={{ left: -80, right: 0 }}
+                                                dragElastic={0.1}
+                                                dragSnapToOrigin={false}
+                                                onDragEnd={(e, info) => {
+                                                    // If dragged more than 40px left, keep it open, otherwise snap back
+                                                    if (info.offset.x > -40) {
+                                                        // This part is tricky with motion.div without a controlled X.
+                                                        // But dragSnapToOrigin={false} with constraints works for basic reveal.
+                                                    }
+                                                }}
+                                                className="bg-zinc-50 dark:bg-white/5 p-4 relative z-10 border border-zinc-100 dark:border-white/5"
+                                            >
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="size-8 rounded-xl bg-zinc-200 dark:bg-white/10 flex items-center justify-center">
+                                                            <Building2 className="size-4 text-zinc-500" />
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[13px] font-black text-zinc-900 dark:text-white">
+                                                                {entry.predefinedAccountAlias || entry.broker}
+                                                            </span>
+                                                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                                                                {entry.owner} {entry.account ? `• ${entry.account}` : ''}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <span className="text-[14px] font-black text-zinc-900 dark:text-white">
+                                                            {entry.qty.toLocaleString()}주
                                                         </span>
-                                                    )}
+                                                    </div>
                                                 </div>
-                                                <div className="flex flex-col items-end">
-                                                    <span className="text-[10px] font-bold text-zinc-400 uppercase mb-0.5">평가 손익</span>
-                                                    <span className={cn(
-                                                        "text-[13px] font-black",
-                                                        isEntryPositive ? "text-[#FF4F60]" : "text-[#2684FE]"
-                                                    )}>
-                                                        {isEntryPositive ? '+' : ''}₩{entryPnl.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                                                    </span>
-                                                    <span className={cn(
-                                                        "text-[10px] font-bold",
-                                                        isEntryPositive ? "text-[#FF4F60]/70" : "text-[#2684FE]/70"
-                                                    )}>
-                                                        ({entryReturnRate.toFixed(2)}%)
-                                                    </span>
+
+                                                <div className="grid grid-cols-2 gap-4 pt-3 border-t border-zinc-100 dark:border-white/5">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] font-bold text-zinc-400 uppercase mb-0.5">매수 평단</span>
+                                                        <span className="text-[13px] font-black text-zinc-900 dark:text-white">
+                                                            {isUSD ? '$' : '₩'}{entryAvgPrice.toLocaleString(undefined, { maximumFractionDigits: isKRStock ? 0 : 2 })}
+                                                        </span>
+                                                        {isUSD && (
+                                                            <span className="text-[10px] font-bold text-zinc-400">
+                                                                ₩{entryAvgPriceInKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex flex-col items-end">
+                                                        <span className="text-[10px] font-bold text-zinc-400 uppercase mb-0.5">평가 손익</span>
+                                                        <span className={cn(
+                                                            "text-[13px] font-black",
+                                                            isEntryPositive ? "text-[#FF4F60]" : "text-[#2684FE]"
+                                                        )}>
+                                                            {isEntryPositive ? '+' : ''}₩{entryPnl.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                                        </span>
+                                                        <span className={cn(
+                                                            "text-[10px] font-bold",
+                                                            isEntryPositive ? "text-[#FF4F60]/70" : "text-[#2684FE]/70"
+                                                        )}>
+                                                            ({entryReturnRate.toFixed(2)}%)
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            </motion.div>
                                         </div>
                                     );
                                 })}
@@ -471,8 +574,112 @@ export default function StockDetailSheetV2({
                             <span className="text-[13px] font-black text-zinc-400 group-hover:text-red-500 transition-colors uppercase tracking-tight">자산 삭제</span>
                         </button>
                     </div>
+
+                    {/* Verification Modal Overlay (Moved inside SheetContent for correct event handling) */}
+                    <AnimatePresence>
+                        {verification.isOpen && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-xl px-6"
+                            >
+                                <motion.div
+                                    initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                                    exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                                    className="w-full max-w-sm bg-white dark:bg-[#1C1C21] rounded-[40px] p-8 shadow-2xl flex flex-col items-center"
+                                >
+                                    <div className="size-16 rounded-3xl bg-red-500/10 flex items-center justify-center mb-6">
+                                        <Trash2 className="size-8 text-red-500" />
+                                    </div>
+
+                                    <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-2 text-center">정말 삭제하시겠습니까?</h3>
+                                    <p className="text-zinc-500 text-sm font-bold mb-8 text-center px-4">
+                                        기록을 유지하려면 아래 숫자 <span className="text-red-500 font-black">{verification.targetPin}</span>를 입력해 주세요.
+                                    </p>
+
+                                    {/* PIN Display */}
+                                    <div className="flex gap-4 mb-10">
+                                        {[0, 1, 2, 3].map((idx) => {
+                                            const char = verification.currentInput[idx];
+                                            return (
+                                                <div
+                                                    key={idx}
+                                                    className={cn(
+                                                        "size-14 rounded-2xl flex items-center justify-center text-2xl font-black transition-all border-2",
+                                                        char
+                                                            ? "bg-zinc-900 border-zinc-900 text-white dark:bg-white dark:border-white dark:text-zinc-900"
+                                                            : "bg-transparent border-zinc-100 dark:border-white/10 text-transparent"
+                                                    )}
+                                                >
+                                                    {verification.isDeleting && idx === verification.currentInput.length - 1 ? (
+                                                        <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                    ) : (
+                                                        char || "•"
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/* Custom Keypad */}
+                                    <div className={cn("grid grid-cols-3 gap-3 w-full max-w-[280px]", verification.isDeleting && "opacity-50 pointer-events-none")}>
+                                        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                                            <button
+                                                key={num}
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handlePinInput(num.toString());
+                                                }}
+                                                disabled={verification.isDeleting}
+                                                className="h-14 rounded-2xl bg-zinc-50 dark:bg-white/5 flex items-center justify-center text-xl font-black text-zinc-900 dark:text-white active:scale-90 active:bg-zinc-100 dark:active:bg-white/10 transition-all"
+                                            >
+                                                {num}
+                                            </button>
+                                        ))}
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setVerification(prev => ({ ...prev, currentInput: "" }));
+                                            }}
+                                            disabled={verification.isDeleting}
+                                            className="h-14 rounded-2xl bg-zinc-50 dark:bg-white/5 flex items-center justify-center text-sm font-black text-zinc-400 active:scale-90 transition-all"
+                                        >
+                                            C
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handlePinInput("0");
+                                            }}
+                                            disabled={verification.isDeleting}
+                                            className="h-14 rounded-2xl bg-zinc-50 dark:bg-white/5 flex items-center justify-center text-xl font-black text-zinc-900 dark:text-white active:scale-90 transition-all"
+                                        >
+                                            0
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setVerification(v => ({ ...v, isOpen: false }));
+                                            }}
+                                            disabled={verification.isDeleting}
+                                            className="h-14 rounded-2xl bg-red-500 flex items-center justify-center text-white active:scale-90 transition-all"
+                                        >
+                                            <X className="size-6" />
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </SheetContent>
+
         </Sheet>
     );
 }

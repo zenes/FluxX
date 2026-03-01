@@ -209,19 +209,35 @@ export default function StockEntryFormV2({ onSuccess, initialSymbol }: StockEntr
             <section className="space-y-4">
                 <h3 className="text-[11px] font-black text-zinc-400 uppercase tracking-widest px-1">계좌 정보</h3>
 
-                {accounts.length > 0 && !formData.predefinedAccountId && (
+                {accounts.length > 0 && (
                     <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
-                        {accounts.map(acc => (
-                            <button
-                                key={acc.id}
-                                type="button"
-                                onClick={() => handleAccountSelect(acc.id)}
-                                className="shrink-0 flex items-center gap-2 px-4 py-3 rounded-xl bg-white dark:bg-white/5 border border-zinc-100 dark:border-white/5 active:scale-95 transition-all"
-                            >
-                                <Building2 className="size-3.5 text-zinc-400" />
-                                <span className="text-[12px] font-black text-zinc-600 dark:text-zinc-300">{acc.alias}</span>
-                            </button>
-                        ))}
+                        {accounts.map(acc => {
+                            const isSelected = formData.predefinedAccountId === acc.id;
+                            return (
+                                <button
+                                    key={acc.id}
+                                    type="button"
+                                    onClick={() => handleAccountSelect(acc.id)}
+                                    className={cn(
+                                        "shrink-0 flex items-center gap-2 px-4 py-3 rounded-xl border active:scale-95 transition-all text-left",
+                                        isSelected
+                                            ? "bg-[#38C798] border-[#38C798] shadow-lg shadow-[#38C798]/20"
+                                            : "bg-white dark:bg-white/5 border-zinc-100 dark:border-white/5"
+                                    )}
+                                >
+                                    <Building2 className={cn(
+                                        "size-3.5",
+                                        isSelected ? "text-white" : "text-zinc-400"
+                                    )} />
+                                    <span className={cn(
+                                        "text-[12px] font-black",
+                                        isSelected ? "text-white" : "text-zinc-600 dark:text-zinc-300"
+                                    )}>
+                                        {acc.alias}
+                                    </span>
+                                </button>
+                            );
+                        })}
                     </div>
                 )}
 
