@@ -421,6 +421,7 @@ export async function editStockEntry(
         dividendPerShare?: number;
         dividendFrequency?: number;
         dividendMonths?: string;
+        initialMemo?: string;
     },
     tickerSymbol: string
 ) {
@@ -428,7 +429,7 @@ export async function editStockEntry(
     if (!session?.user?.id) throw new Error('Unauthorized');
 
     try {
-        const { predefinedAccountId, ...rest } = data;
+        const { predefinedAccountId, initialMemo, ...rest } = data;
         await (prisma as any).stockEntry.update({
             where: { id: entryId, userId: session.user.id },
             data: {

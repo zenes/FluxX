@@ -164,7 +164,8 @@ export default function AssetListGroupCard({
                             key={asset.id || index}
                             onClick={() => onAssetClick?.(asset)}
                             className={cn(
-                                "flex items-center justify-between p-4 w-full text-left active:opacity-60 transition-opacity rounded-2xl hover:bg-zinc-50 dark:hover:bg-white/5",
+                                "flex items-center justify-between py-4 px-4 w-full text-left active:opacity-60 transition-opacity rounded-2xl hover:bg-zinc-50 dark:hover:bg-white/5",
+                                index !== assets.length - 1 && "border-b border-zinc-100 dark:border-white/5"
                             )}
                         >
                             <div className="flex items-center gap-3 flex-1 min-w-0 pr-2">
