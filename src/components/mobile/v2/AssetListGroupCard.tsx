@@ -132,6 +132,9 @@ export default function AssetListGroupCard({
                                     </span>
                                     <span className="text-[12px] text-zinc-500 dark:text-zinc-400 line-clamp-1 break-all uppercase font-bold tracking-tighter">
                                         {asset.amount.toLocaleString()}주 보유 • {isUSD ? '$' : '₩'}{formatPrice(asset.currency || 'USD', marketValue)}
+                                        {isUSD && marketPrices && (
+                                            <> • ₩{Math.round(marketValue * marketPrices.usdKrw).toLocaleString()}</>
+                                        )}
                                     </span>
                                 </div>
 

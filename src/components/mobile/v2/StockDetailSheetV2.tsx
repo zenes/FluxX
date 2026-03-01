@@ -686,23 +686,22 @@ export default function StockDetailSheetV2({
                                 {/* Keypad Grid */}
                                 <div className="grid grid-cols-3 gap-x-6 gap-y-5 mb-12">
                                     {[
-                                        { n: '1', sub: '' }, { n: '2', sub: 'A B C' }, { n: '3', sub: 'D E F' },
-                                        { n: '4', sub: 'G H I' }, { n: '5', sub: 'J K L' }, { n: '6', sub: 'M N O' },
-                                        { n: '7', sub: 'P Q R S' }, { n: '8', sub: 'T U V' }, { n: '9', sub: 'W X Y Z' },
-                                        { n: '*', sub: '' }, { n: '0', sub: '+' }, { n: '#', sub: '' }
-                                    ].map((btn) => (
+                                        '1', '2', '3',
+                                        '4', '5', '6',
+                                        '7', '8', '9',
+                                        '*', '0', '#'
+                                    ].map((n) => (
                                         <button
-                                            key={btn.n}
+                                            key={n}
                                             onClick={() => {
-                                                if (btn.n !== '*' && btn.n !== '#') handlePinInput(btn.n);
+                                                if (n !== '*' && n !== '#') handlePinInput(n);
                                             }}
                                             className={cn(
                                                 "size-20 rounded-full flex flex-col items-center justify-center transition-all active:bg-zinc-200 dark:active:bg-zinc-700",
-                                                btn.n === '*' || btn.n === '#' ? "invisible" : "bg-zinc-50 dark:bg-zinc-900"
+                                                n === '*' || n === '#' ? "invisible" : "bg-zinc-50 dark:bg-zinc-900"
                                             )}
                                         >
-                                            <span className="text-3xl font-normal text-zinc-900 dark:text-white leading-none">{btn.n}</span>
-                                            {btn.sub && <span className="text-[9px] font-black text-zinc-400 dark:text-white/50 mt-1 uppercase tracking-tighter">{btn.sub}</span>}
+                                            <span className="text-3xl font-normal text-zinc-900 dark:text-white leading-none">{n}</span>
                                         </button>
                                     ))}
                                 </div>

@@ -495,7 +495,19 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                         <AssetListGroupCard
                             title="주식"
                             icon={Briefcase}
-                            assets={displayAssets.filter(a => a.assetType === 'stock')}
+                            assets={displayAssets
+                                .filter(a => a.assetType === 'stock')
+                                .sort((a, b) => {
+                                    if (!marketPrices) return 0;
+                                    const getVal = (asset: any) => {
+                                        const priceData = marketPrices.stockPrices[asset.assetSymbol?.toUpperCase() || ''];
+                                        const currentPrice = priceData?.price || asset.avgPrice || 0;
+                                        const value = asset.amount * currentPrice;
+                                        return asset.currency === 'USD' ? value * marketPrices.usdKrw : value;
+                                    };
+                                    return getVal(b) - getVal(a);
+                                })
+                            }
                             onAssetClick={(asset) => setSelectedAsset(asset)}
                             exchangeRate={marketData.exchange?.rate || 1400}
                             type="stock"
