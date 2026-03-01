@@ -1,4 +1,4 @@
-import { getAssets, getPredefinedAccounts } from "@/lib/actions";
+import { getAssets, getPredefinedAccounts, getUserSettings } from "@/lib/actions";
 import yahooFinance from 'yahoo-finance2';
 import SimpleModeV2Container from '@/components/mobile/v2/SimpleModeV2Container';
 
@@ -20,9 +20,10 @@ async function getInitialMarketData() {
 }
 
 export default async function SimpleModeV2Page() {
-    const [assets, marketData] = await Promise.all([
+    const [assets, marketData, userSettings] = await Promise.all([
         getAssets(),
-        getInitialMarketData()
+        getInitialMarketData(),
+        getUserSettings()
     ]);
 
     return (
@@ -30,6 +31,7 @@ export default async function SimpleModeV2Page() {
             <SimpleModeV2Container
                 assets={assets}
                 marketData={marketData}
+                initialHideAssets={userSettings.hideAssets}
             />
         </div>
     );

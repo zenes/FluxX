@@ -18,6 +18,7 @@ model User {
   image         String?   // Profile picture path or URL
   lastLoginAt   DateTime?
   lastActiveAt  DateTime?
+  hideAssets    Boolean   @default(false)
   createdAt     DateTime  @default(now())
   
   assets              Asset[]

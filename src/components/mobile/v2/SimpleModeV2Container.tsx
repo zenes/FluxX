@@ -28,14 +28,27 @@ interface SimpleModeV2ContainerProps {
         gold: { price: number } | null;
         accounts: any[];
     };
+    initialHideAssets?: boolean;
 }
 
-export default function SimpleModeV2Container({ assets, marketData }: SimpleModeV2ContainerProps) {
+export default function SimpleModeV2Container({ assets, marketData, initialHideAssets = false }: SimpleModeV2ContainerProps) {
     const [activeTag, setActiveTag] = useState('all');
     const [currentPage, setCurrentPage] = useState(0);
     const [myStocks, setMyStocks] = useState<MarketAsset[]>(INITIAL_STOCKS);
     const [isAnyModalOpen, setIsAnyModalOpen] = useState(false);
     const [isHydrated, setIsHydrated] = useState(false);
+    const [isHidden, setIsHidden] = useState(initialHideAssets);
+
+    const togglePrivacy = async () => {
+        const newValue = !isHidden;
+        setIsHidden(newValue);
+        try {
+            const { updateUserPrivacy } = await import('@/lib/actions');
+            await updateUserPrivacy(newValue);
+        } catch (e) {
+            console.error("Failed to sync privacy setting:", e);
+        }
+    };
 
     // Detail Sheet States
     const [selectedAsset, setSelectedAsset] = useState<AssetItem | null>(null);
@@ -466,6 +479,8 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                             initialExchange={marketData.exchange || undefined}
                             initialGold={marketData.gold || undefined}
                             onClick={() => setIsTotalDetailOpen(true)}
+                            isHidden={isHidden}
+                            onToggleHide={togglePrivacy}
                         />
 
                         {/* New Stock Quotes Widget */}
@@ -528,6 +543,7 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                                 pnl: totalStockPnLInfo.pnl,
                                 returnRate: totalStockPnLInfo.rate
                             }}
+                            isHidden={isHidden}
                         />
 
                         {/* Group 2: Cash & Commodities */}
@@ -545,6 +561,7 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                                 pnl: 0, // No PNL for cash/gold yet
                                 returnRate: 0
                             }}
+                            isHidden={isHidden}
                             onAddClick={() => {
                                 setEntryType('other');
                                 setIsAssetEntryOpen(true);

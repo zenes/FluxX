@@ -23,6 +23,7 @@ interface AssetListGroupCardProps {
         pnl: number;
         returnRate: number;
     };
+    isHidden?: boolean;
 }
 
 export default function AssetListGroupCard({
@@ -35,7 +36,8 @@ export default function AssetListGroupCard({
     marketPrices,
     debugLabel,
     onAddClick,
-    summary
+    summary,
+    isHidden = false
 }: AssetListGroupCardProps) {
     if (assets.length === 0) return null;
 
@@ -74,13 +76,16 @@ export default function AssetListGroupCard({
                         </h2>
                     </div>
                     <div className="flex items-end gap-3">
-                        <span className="text-3xl font-black text-zinc-900 dark:text-white">
-                            ₩{Math.round(summary.totalValue).toLocaleString()}
+                        <span className={cn(
+                            "font-black text-zinc-900 dark:text-white tracking-tighter",
+                            isHidden ? "text-[32px] tracking-[0.1em] text-zinc-300 dark:text-white/10 select-none pb-1" : "text-3xl"
+                        )}>
+                            {isHidden ? "******" : `₩${Math.round(summary.totalValue).toLocaleString()}`}
                         </span>
-                        {type === 'stock' && (
+                        {type === 'stock' && !isHidden && (
                             <div className={cn(
-                                "flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-black text-white mb-1",
-                                summary.pnl >= 0 ? "bg-[#FF3B2F]" : "bg-[#35C759]"
+                                "flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-black mb-1",
+                                summary.pnl >= 0 ? "bg-[#FF3B2F] text-white" : "bg-[#35C759] text-white"
                             )}>
                                 {summary.pnl >= 0 ? "+" : ""}{summary.returnRate.toFixed(2)}%
                             </div>

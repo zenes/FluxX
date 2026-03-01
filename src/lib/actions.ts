@@ -26,6 +26,39 @@ export async function authenticate(
     }
 }
 
+export async function getUserSettings() {
+    const session = await auth();
+    if (!session?.user?.id) return { hideAssets: false };
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { hideAssets: true } as any
+        });
+        return { hideAssets: !!(user as any)?.hideAssets };
+    } catch (e) {
+        console.error('Failed to fetch user settings:', e);
+        return { hideAssets: false };
+    }
+}
+
+export async function updateUserPrivacy(hideAssets: boolean) {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error('Unauthorized');
+
+    try {
+        await (prisma.user as any).update({
+            where: { id: session.user.id },
+            data: { hideAssets }
+        });
+        revalidatePath('/m/v2');
+        return { success: true };
+    } catch (e) {
+        console.error('Failed to update user privacy:', e);
+        throw new Error('Failed to update privacy setting');
+    }
+}
+
 export type AssetItem = {
     id?: string;
     assetType: string;

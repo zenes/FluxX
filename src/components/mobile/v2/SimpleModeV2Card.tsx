@@ -18,6 +18,8 @@ interface SimpleModeV2CardProps {
     stockAsset?: AssetItem;
     assetItem?: AssetItem; // For non-stock assets (krw, gold, usd)
     onClick?: () => void;
+    isHidden?: boolean;
+    onToggleHide?: () => void;
 }
 
 export default function SimpleModeV2Card({
@@ -28,12 +30,13 @@ export default function SimpleModeV2Card({
     stockAsset,
     assetItem,
     onClick,
+    isHidden = false,
+    onToggleHide
 }: SimpleModeV2CardProps) {
     const [netWorth, setNetWorth] = useState<number | null>(null);
     const [stockPriceInfo, setStockPriceInfo] = useState<{ price: number; currency: string; change?: number; changePercent?: number; shortName?: string } | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [marketPrices, setMarketPrices] = useState<MarketPrices | null>(null);
-    const [isHidden, setIsHidden] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -169,11 +172,15 @@ export default function SimpleModeV2Card({
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
-                            setIsHidden(!isHidden);
+                            onToggleHide?.();
                         }}
-                        className="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
+                        className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-white/5 transition-colors active:scale-90"
                     >
-                        {isHidden ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+                        {isHidden ? (
+                            <EyeOff className="size-5 text-zinc-400" />
+                        ) : (
+                            <Eye className="size-5 text-zinc-400" />
+                        )}
                     </button>
                 ) : (
                     <button className="p-1 text-zinc-300 pointer-events-none">
