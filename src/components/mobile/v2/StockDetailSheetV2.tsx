@@ -17,7 +17,124 @@ import {
 } from 'lucide-react';
 import { AssetItem, deleteStockAssetAllEntries, deleteStockEntry } from '@/lib/actions';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useAnimation } from 'framer-motion';
+
+// --- Sub-component for individual history entry with sticky swipe ---
+const PurchaseHistoryItem = ({
+    entry,
+    idx,
+    isUSD,
+    exchangeRate,
+    currentPrice,
+    isKRStock,
+    handleDeleteEntry
+}: {
+    entry: any;
+    idx: number;
+    isUSD: boolean;
+    exchangeRate: number;
+    currentPrice: number | null;
+    isKRStock: boolean;
+    handleDeleteEntry: (id: string) => void;
+}) => {
+    const controls = useAnimation();
+
+    const entryAvgPrice = entry.qty > 0 ? entry.totalCost / entry.qty : 0;
+    const entryAvgPriceInKrw = isUSD ? entryAvgPrice * exchangeRate : entryAvgPrice;
+    const entryCurrentValueInKrw = (isUSD ? (currentPrice || 0) * exchangeRate : (currentPrice || 0)) * entry.qty;
+    const entryTotalCostInKrw = isUSD ? entry.totalCost * exchangeRate : entry.totalCost;
+    const entryPnl = entryCurrentValueInKrw - entryTotalCostInKrw;
+    const entryReturnRate = entryTotalCostInKrw > 0 ? (entryPnl / entryTotalCostInKrw) * 100 : 0;
+    const isEntryPositive = entryPnl >= 0;
+
+    const onDragEnd = (event: any, info: any) => {
+        // If dragged more than 40px left, snap to reveal delete button
+        if (info.offset.x < -40) {
+            controls.start({ x: -80 });
+        } else {
+            // Otherwise snap back to origin
+            controls.start({ x: 0 });
+        }
+    };
+
+    return (
+        <div key={entry.id || idx} className="relative group overflow-hidden rounded-3xl">
+            {/* Swipe Background Layer */}
+            <div className="absolute inset-0 bg-zinc-50 dark:bg-white/5 flex justify-end items-center">
+                {/* Delete Action Area (Red only on the right) */}
+                <div className="h-full w-20 bg-[#FF3B2F] flex items-center justify-center">
+                    <button
+                        onClick={() => handleDeleteEntry(entry.id)}
+                        className="flex flex-col items-center gap-1 text-white active:scale-90 transition-transform"
+                    >
+                        <Trash2 className="size-6" />
+                        <span className="text-[10px] font-black uppercase tracking-tighter">삭제</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Foreground Item */}
+            <motion.div
+                drag="x"
+                dragConstraints={{ left: -80, right: 0 }}
+                dragElastic={{ left: 0.1, right: 0 }}
+                animate={controls}
+                onDragEnd={onDragEnd}
+                className="bg-white dark:bg-[#1C1C21] p-4 relative z-10 border border-zinc-100 dark:border-white/10"
+            >
+                <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                        <div className="size-8 rounded-xl bg-zinc-200 dark:bg-white/10 flex items-center justify-center">
+                            <Building2 className="size-4 text-zinc-500" />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-[13px] font-black text-zinc-900 dark:text-white">
+                                {entry.predefinedAccountAlias || entry.broker}
+                            </span>
+                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                                {entry.owner} {entry.account ? `• ${entry.account}` : ''}
+                            </span>
+                        </div>
+                    </div>
+                    <div className="text-right">
+                        <span className="text-[14px] font-black text-zinc-900 dark:text-white">
+                            {entry.qty.toLocaleString()}주
+                        </span>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-3 border-t border-zinc-100 dark:border-white/5">
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase mb-0.5">매수 평단</span>
+                        <span className="text-[13px] font-black text-zinc-900 dark:text-white">
+                            {isUSD ? '$' : '₩'}{entryAvgPrice.toLocaleString(undefined, { maximumFractionDigits: isKRStock ? 0 : 2 })}
+                        </span>
+                        {isUSD && (
+                            <span className="text-[10px] font-bold text-zinc-400">
+                                ₩{entryAvgPriceInKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            </span>
+                        )}
+                    </div>
+                    <div className="flex flex-col items-end">
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase mb-0.5">평가 손익</span>
+                        <span className={cn(
+                            "text-[13px] font-black",
+                            isEntryPositive ? "text-[#FF4F60]" : "text-[#2684FE]"
+                        )}>
+                            {isEntryPositive ? '+' : ''}₩{entryPnl.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                        </span>
+                        <span className={cn(
+                            "text-[10px] font-bold",
+                            isEntryPositive ? "text-[#FF4F60]/70" : "text-[#2684FE]/70"
+                        )}>
+                            ({entryReturnRate.toFixed(2)}%)
+                        </span>
+                    </div>
+                </div>
+            </motion.div>
+        </div>
+    );
+};
 import {
     AreaChart,
     Area,
@@ -34,6 +151,7 @@ import { useRouter } from 'next/navigation';
 interface StockDetailSheetV2Props {
     isOpen: boolean;
     onClose: () => void;
+    onNavigate?: (page: number) => void;
     stockAsset: AssetItem | null;
     currentPrice: number | null;
     changePercent: number | null;
@@ -47,6 +165,7 @@ const RANGES = ['1D', '1W', '1M', '3M', '6M', 'YTD', '1Y', 'MAX'];
 export default function StockDetailSheetV2({
     isOpen,
     onClose,
+    onNavigate,
     stockAsset,
     currentPrice,
     changePercent,
@@ -119,7 +238,17 @@ export default function StockDetailSheetV2({
             const res = await deleteStockEntry(entryId, stockAsset.assetSymbol);
             if (res.success) {
                 setVerification({ isOpen: false, entryId: null, targetPin: '', currentInput: '', isDeleting: false });
-                router.refresh();
+
+                // If this was the last entry, close sheet and navigate to Page 2 (D Card view)
+                if (stockAsset.entries && stockAsset.entries.length === 1) {
+                    onClose();
+                    // Small delay to let the sheet close animation breathe
+                    setTimeout(() => {
+                        onNavigate?.(1); // Page 2 is index 1
+                    }, 300);
+                } else {
+                    router.refresh();
+                }
             } else {
                 setVerification(prev => ({ ...prev, isDeleting: false }));
             }
@@ -469,96 +598,18 @@ export default function StockDetailSheetV2({
                         <div className="px-6 mt-10">
                             <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-4 px-1">매수 이력</h3>
                             <div className="space-y-3">
-                                {stockAsset.entries.map((entry, idx) => {
-                                    const entryAvgPrice = entry.qty > 0 ? entry.totalCost / entry.qty : 0;
-                                    const entryAvgPriceInKrw = isUSD ? entryAvgPrice * exchangeRate : entryAvgPrice;
-                                    const entryCurrentValueInKrw = (isUSD ? (currentPrice || 0) * exchangeRate : (currentPrice || 0)) * entry.qty;
-                                    const entryTotalCostInKrw = isUSD ? entry.totalCost * exchangeRate : entry.totalCost;
-                                    const entryPnl = entryCurrentValueInKrw - entryTotalCostInKrw;
-                                    const entryReturnRate = entryTotalCostInKrw > 0 ? (entryPnl / entryTotalCostInKrw) * 100 : 0;
-                                    const isEntryPositive = entryPnl >= 0;
-
-                                    return (
-                                        <div key={entry.id || idx} className="relative group overflow-hidden rounded-3xl">
-                                            {/* Delete Button (Background) */}
-                                            <div className="absolute inset-0 bg-[#FF3B2F] flex justify-end items-center px-6">
-                                                <button
-                                                    onClick={() => handleDeleteEntry(entry.id)}
-                                                    className="flex flex-col items-center gap-1 text-white active:scale-90 transition-transform"
-                                                >
-                                                    <Trash2 className="size-6" />
-                                                    <span className="text-[10px] font-black uppercase tracking-tighter">삭제</span>
-                                                </button>
-                                            </div>
-
-                                            {/* Foreground Item */}
-                                            <motion.div
-                                                drag="x"
-                                                dragConstraints={{ left: -80, right: 0 }}
-                                                dragElastic={0.1}
-                                                dragSnapToOrigin={false}
-                                                onDragEnd={(e, info) => {
-                                                    // If dragged more than 40px left, keep it open, otherwise snap back
-                                                    if (info.offset.x > -40) {
-                                                        // This part is tricky with motion.div without a controlled X.
-                                                        // But dragSnapToOrigin={false} with constraints works for basic reveal.
-                                                    }
-                                                }}
-                                                className="bg-zinc-50 dark:bg-white/5 p-4 relative z-10 border border-zinc-100 dark:border-white/5"
-                                            >
-                                                <div className="flex items-center justify-between mb-3">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="size-8 rounded-xl bg-zinc-200 dark:bg-white/10 flex items-center justify-center">
-                                                            <Building2 className="size-4 text-zinc-500" />
-                                                        </div>
-                                                        <div className="flex flex-col">
-                                                            <span className="text-[13px] font-black text-zinc-900 dark:text-white">
-                                                                {entry.predefinedAccountAlias || entry.broker}
-                                                            </span>
-                                                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
-                                                                {entry.owner} {entry.account ? `• ${entry.account}` : ''}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <span className="text-[14px] font-black text-zinc-900 dark:text-white">
-                                                            {entry.qty.toLocaleString()}주
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                <div className="grid grid-cols-2 gap-4 pt-3 border-t border-zinc-100 dark:border-white/5">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[10px] font-bold text-zinc-400 uppercase mb-0.5">매수 평단</span>
-                                                        <span className="text-[13px] font-black text-zinc-900 dark:text-white">
-                                                            {isUSD ? '$' : '₩'}{entryAvgPrice.toLocaleString(undefined, { maximumFractionDigits: isKRStock ? 0 : 2 })}
-                                                        </span>
-                                                        {isUSD && (
-                                                            <span className="text-[10px] font-bold text-zinc-400">
-                                                                ₩{entryAvgPriceInKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex flex-col items-end">
-                                                        <span className="text-[10px] font-bold text-zinc-400 uppercase mb-0.5">평가 손익</span>
-                                                        <span className={cn(
-                                                            "text-[13px] font-black",
-                                                            isEntryPositive ? "text-[#FF4F60]" : "text-[#2684FE]"
-                                                        )}>
-                                                            {isEntryPositive ? '+' : ''}₩{entryPnl.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                                                        </span>
-                                                        <span className={cn(
-                                                            "text-[10px] font-bold",
-                                                            isEntryPositive ? "text-[#FF4F60]/70" : "text-[#2684FE]/70"
-                                                        )}>
-                                                            ({entryReturnRate.toFixed(2)}%)
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </motion.div>
-                                        </div>
-                                    );
-                                })}
+                                {stockAsset.entries.map((entry, idx) => (
+                                    <PurchaseHistoryItem
+                                        key={entry.id || idx}
+                                        entry={entry}
+                                        idx={idx}
+                                        isUSD={isUSD}
+                                        exchangeRate={exchangeRate}
+                                        currentPrice={currentPrice}
+                                        isKRStock={isKRStock}
+                                        handleDeleteEntry={handleDeleteEntry}
+                                    />
+                                ))}
                             </div>
                         </div>
                     )}
@@ -576,104 +627,70 @@ export default function StockDetailSheetV2({
                     </div>
 
                     {/* Verification Modal Overlay (Moved inside SheetContent for correct event handling) */}
+                    {/* Full-screen Keypad Verification Modal */}
                     <AnimatePresence>
                         {verification.isOpen && (
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="absolute inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-xl px-6"
+                                className="fixed inset-0 z-[300] bg-white dark:bg-black flex flex-col items-center justify-center transition-colors duration-300"
                             >
-                                <motion.div
-                                    initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                                    animate={{ scale: 1, opacity: 1, y: 0 }}
-                                    exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                                    className="w-full max-w-sm bg-white dark:bg-[#1C1C21] rounded-[40px] p-8 shadow-2xl flex flex-col items-center"
-                                >
-                                    <div className="size-16 rounded-3xl bg-red-500/10 flex items-center justify-center mb-6">
-                                        <Trash2 className="size-8 text-red-500" />
-                                    </div>
-
-                                    <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-2 text-center">정말 삭제하시겠습니까?</h3>
-                                    <p className="text-zinc-500 text-sm font-bold mb-8 text-center px-4">
-                                        기록을 유지하려면 아래 숫자 <span className="text-red-500 font-black">{verification.targetPin}</span>를 입력해 주세요.
-                                    </p>
-
-                                    {/* PIN Display */}
-                                    <div className="flex gap-4 mb-10">
-                                        {[0, 1, 2, 3].map((idx) => {
-                                            const char = verification.currentInput[idx];
-                                            return (
-                                                <div
-                                                    key={idx}
-                                                    className={cn(
-                                                        "size-14 rounded-2xl flex items-center justify-center text-2xl font-black transition-all border-2",
-                                                        char
-                                                            ? "bg-zinc-900 border-zinc-900 text-white dark:bg-white dark:border-white dark:text-zinc-900"
-                                                            : "bg-transparent border-zinc-100 dark:border-white/10 text-transparent"
-                                                    )}
-                                                >
-                                                    {verification.isDeleting && idx === verification.currentInput.length - 1 ? (
-                                                        <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                    ) : (
-                                                        char || "•"
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-
-                                    {/* Custom Keypad */}
-                                    <div className={cn("grid grid-cols-3 gap-3 w-full max-w-[280px]", verification.isDeleting && "opacity-50 pointer-events-none")}>
-                                        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-                                            <button
-                                                key={num}
-                                                type="button"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handlePinInput(num.toString());
-                                                }}
-                                                disabled={verification.isDeleting}
-                                                className="h-14 rounded-2xl bg-zinc-50 dark:bg-white/5 flex items-center justify-center text-xl font-black text-zinc-900 dark:text-white active:scale-90 active:bg-zinc-100 dark:active:bg-white/10 transition-all"
-                                            >
-                                                {num}
-                                            </button>
+                                {/* Header: Target & Input */}
+                                <div className="flex flex-col items-center mb-16">
+                                    <h2 className="text-[64px] font-light text-zinc-900 dark:text-white tracking-widest mb-2 leading-none">
+                                        {verification.targetPin}
+                                    </h2>
+                                    <div className="flex gap-3 h-8 items-center justify-center">
+                                        {verification.currentInput.split('').map((char, idx) => (
+                                            <div key={idx} className="size-2.5 rounded-full bg-zinc-900 dark:bg-white animate-pulse" />
                                         ))}
-                                        <button
-                                            type="button"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setVerification(prev => ({ ...prev, currentInput: "" }));
-                                            }}
-                                            disabled={verification.isDeleting}
-                                            className="h-14 rounded-2xl bg-zinc-50 dark:bg-white/5 flex items-center justify-center text-sm font-black text-zinc-400 active:scale-90 transition-all"
-                                        >
-                                            C
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handlePinInput("0");
-                                            }}
-                                            disabled={verification.isDeleting}
-                                            className="h-14 rounded-2xl bg-zinc-50 dark:bg-white/5 flex items-center justify-center text-xl font-black text-zinc-900 dark:text-white active:scale-90 transition-all"
-                                        >
-                                            0
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setVerification(v => ({ ...v, isOpen: false }));
-                                            }}
-                                            disabled={verification.isDeleting}
-                                            className="h-14 rounded-2xl bg-red-500 flex items-center justify-center text-white active:scale-90 transition-all"
-                                        >
-                                            <X className="size-6" />
-                                        </button>
+                                        {Array.from({ length: 4 - verification.currentInput.length }).map((_, idx) => (
+                                            <div key={idx} className="size-2.5 rounded-full bg-zinc-100 dark:bg-zinc-800" />
+                                        ))}
                                     </div>
-                                </motion.div>
+                                </div>
+
+                                {/* Keypad Grid */}
+                                <div className="grid grid-cols-3 gap-x-6 gap-y-5 mb-12">
+                                    {[
+                                        { n: '1', sub: '' }, { n: '2', sub: 'A B C' }, { n: '3', sub: 'D E F' },
+                                        { n: '4', sub: 'G H I' }, { n: '5', sub: 'J K L' }, { n: '6', sub: 'M N O' },
+                                        { n: '7', sub: 'P Q R S' }, { n: '8', sub: 'T U V' }, { n: '9', sub: 'W X Y Z' },
+                                        { n: '*', sub: '' }, { n: '0', sub: '+' }, { n: '#', sub: '' }
+                                    ].map((btn) => (
+                                        <button
+                                            key={btn.n}
+                                            onClick={() => {
+                                                if (btn.n !== '*' && btn.n !== '#') handlePinInput(btn.n);
+                                            }}
+                                            className={cn(
+                                                "size-20 rounded-full flex flex-col items-center justify-center transition-all active:bg-zinc-200 dark:active:bg-zinc-700",
+                                                btn.n === '*' || btn.n === '#' ? "invisible" : "bg-zinc-50 dark:bg-zinc-900"
+                                            )}
+                                        >
+                                            <span className="text-3xl font-normal text-zinc-900 dark:text-white leading-none">{btn.n}</span>
+                                            {btn.sub && <span className="text-[9px] font-black text-zinc-400 dark:text-white/50 mt-1 uppercase tracking-tighter">{btn.sub}</span>}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* Bottom Actions: Cancel & Delete */}
+                                <div className="flex items-center justify-between w-full max-w-[280px] px-6">
+                                    <button
+                                        onClick={() => setVerification(v => ({ ...v, isOpen: false }))}
+                                        className="text-zinc-900 dark:text-white text-lg font-light active:opacity-50"
+                                    >
+                                        Cancel
+                                    </button>
+
+                                    <button
+                                        onClick={() => setVerification(v => ({ ...v, currentInput: v.currentInput.slice(0, -1) }))}
+                                        className="size-12 flex items-center justify-center text-zinc-300 dark:text-zinc-500 active:text-zinc-900 dark:active:text-white"
+                                    >
+                                        <X className="size-8" />
+                                    </button>
+                                </div>
                             </motion.div>
                         )}
                     </AnimatePresence>

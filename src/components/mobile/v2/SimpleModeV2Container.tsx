@@ -260,6 +260,18 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
         }
     };
 
+    const goToPage = (pageIndex: number) => {
+        if (pageIndex < 0 || pageIndex > 3) return;
+        setCurrentPage(pageIndex);
+        const targetX = -pageIndex * width;
+        animate(dragX, targetX, {
+            type: "spring",
+            stiffness: 300,
+            damping: 30,
+            mass: 0.8
+        });
+    };
+
     const handleDragEnd = (event: any, info: any) => {
         const velocity = info.velocity.x;
         const offset = info.offset.x;
@@ -275,16 +287,7 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
             else if (offset > threshold && currentPage > 0) targetPage = currentPage - 1;
         }
 
-        setCurrentPage(targetPage);
-
-        const targetX = -targetPage * width;
-        animate(dragX, targetX, {
-            type: "spring",
-            stiffness: 300,
-            damping: 30,
-            mass: 0.8,
-            velocity: velocity
-        });
+        goToPage(targetPage);
     };
 
     useEffect(() => {
@@ -537,6 +540,7 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
             <StockDetailSheetV2
                 isOpen={!!selectedAsset}
                 onClose={() => setSelectedAsset(null)}
+                onNavigate={goToPage}
                 stockAsset={selectedAsset}
                 currentPrice={selectedAsset ? (marketPrices?.stockPrices?.[selectedAsset.assetSymbol || '']?.price || selectedAsset.avgPrice || 0) : 0}
                 changePercent={selectedAsset ? (marketPrices?.stockPrices?.[selectedAsset.assetSymbol || '']?.changePercent || 0) : 0}
