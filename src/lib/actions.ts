@@ -380,6 +380,23 @@ export async function deleteStockEntry(entryId: string, tickerSymbol: string) {
     }
 }
 
+export async function deleteStockAssetAllEntries(tickerSymbol: string) {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error('Unauthorized');
+
+    try {
+        await prisma.stockEntry.deleteMany({
+            where: { tickerSymbol, userId: session.user.id }
+        });
+        await recalculateStockAsset(session.user.id, tickerSymbol);
+        revalidatePath('/operations');
+        return { success: true };
+    } catch (e) {
+        console.error('Failed to delete all stock entries:', e);
+        throw new Error('Failed to delete all stock entries');
+    }
+}
+
 export async function editStockEntry(
     entryId: string,
     data: {

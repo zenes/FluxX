@@ -125,7 +125,7 @@ export default function AssetGrowthDetailSheetV2({
                 {/* Header */}
                 <div className="px-6 pt-10 pb-6 border-b border-zinc-100 dark:border-white/5">
                     <div className="flex items-center justify-between uppercase text-[10px] font-black tracking-widest text-[#38C798] mb-2">
-                        <span>Total Assets Analysis</span>
+                        <span>전체 자산 분석 리포트</span>
                         <button onClick={onClose} className="p-1 rounded-full bg-zinc-50 dark:bg-white/5 text-zinc-400">
                             <X className="size-4" />
                         </button>
@@ -135,7 +135,7 @@ export default function AssetGrowthDetailSheetV2({
                             <SheetTitle className="text-2xl font-black text-[#2B364B] dark:text-white tracking-tight leading-none mb-1">
                                 총 자산 현황
                             </SheetTitle>
-                            <p className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Net Worth</p>
+                            <p className="text-xs text-zinc-400 font-bold uppercase tracking-wider text-right">순자산 구성</p>
                         </div>
                         <div className="text-right">
                             <div className="flex items-baseline gap-1 justify-end">
@@ -242,7 +242,7 @@ export default function AssetGrowthDetailSheetV2({
                             </ResponsiveContainer>
                             {/* Central Label for richness */}
                             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-0.5">Total</p>
+                                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-0.5">합계</p>
                                 <p className="text-xl font-black text-[#2B364B] dark:text-white tracking-tighter">
                                     <span className="text-xs mr-0.5 opacity-30">₩</span>
                                     {(totalNetWorth / 1000000).toFixed(1)}M
@@ -275,7 +275,7 @@ export default function AssetGrowthDetailSheetV2({
                         </div>
                     ) : (
                         <div className="bg-zinc-50 dark:bg-white/5 p-6 rounded-[32px] border border-zinc-100 dark:border-white/5">
-                            <p className="text-xs font-bold text-zinc-400 mb-2 uppercase tracking-widest">Growth Note</p>
+                            <p className="text-xs font-bold text-zinc-400 mb-2 uppercase tracking-widest">증감 데이터 안내</p>
                             <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed font-medium">
                                 현재 자산 증감 데이터가 충분하지 않아 임시 데이터로 추이를 보여드리고 있습니다. 매일 정해진 시간에 자산 현황을 기록하여 실제 증감 그래프를 구성할 예정입니다.
                             </p>

@@ -3,7 +3,7 @@ import { AssetItem } from "@/lib/actions";
 export type MarketPrices = {
     usdKrw: number;
     goldUsd: number;
-    stockPrices: Record<string, { price: number; currency: string; changePercent?: number }>;
+    stockPrices: Record<string, { price: number; currency: string; changePercent?: number; shortName?: string }>;
 };
 
 export function calculateNetWorth(assets: AssetItem[], prices: MarketPrices): number {

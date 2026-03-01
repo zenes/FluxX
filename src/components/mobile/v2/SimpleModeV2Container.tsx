@@ -104,8 +104,6 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
         localStorage.setItem('v2-my-stocks', JSON.stringify(myStocks));
     }, [myStocks, isHydrated]);
 
-    const displayAssets = mergeStockAssets(assets);
-
     const refreshAllQuotes = async () => {
         if (myStocks.length === 0) return;
 
@@ -190,6 +188,10 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
     const containerRef = React.useRef<HTMLDivElement>(null);
     const dragX = useMotionValue(0);
 
+    const width = typeof window !== 'undefined' ? window.innerWidth : 390;
+
+    const displayAssets = mergeStockAssets(assets);
+
     // Ensure core asset types always exist
     const coreAssetTypes = ['krw', 'usd', 'gold'];
     const mergedAssets = [...displayAssets];
@@ -244,7 +246,6 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
     };
 
     const handleDragEnd = (event: any, info: any) => {
-        const width = window.innerWidth;
         const velocity = info.velocity.x;
         const offset = info.offset.x;
         const threshold = width * (1 / 3);
@@ -270,8 +271,6 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
             velocity: velocity
         });
     };
-
-    const width = typeof window !== 'undefined' ? window.innerWidth : 390;
 
     useEffect(() => {
         const scrollContainer = document.querySelector('main');
@@ -401,7 +400,7 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                     <div className="space-y-4 pb-10">
                         {/* Group 1: Stock Assets */}
                         <AssetListGroupCard
-                            title="STOCKS"
+                            title="주식"
                             icon={Briefcase}
                             assets={displayAssets.filter(a => a.assetType === 'stock')}
                             onAssetClick={(asset) => setSelectedAsset(asset)}
@@ -414,7 +413,7 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
 
                         {/* Group 2: Cash & Commodities */}
                         <AssetListGroupCard
-                            title="CASH & COMMODITIES"
+                            title="현금 및 기타"
                             icon={Coins}
                             assets={displayAssets.filter(a => a.assetType !== 'stock')}
                             onAssetClick={(asset) => setSelectedAsset(asset)}

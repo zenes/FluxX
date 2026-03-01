@@ -13,8 +13,9 @@ import {
     Building2,
     BarChart2,
     Percent,
+    Trash2,
 } from 'lucide-react';
-import { AssetItem } from '@/lib/actions';
+import { AssetItem, deleteStockAssetAllEntries } from '@/lib/actions';
 import { cn } from '@/lib/utils';
 import {
     AreaChart,
@@ -37,6 +38,7 @@ interface StockDetailSheetV2Props {
     changePercent: number | null;
     exchangeRate: number;
     totalNetWorth: number;
+    title?: string;
 }
 
 const RANGES = ['1D', '1W', '1M', '3M', '6M', 'YTD', '1Y', 'MAX'];
@@ -49,6 +51,7 @@ export default function StockDetailSheetV2({
     changePercent,
     exchangeRate,
     totalNetWorth,
+    title,
 }: StockDetailSheetV2Props) {
     const [activeRange, setActiveRange] = useState('1M');
     const [chartData, setChartData] = useState<any[]>([]);
@@ -103,6 +106,24 @@ export default function StockDetailSheetV2({
 
         fetchHistory();
     }, [isOpen, stockAsset?.assetSymbol, activeRange, isKRStock]);
+
+    const handleDelete = async () => {
+        if (!stockAsset?.assetSymbol) return;
+
+        const confirmed = window.confirm(`정말 ${title || stockAsset.assetSymbol} 자산의 모든 데이터를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`);
+        if (!confirmed) return;
+
+        try {
+            const res = await deleteStockAssetAllEntries(stockAsset.assetSymbol);
+            if (res.success) {
+                onClose();
+                window.location.reload();
+            }
+        } catch (err) {
+            console.error("Failed to delete asset:", err);
+            alert("자산 삭제 중 오류가 발생했습니다.");
+        }
+    };
 
 
     const currentPriceInKrw = currentPrice
@@ -202,7 +223,7 @@ export default function StockDetailSheetV2({
                                 <span className="text-[10px] font-black opacity-30">[F]</span>
                             </span>
                             <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">
-                                {stockAsset?.assetSymbol || '---'}
+                                {title || stockAsset?.assetSymbol || '---'}
                             </h2>
                         </div>
                         <div className="flex items-end gap-3">
@@ -438,6 +459,18 @@ export default function StockDetailSheetV2({
                             </div>
                         </div>
                     )}
+
+                    <div className="px-6 mt-10 mb-20">
+                        <button
+                            onClick={handleDelete}
+                            className="w-full py-4 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-dashed border-zinc-200 dark:border-white/10 flex items-center justify-center gap-2 group active:scale-[0.98] transition-all hover:bg-red-50 dark:hover:bg-red-900/10 hover:border-red-200 dark:hover:border-red-900/20"
+                        >
+                            <div className="size-6 rounded-full bg-zinc-200 dark:bg-white/10 text-zinc-500 group-hover:bg-red-500 group-hover:text-white transition-all flex items-center justify-center">
+                                <Trash2 className="size-3.5" />
+                            </div>
+                            <span className="text-[13px] font-black text-zinc-400 group-hover:text-red-500 transition-colors uppercase tracking-tight">자산 삭제</span>
+                        </button>
+                    </div>
                 </div>
             </SheetContent>
         </Sheet>

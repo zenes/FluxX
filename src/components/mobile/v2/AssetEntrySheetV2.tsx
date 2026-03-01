@@ -9,7 +9,7 @@ import {
     SheetTitle,
 } from "@/components/ui/sheet";
 import { Plus, X } from 'lucide-react';
-import StockEntryForm from '@/components/StockEntryForm';
+import StockEntryFormV2 from '@/components/StockEntryFormV2';
 
 interface AssetEntrySheetV2Props {
     isOpen: boolean;
@@ -48,14 +48,12 @@ export default function AssetEntrySheetV2({ isOpen, onClose }: AssetEntrySheetV2
 
                 {/* Form Content Area */}
                 <div className="flex-1 overflow-y-auto px-6 pb-10 mt-4 custom-scrollbar">
-                    <div className="bg-white dark:bg-[#1A1A1E] rounded-[24px] p-6 shadow-sm border border-zinc-100 dark:border-white/5">
-                        <StockEntryForm
-                            onSuccess={() => {
-                                onClose();
-                                window.location.reload();
-                            }}
-                        />
-                    </div>
+                    <StockEntryFormV2
+                        onSuccess={() => {
+                            onClose();
+                            window.location.reload();
+                        }}
+                    />
                 </div>
             </SheetContent>
         </Sheet>

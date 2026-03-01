@@ -8,6 +8,7 @@ import { calculateNetWorth, MarketPrices } from '@/lib/calculations';
 import { AssetItem } from '@/lib/actions';
 import StockDetailSheetV2 from './StockDetailSheetV2';
 import AssetGrowthDetailSheetV2 from './AssetGrowthDetailSheetV2';
+import { koreanNameMap } from '@/lib/koreanNameMap';
 
 interface SimpleModeV2CardProps {
     id: string | number;
@@ -27,7 +28,7 @@ export default function SimpleModeV2Card({
     assetItem,
 }: SimpleModeV2CardProps) {
     const [netWorth, setNetWorth] = useState<number | null>(null);
-    const [stockPriceInfo, setStockPriceInfo] = useState<{ price: number; currency: string; change?: number; changePercent?: number } | null>(null);
+    const [stockPriceInfo, setStockPriceInfo] = useState<{ price: number; currency: string; change?: number; changePercent?: number; shortName?: string } | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [marketPrices, setMarketPrices] = useState<MarketPrices | null>(null);
@@ -45,7 +46,8 @@ export default function SimpleModeV2Card({
                             price: quote.price,
                             currency: quote.currency || 'USD',
                             change: quote.change,
-                            changePercent: quote.changePercent
+                            changePercent: quote.changePercent,
+                            shortName: quote.shortName
                         });
                     }
                 } else if (id === 'total' && initialAssets) {
@@ -97,7 +99,7 @@ export default function SimpleModeV2Card({
         displayValue = stockPriceInfo
             ? stockAsset.amount * stockPriceInfo.price * (stockPriceInfo.currency === 'USD' ? (initialExchange?.rate || 1400) : 1)
             : stockAsset.amount * (stockAsset.avgPrice || 0) * (stockAsset.currency === 'USD' ? (initialExchange?.rate || 1400) : 1);
-        title = stockAsset.assetSymbol || "Unknown";
+        title = koreanNameMap[stockAsset.assetSymbol || ''] || stockPriceInfo?.shortName || stockAsset.assetSymbol || "Unknown";
         subtitle = `${stockAsset.amount.toLocaleString()}주 보유`;
         icon = (
             <div className="size-10 rounded-xl bg-[#F5F5F7] dark:bg-white/5 flex items-center justify-center font-black text-[#2B364B] dark:text-white/80">
@@ -213,6 +215,7 @@ export default function SimpleModeV2Card({
                     changePercent={stockPriceInfo?.changePercent ?? null}
                     exchangeRate={initialExchange?.rate || 1400}
                     totalNetWorth={isTotal ? (netWorth || 0) : 0}
+                    title={title}
                 />
             )}
 

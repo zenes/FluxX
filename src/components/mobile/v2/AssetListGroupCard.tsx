@@ -7,6 +7,7 @@ import { Building2, Plus, ChevronRight, TrendingUp, TrendingDown } from 'lucide-
 import { motion } from 'framer-motion';
 import { Sparkline } from './Sparkline';
 import { MarketPrices } from '@/lib/calculations';
+import { koreanNameMap } from '@/lib/koreanNameMap';
 
 interface AssetListGroupCardProps {
     title: string;
@@ -52,8 +53,8 @@ export default function AssetListGroupCard({
                         {debugLabel && <span className="text-[10px] font-black opacity-30 ml-1">[{debugLabel}]</span>}
                     </span>
                 </div>
-                <span className="text-[10px] font-black text-zinc-300 dark:text-zinc-600 bg-zinc-50 dark:bg-white/5 px-2 py-0.5 rounded-full">
-                    {assets.length} ITEMS
+                <span className="text-[10px] font-black text-zinc-300 dark:text-zinc-600 bg-zinc-50 dark:bg-white/5 px-2 py-0.5 rounded-full uppercase">
+                    {assets.length}개 종목
                 </span>
             </header>
 
@@ -94,10 +95,10 @@ export default function AssetListGroupCard({
                                 {/* Left: Ticker & Name */}
                                 <div className="flex flex-col gap-0.5 flex-1 min-w-0 pr-2">
                                     <span className="text-[15px] font-bold text-zinc-900 dark:text-white uppercase tracking-tight truncate">
-                                        {asset.assetSymbol}
+                                        {koreanNameMap[asset.assetSymbol || ''] || priceData?.shortName || asset.assetSymbol}
                                     </span>
                                     <span className="text-[12px] text-zinc-500 dark:text-zinc-400 line-clamp-1 break-all uppercase font-bold tracking-tighter">
-                                        {asset.amount.toLocaleString()} SHARES
+                                        {asset.amount.toLocaleString()}주 보유
                                     </span>
                                 </div>
 
@@ -141,10 +142,10 @@ export default function AssetListGroupCard({
                                 </div>
                                 <div className="flex flex-col gap-0.5 min-w-0">
                                     <span className="text-[15px] font-black text-zinc-900 dark:text-white uppercase tracking-tight truncate">
-                                        {mainLabel}
+                                        {isStock ? (koreanNameMap[asset.assetSymbol || ''] || priceData?.shortName || asset.assetSymbol) : mainLabel}
                                     </span>
                                     <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-tighter truncate">
-                                        {asset.amount.toLocaleString()} {isStock ? 'Shares' : (asset.assetType === 'gold' ? 'g' : '')}
+                                        {asset.amount.toLocaleString()}{isStock ? '주' : (asset.assetType === 'gold' ? 'g' : '')} 보유
                                     </p>
                                 </div>
                             </div>
@@ -169,7 +170,7 @@ export default function AssetListGroupCard({
                                         <ChevronRight className="size-3" />
                                     </div>
                                 ) : (
-                                    <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Available</p>
+                                    <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">보유 중</p>
                                 )}
                             </div>
                         </button>
