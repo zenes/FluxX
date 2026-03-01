@@ -17,6 +17,7 @@ interface SimpleModeV2CardProps {
     initialGold?: { price: number };
     stockAsset?: AssetItem;
     assetItem?: AssetItem; // For non-stock assets (krw, gold, usd)
+    onClick?: () => void;
 }
 
 export default function SimpleModeV2Card({
@@ -26,11 +27,11 @@ export default function SimpleModeV2Card({
     initialGold,
     stockAsset,
     assetItem,
+    onClick,
 }: SimpleModeV2CardProps) {
     const [netWorth, setNetWorth] = useState<number | null>(null);
     const [stockPriceInfo, setStockPriceInfo] = useState<{ price: number; currency: string; change?: number; changePercent?: number; shortName?: string } | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [marketPrices, setMarketPrices] = useState<MarketPrices | null>(null);
 
     useEffect(() => {
@@ -137,102 +138,75 @@ export default function SimpleModeV2Card({
     const COLOR_DOWN = "#2684FE";
 
     return (
-        <>
-            <Card
-                onClick={() => {
-                    if (isStock || isTotal) setIsDetailOpen(true);
-                }}
-                className={cn(
-                    "relative overflow-hidden bg-white dark:bg-[#1A1A1E] border-none rounded-[24px] shadow-sm active:scale-[0.98] transition-all cursor-pointer p-6",
-                    isTotal ? "ring-1 ring-zinc-100 dark:ring-white/5" : ""
-                )}
-            >
-                <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-3">
-                        {icon}
-                        <div>
-                            <p className="text-[16px] font-bold text-[#2B364B] dark:text-white/90 leading-tight flex items-center gap-1">
-                                {title}
-                                {isTotal && <span className="text-[9px] font-black opacity-30">[A]</span>}
+        <Card
+            onClick={onClick}
+            className={cn(
+                "relative overflow-hidden bg-white dark:bg-[#1A1A1E] border-none rounded-[24px] shadow-sm active:scale-[0.98] transition-all cursor-pointer p-6",
+                isTotal ? "ring-1 ring-zinc-100 dark:ring-white/5" : ""
+            )}
+        >
+            <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center gap-3">
+                    {icon}
+                    <div>
+                        <p className="text-[16px] font-bold text-[#2B364B] dark:text-white/90 leading-tight flex items-center gap-1">
+                            {title}
+                            {isTotal && <span className="text-[9px] font-black opacity-30">[A]</span>}
+                        </p>
+                        {subtitle && (
+                            <p className="text-[12px] text-zinc-400 font-medium pb-0.5">
+                                {subtitle}
                             </p>
-                            {subtitle && (
-                                <p className="text-[12px] text-zinc-400 font-medium pb-0.5">
-                                    {subtitle}
-                                </p>
-                            )}
+                        )}
+                    </div>
+                </div>
+                <button className="p-1 text-zinc-300 pointer-events-none">
+                    <MoreHorizontal className="size-5" />
+                </button>
+            </div>
+
+            <div className="space-y-1">
+                {isLoading && isStock ? (
+                    <div className="h-10 w-40 bg-zinc-100 dark:bg-white/5 animate-pulse rounded-lg" />
+                ) : (
+                    <>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-lg font-bold text-[#2B364B]/30 dark:text-white/20">₩</span>
+                            <h2 className="text-[32px] font-black tracking-tighter text-[#2B364B] dark:text-white leading-none">
+                                {displayValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            </h2>
                         </div>
-                    </div>
-                    <button className="p-1 text-zinc-300">
-                        <MoreHorizontal className="size-5" />
-                    </button>
-                </div>
 
-                <div className="space-y-1">
-                    {isLoading && isStock ? (
-                        <div className="h-10 w-40 bg-zinc-100 dark:bg-white/5 animate-pulse rounded-lg" />
-                    ) : (
-                        <>
-                            <div className="flex items-baseline gap-1">
-                                <span className="text-lg font-bold text-[#2B364B]/30 dark:text-white/20">₩</span>
-                                <h2 className="text-[32px] font-black tracking-tighter text-[#2B364B] dark:text-white leading-none">
-                                    {displayValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                                </h2>
+                        {isStock && stockPriceInfo && (
+                            <div
+                                className="flex items-center gap-1 font-bold text-sm mt-1"
+                                style={{ color: isUp ? COLOR_UP : COLOR_DOWN }}
+                            >
+                                {isUp ? <TrendingUp className="size-4" /> : <TrendingDown className="size-4" />}
+                                <span>{isUp ? '+' : ''}{changePercent.toFixed(2)}%</span>
+                                <span className="text-zinc-300 dark:text-zinc-600 font-medium ml-1">당일</span>
                             </div>
-
-                            {isStock && stockPriceInfo && (
-                                <div
-                                    className="flex items-center gap-1 font-bold text-sm mt-1"
-                                    style={{ color: isUp ? COLOR_UP : COLOR_DOWN }}
-                                >
-                                    {isUp ? <TrendingUp className="size-4" /> : <TrendingDown className="size-4" />}
-                                    <span>{isUp ? '+' : ''}{changePercent.toFixed(2)}%</span>
-                                    <span className="text-zinc-300 dark:text-zinc-600 font-medium ml-1">당일</span>
-                                </div>
-                            )}
-                        </>
-                    )}
-                </div>
-
-                {(isTotal || isStock) && (
-                    <div className="absolute right-0 bottom-0 w-32 h-16 opacity-10 pointer-events-none">
-                        <svg viewBox="0 0 100 40" className="w-full h-full">
-                            <path
-                                d="M0 35 Q 25 35, 50 15 T 100 5 L 100 40 L 0 40 Z"
-                                fill={isUp ? COLOR_UP : COLOR_DOWN}
-                            />
-                            <path
-                                d="M0 35 Q 25 35, 50 15 T 100 5"
-                                fill="none"
-                                stroke={isUp ? COLOR_UP : COLOR_DOWN}
-                                strokeWidth="2"
-                            />
-                        </svg>
-                    </div>
+                        )}
+                    </>
                 )}
-            </Card>
+            </div>
 
-            {stockAsset && (
-                <StockDetailSheetV2
-                    isOpen={isDetailOpen}
-                    onClose={() => setIsDetailOpen(false)}
-                    stockAsset={stockAsset}
-                    currentPrice={stockPriceInfo?.price ?? null}
-                    changePercent={stockPriceInfo?.changePercent ?? null}
-                    exchangeRate={initialExchange?.rate || 1400}
-                    totalNetWorth={isTotal ? (netWorth || 0) : 0}
-                    title={title}
-                />
+            {(isTotal || isStock) && (
+                <div className="absolute right-0 bottom-0 w-32 h-16 opacity-10 pointer-events-none">
+                    <svg viewBox="0 0 100 40" className="w-full h-full">
+                        <path
+                            d="M0 35 Q 25 35, 50 15 T 100 5 L 100 40 L 0 40 Z"
+                            fill={isUp ? COLOR_UP : COLOR_DOWN}
+                        />
+                        <path
+                            d="M0 35 Q 25 35, 50 15 T 100 5"
+                            fill="none"
+                            stroke={isUp ? COLOR_UP : COLOR_DOWN}
+                            strokeWidth="2"
+                        />
+                    </svg>
+                </div>
             )}
-
-            {isTotal && initialAssets && marketPrices && (
-                <AssetGrowthDetailSheetV2
-                    isOpen={isDetailOpen}
-                    onClose={() => setIsDetailOpen(false)}
-                    assets={initialAssets}
-                    marketPrices={marketPrices}
-                    totalNetWorth={netWorth || 0}
-                />
-            )}
-        </>
+        </Card>
     );
 }

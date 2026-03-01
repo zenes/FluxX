@@ -381,14 +381,13 @@ export default function SimpleModeV2Container({ assets, marketData }: SimpleMode
                     </header>
 
                     <div className="space-y-4">
-                        <div onClick={() => setIsTotalDetailOpen(true)}>
-                            <SimpleModeV2Card
-                                id="total"
-                                initialAssets={displayAssets}
-                                initialExchange={marketData.exchange || undefined}
-                                initialGold={marketData.gold || undefined}
-                            />
-                        </div>
+                        <SimpleModeV2Card
+                            id="total"
+                            initialAssets={displayAssets}
+                            initialExchange={marketData.exchange || undefined}
+                            initialGold={marketData.gold || undefined}
+                            onClick={() => setIsTotalDetailOpen(true)}
+                        />
 
                         {/* New Stock Quotes Widget */}
                         <MarketQuoteWidgetV2
