@@ -472,14 +472,14 @@ export default function StockDetailSheetV2({
                                 "text-3xl font-black transition-colors",
                                 hoveredData ? "text-[#38C798]" : "text-zinc-900 dark:text-white"
                             )}>
-                                {isUSD ? '$' : '₩'}{formatPriceLocal(hoveredData ? hoveredData.price : computedAvgPrice)}
+                                {isUSD ? '$' : '₩'}{formatPriceLocal(hoveredData ? hoveredData.price : (currentPrice || computedAvgPrice))}
                             </span>
                             {!hoveredData && (
                                 <div className={cn(
                                     "flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-black text-white mb-1",
-                                    isPositive ? "bg-[#FF3B2F]" : "bg-[#35C759]"
+                                    (changePercent || 0) >= 0 ? "bg-[#FF3B2F]" : "bg-[#35C759]"
                                 )}>
-                                    {isPositive ? "+" : ""}{returnRate.toFixed(2)}%
+                                    {(changePercent || 0) >= 0 ? "+" : ""}{(changePercent || 0).toFixed(2)}%
                                 </div>
                             )}
                             {hoveredData && (

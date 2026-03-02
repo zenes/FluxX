@@ -568,9 +568,7 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                             }}
                         />
 
-                        {displayAssets.length === 0 && (
-                            <div className="py-20 text-center text-zinc-400 font-medium font-black italic">보유 중인 자산 데이터가 없습니다.</div>
-                        )}
+                        {/* Removed: Global empty asset message as Card D and E now handle empty states */}
                     </div>
                 </div>
 
