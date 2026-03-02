@@ -18,6 +18,7 @@ import {
 } from 'recharts';
 import { koreanNameMap } from '@/lib/koreanNameMap';
 import { Sparkline } from './Sparkline';
+import { toggleWatchlistStock } from '@/lib/watchlist-actions';
 
 const TABS = ['주요', 'MY종목', 'MY지수', '환율', '주가지수', '원자재', '국채수익률'];
 
@@ -98,6 +99,7 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [pendingAsset, setPendingAsset] = useState<any | null>(null);
+    const [duplicateError, setDuplicateError] = useState<string | null>(null);
 
     // Synchronize modal state with parent
     useEffect(() => {
@@ -233,6 +235,13 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
     const handleAddClick = () => {
         if (!pendingAsset) return;
 
+        // Check for duplicates
+        if (myStocks.some(s => s.ticker === pendingAsset.symbol)) {
+            setDuplicateError('이미 추가된 종목입니다.');
+            setTimeout(() => setDuplicateError(null), 2000);
+            return;
+        }
+
         const newAsset: MarketAsset = {
             id: pendingAsset.symbol + Date.now(),
             type: inferAssetType(pendingAsset),
@@ -251,9 +260,16 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
         setSearchQuery('');
         setPendingAsset(null);
         setSearchResults([]);
+
+        // Sync to DB
+        toggleWatchlistStock(newAsset.ticker, newAsset.type).catch(console.error);
     };
 
     const handleDeleteStock = (id: string | number) => {
+        const target = myStocks.find(s => s.id === id);
+        if (target) {
+            toggleWatchlistStock(target.ticker, target.type).catch(console.error);
+        }
         setMyStocks(prev => prev.filter(s => s.id !== id));
     };
 
@@ -432,9 +448,24 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
                                                     : "bg-zinc-100 dark:bg-white/5 text-zinc-400 cursor-not-allowed"
                                             )}
                                         >
-                                            <Plus className="size-7" />
+                                            <Plus className="size-6" />
                                         </button>
                                     </div>
+
+                                    <AnimatePresence>
+                                        {duplicateError && (
+                                            <motion.div
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                exit={{ opacity: 0, height: 0 }}
+                                                className="px-2 mt-2 overflow-hidden"
+                                            >
+                                                <span className="text-[12px] font-bold text-red-500">
+                                                    {duplicateError}
+                                                </span>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
 
                                     <AnimatePresence>
                                         {searchResults.length > 0 && searchQuery.trim() !== '' && (
@@ -707,6 +738,6 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
                     </>
                 )}
             </AnimatePresence>
-        </div >
+        </div>
     );
 }

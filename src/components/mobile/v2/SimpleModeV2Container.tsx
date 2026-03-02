@@ -12,6 +12,8 @@ import prisma from '@/lib/prisma';
 import { encrypt, decrypt } from '@/lib/encryption';
 import { revalidatePath } from 'next/cache';
 import { bulkInsertTestData, bulkDeleteTestData } from '@/lib/test-actions';
+import { getWatchlistStocks, syncWatchlist } from '@/lib/watchlist-actions';
+import { koreanNameMap } from '@/lib/koreanNameMap';
 import { AssetItem, getAssets, getMemos, getPredefinedAccounts } from '@/lib/actions';
 import { calculateNetWorth, MarketPrices, GOLD_TROY_OUNCE_GRAMS } from '@/lib/calculations';
 import { cn } from '@/lib/utils';
@@ -111,20 +113,44 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
         return [...Object.values(merged), ...nonStocks];
     };
 
-    // Persistence: Load stocks from localStorage on mount
+    // Persistence: Load stocks from DB and sync from localStorage if needed
     useEffect(() => {
-        const saved = localStorage.getItem('v2-my-stocks');
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    setMyStocks(parsed);
+        const initWatchlist = async () => {
+            // 1. Check localStorage for migration
+            const saved = localStorage.getItem('v2-my-stocks');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        // Sync to DB
+                        await syncWatchlist(parsed.map((s: any) => ({ ticker: s.ticker, type: s.type })));
+                        // Once synced, we can clear it or leave it, but DB will be primary
+                        localStorage.removeItem('v2-my-stocks');
+                    }
+                } catch (e) {
+                    console.error("Failed to migrate v2-my-stocks:", e);
                 }
-            } catch (e) {
-                console.error("Failed to load v2-my-stocks from localStorage:", e);
             }
-        }
-        setIsHydrated(true);
+
+            // 2. Fetch from DB
+            const dbStocks = await getWatchlistStocks();
+            if (dbStocks.length > 0) {
+                // We need to map DB stocks back to MarketAsset structure
+                const mappedStocks = dbStocks.map((s: { ticker: string, type: string }) => ({
+                    id: s.ticker + Date.now(), // Temporary ID for Reorder
+                    ticker: s.ticker,
+                    type: s.type as any,
+                    name: koreanNameMap[s.ticker] || s.ticker,
+                    currentPrice: 0,
+                    changeAmount: 0,
+                    changeRate: 0,
+                }));
+                setMyStocks(mappedStocks);
+            }
+            setIsHydrated(true);
+        };
+
+        initWatchlist();
     }, []);
 
     // Keep selectedAsset in sync with updated assets prop after router.refresh()
@@ -142,11 +168,7 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
         }
     }, [assets]);
 
-    // Persistence: Save stocks to localStorage on change
-    useEffect(() => {
-        if (!isHydrated) return;
-        localStorage.setItem('v2-my-stocks', JSON.stringify(myStocks));
-    }, [myStocks, isHydrated]);
+    // Remove the localStorage persistence effect as DB is now primary
 
     const refreshAllQuotes = async () => {
         if (myStocks.length === 0) return;

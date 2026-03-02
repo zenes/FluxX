@@ -27,6 +27,20 @@ model User {
   dividendRecords     DividendRecord[]
   memos               Memo[]
   assetMemos          AssetMemo[]
+  watchlistStocks     WatchlistStock[]
+}
+
+model WatchlistStock {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ticker       String   // e.g., 'AAPL'
+  type         String   // 'US' or 'KR'
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, ticker])
+  @@index([userId])
 }
 
 model Asset {

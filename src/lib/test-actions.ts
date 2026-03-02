@@ -13,7 +13,7 @@ export async function bulkDeleteTestData() {
 
     try {
         // Validate models exist at runtime
-        const requiredModels = ['dividendRecord', 'stockEntry', 'asset', 'predefinedAccount', 'memo', 'assetMemo'];
+        const requiredModels = ['dividendRecord', 'stockEntry', 'asset', 'predefinedAccount', 'memo', 'assetMemo', 'watchlistStock'];
         const missing = requiredModels.filter(m => !(prisma as any)[m]);
 
         if (missing.length > 0) {
@@ -31,6 +31,7 @@ export async function bulkDeleteTestData() {
             (prisma as any).predefinedAccount.deleteMany({ where: { userId } }),
             (prisma as any).memo.deleteMany({ where: { userId } }),
             (prisma as any).assetMemo.deleteMany({ where: { userId } }),
+            (prisma as any).watchlistStock.deleteMany({ where: { userId } }),
         ]);
 
         revalidatePath('/');
