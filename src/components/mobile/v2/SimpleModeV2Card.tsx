@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, MoreHorizontal, Coins, CreditCard, DollarSign, Eye, EyeOff } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { calculateNetWorth, MarketPrices } from '@/lib/calculations';
+import { calculateNetWorth, GOLD_TROY_OUNCE_GRAMS, MarketPrices } from '@/lib/calculations';
 import { AssetItem } from '@/lib/actions';
 import StockDetailSheetV2 from './StockDetailSheetV2';
 import AssetGrowthDetailSheetV2 from './AssetGrowthDetailSheetV2';
@@ -20,6 +20,8 @@ interface SimpleModeV2CardProps {
     onClick?: () => void;
     isHidden?: boolean;
     onToggleHide?: () => void;
+    forcedValue?: number;
+    externalMarketPrices?: MarketPrices | null;
 }
 
 export default function SimpleModeV2Card({
@@ -31,7 +33,9 @@ export default function SimpleModeV2Card({
     assetItem,
     onClick,
     isHidden = false,
-    onToggleHide
+    onToggleHide,
+    forcedValue,
+    externalMarketPrices
 }: SimpleModeV2CardProps) {
     const [netWorth, setNetWorth] = useState<number | null>(null);
     const [stockPriceInfo, setStockPriceInfo] = useState<{ price: number; currency: string; change?: number; changePercent?: number; shortName?: string } | null>(null);
@@ -40,6 +44,13 @@ export default function SimpleModeV2Card({
 
     useEffect(() => {
         const fetchData = async () => {
+            if (forcedValue !== undefined && isTotal) {
+                setNetWorth(forcedValue);
+                if (externalMarketPrices) setMarketPrices(externalMarketPrices);
+                setIsLoading(false);
+                return;
+            }
+
             setIsLoading(true);
             try {
                 if (stockAsset && stockAsset.assetSymbol) {
@@ -85,7 +96,7 @@ export default function SimpleModeV2Card({
         };
 
         fetchData();
-    }, [id, initialAssets, initialExchange, initialGold, stockAsset]);
+    }, [id, initialAssets, initialExchange, initialGold, stockAsset, forcedValue, externalMarketPrices]);
 
     const isTotal = id === 'total';
     const isStock = !!stockAsset;
@@ -128,7 +139,7 @@ export default function SimpleModeV2Card({
             subtitle = `$${assetItem.amount.toLocaleString()}`;
             icon = <div className="size-10 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center"><DollarSign className="size-5 text-green-500" /></div>;
         } else if (assetItem.assetType === 'gold') {
-            displayValue = (assetItem.amount / 31.1034768) * (initialGold?.price || 2600) * (initialExchange?.rate || 1400);
+            displayValue = (assetItem.amount / GOLD_TROY_OUNCE_GRAMS) * (initialGold?.price || 2300) * (initialExchange?.rate || 1400);
             title = "금 (Gold)";
             subtitle = `${assetItem.amount.toLocaleString()}g`;
             icon = <div className="size-10 rounded-xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center"><Coins className="size-5 text-orange-500" /></div>;

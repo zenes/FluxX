@@ -6,6 +6,8 @@ export type MarketPrices = {
     stockPrices: Record<string, { price: number; currency: string; changePercent?: number; shortName?: string }>;
 };
 
+export const GOLD_TROY_OUNCE_GRAMS = 31.1034768;
+
 export function calculateNetWorth(assets: AssetItem[], prices: MarketPrices): number {
     const { usdKrw, goldUsd, stockPrices } = prices;
 
@@ -19,7 +21,7 @@ export function calculateNetWorth(assets: AssetItem[], prices: MarketPrices): nu
     const krwAmount = sumAmount('krw');
 
     // Convert gold to KRW: (grams / troy_ounce_grams) * price_usd * usd_krw
-    const goldKrw = (goldAmount / 31.1034768) * goldUsd * usdKrw;
+    const goldKrw = (goldAmount / GOLD_TROY_OUNCE_GRAMS) * goldUsd * usdKrw;
     const usdKrwVal = usdAmount * usdKrw;
 
     let totalStockKrw = 0;

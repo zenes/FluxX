@@ -13,7 +13,7 @@ import { encrypt, decrypt } from '@/lib/encryption';
 import { revalidatePath } from 'next/cache';
 import { bulkInsertTestData, bulkDeleteTestData } from '@/lib/test-actions';
 import { AssetItem, getAssets, getMemos, getPredefinedAccounts } from '@/lib/actions';
-import { calculateNetWorth, MarketPrices } from '@/lib/calculations';
+import { calculateNetWorth, MarketPrices, GOLD_TROY_OUNCE_GRAMS } from '@/lib/calculations';
 import { cn } from '@/lib/utils';
 import { motion, animate, useMotionValue } from 'framer-motion';
 import { Briefcase, Coins, PieChart, TrendingUp, Landmark, Plus } from 'lucide-react';
@@ -320,7 +320,7 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
             .reduce((sum, asset) => {
                 const amount = asset.amount || 0;
                 if (asset.assetType === 'usd') return sum + (amount * marketPrices.usdKrw);
-                if (asset.assetType === 'gold') return sum + (amount * marketPrices.goldUsd * marketPrices.usdKrw / 31.1035); // US Pricing is per ounce
+                if (asset.assetType === 'gold') return sum + (amount * marketPrices.goldUsd * marketPrices.usdKrw / GOLD_TROY_OUNCE_GRAMS); // US Pricing is per ounce
                 return sum + amount; // krw
             }, 0);
     }, [displayAssets, marketPrices]);
@@ -481,6 +481,8 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                             onClick={() => setIsTotalDetailOpen(true)}
                             isHidden={isHidden}
                             onToggleHide={togglePrivacy}
+                            forcedValue={totalNetWorth}
+                            externalMarketPrices={marketPrices}
                         />
 
                         {/* New Stock Quotes Widget */}
