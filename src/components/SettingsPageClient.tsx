@@ -1,6 +1,7 @@
 'use client';
 
-import { Download, Trash2, ShieldAlert } from 'lucide-react';
+import { useState } from 'react';
+import { Download, Trash2, ShieldAlert, Loader2 } from 'lucide-react';
 import ProfilePictureUpload from '@/components/ProfilePictureUpload';
 import PredefinedAccountsManager from '@/components/PredefinedAccountsManager';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -19,6 +20,42 @@ export default function SettingsPageClient({
     predefinedAccounts,
 }: SettingsPageClientProps) {
     const { t } = useLanguage();
+    const [isExporting, setIsExporting] = useState(false);
+
+    const handleExportCSV = async () => {
+        try {
+            setIsExporting(true);
+            const response = await fetch('/api/export/csv');
+
+            if (!response.ok) {
+                throw new Error('Export failed');
+            }
+
+            // Get the filename from the Content-Disposition header if possible
+            const contentDisposition = response.headers.get('Content-Disposition');
+            let filename = `fluxx-export-${new Date().toISOString().replace(/[:.]/g, '-')}.csv`;
+            if (contentDisposition && contentDisposition.includes('filename="')) {
+                const match = contentDisposition.match(/filename="([^"]+)"/);
+                if (match && match[1]) filename = match[1];
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch (error) {
+            console.error('Error exporting CSV:', error);
+            alert(t('common.error') || 'Export failed. Please try again.');
+        } finally {
+            setIsExporting(false);
+        }
+    };
 
     return (
         <div className="flex-1 space-y-8 p-8 pt-6">
@@ -70,8 +107,13 @@ export default function SettingsPageClient({
                                 {t('settings.danger_zone_desc')}
                             </p>
                             <div className="flex gap-4">
-                                <button className="flex-1 flex items-center justify-center gap-2 text-xs font-bold tracking-widest text-foreground bg-secondary hover:bg-secondary/80 px-4 py-3 rounded-md uppercase transition-colors">
-                                    <Download size={14} /> {t('settings.export_csv')}
+                                <button
+                                    onClick={handleExportCSV}
+                                    disabled={isExporting}
+                                    className="flex-1 flex items-center justify-center gap-2 text-xs font-bold tracking-widest text-foreground bg-secondary hover:bg-secondary/80 px-4 py-3 rounded-md uppercase transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isExporting ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+                                    {isExporting ? t('common.loading') || 'EXPORTING...' : t('settings.export_csv')}
                                 </button>
                                 <button className="flex-1 flex items-center justify-center gap-2 text-xs font-bold tracking-widest text-destructive bg-destructive/10 border border-destructive/20 hover:bg-destructive hover:text-destructive-foreground px-4 py-3 rounded-md uppercase transition-colors">
                                     <Trash2 size={14} /> {t('settings.reset_assets')}
