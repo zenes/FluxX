@@ -470,12 +470,15 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
     };
 
     useEffect(() => {
-        const scrollContainer = document.querySelector('main');
-        if (scrollContainer) {
-            scrollContainer.scrollTo(0, 0);
-        } else {
-            window.scrollTo(0, 0);
-        }
+        // Use requestAnimationFrame to ensure the scroll happens after render and momentum scrolling
+        requestAnimationFrame(() => {
+            window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+
+            // Fallback for iOS Safari which sometimes ignores the first scrollTo during swipe momentum
+            setTimeout(() => {
+                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+            }, 10);
+        });
     }, [currentPage]);
 
     return (
