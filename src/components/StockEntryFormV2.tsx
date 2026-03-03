@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AssetItem, addStockEntry, getPredefinedAccounts } from '@/lib/actions';
-import { koreanNameMap } from '@/lib/koreanNameMap';
+import { isKoreanStock, getStockDisplayName } from '@/lib/stock-utils';
 import { cn } from '@/lib/utils';
 import { useDebounce } from 'use-debounce';
 import {
@@ -44,9 +44,7 @@ export default function StockEntryFormV2({ onSuccess, initialSymbol, editingEntr
         accountNumber: editingEntry?.account || editingEntry?.accountNumber || '',
         quantity: editingEntry?.qty?.toString() || editingEntry?.quantity?.toString() || '',
         totalPurchaseAmount: editingEntry?.totalCost?.toString() || editingEntry?.totalPurchaseAmount?.toString() || '',
-        currency: editingEntry?.currency || (initialSymbol
-            ? (initialSymbol.endsWith('.KS') || initialSymbol.endsWith('.KQ') ? 'KRW' : 'USD')
-            : 'KRW'),
+        currency: editingEntry?.currency || (isKoreanStock(initialSymbol) ? 'KRW' : 'USD'),
         predefinedAccountId: editingEntry?.predefinedAccountId || '',
         dividendPerShare: editingEntry?.dividendPerShare?.toString() || '',
         dividendFrequency: editingEntry?.dividendFrequency?.toString() || '4', // Default to quarterly
@@ -64,10 +62,10 @@ export default function StockEntryFormV2({ onSuccess, initialSymbol, editingEntr
         fetchAccounts();
 
         if (initialSymbol) {
-            setSelectedName(koreanNameMap[initialSymbol] || initialSymbol);
+            setSelectedName(getStockDisplayName(initialSymbol));
             setFormData(prev => ({
                 ...prev,
-                currency: initialSymbol.endsWith('.KS') || initialSymbol.endsWith('.KQ') ? 'KRW' : 'USD'
+                currency: isKoreanStock(initialSymbol) ? 'KRW' : 'USD'
             }));
         }
     }, [initialSymbol]);
@@ -98,9 +96,9 @@ export default function StockEntryFormV2({ onSuccess, initialSymbol, editingEntr
         setFormData(prev => ({
             ...prev,
             tickerSymbol: ticker,
-            currency: ticker.endsWith('.KS') || ticker.endsWith('.KQ') ? 'KRW' : 'USD'
+            currency: isKoreanStock(ticker) ? 'KRW' : 'USD'
         }));
-        setSelectedName(koreanNameMap[ticker] || name || ticker);
+        setSelectedName(getStockDisplayName(ticker, name));
         setSearchQuery('');
         setSearchResults([]);
     };

@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { AssetItem, deleteStockAssetAllEntries, deleteStockEntry } from '@/lib/actions';
 import { cn } from '@/lib/utils';
-import { koreanNameMap } from '@/lib/koreanNameMap';
+import { isKoreanStock, getNormalizedTicker, getStockDisplayName } from '@/lib/stock-utils';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 
 // --- Sub-component for individual history entry with sticky swipe ---
@@ -175,6 +175,7 @@ interface StockDetailSheetV2Props {
     title?: string;
     isWatchlisted?: boolean;
     onToggleWatchlist?: (ticker: string) => void;
+    priceData?: any;
 }
 
 const RANGES = ['1D', '1W', '1M', '3M', '6M', 'YTD', '1Y', 'MAX'];
@@ -193,6 +194,7 @@ export default function StockDetailSheetV2({
     onEditEntry,
     isWatchlisted = false,
     onToggleWatchlist,
+    priceData,
 }: StockDetailSheetV2Props) {
     const [activeRange, setActiveRange] = useState('1M');
     const [chartData, setChartData] = useState<any[]>([]);
@@ -332,7 +334,7 @@ export default function StockDetailSheetV2({
     };
 
     // Robust Currency Detection
-    const isKRStock = stockAsset?.assetSymbol?.endsWith('.KS') || stockAsset?.assetSymbol?.endsWith('.KQ') || stockAsset?.currency === 'KRW';
+    const isKRStock = isKoreanStock(stockAsset?.assetSymbol, stockAsset?.currency);
     const isUSD = !isKRStock;
 
     useEffect(() => {
@@ -355,12 +357,8 @@ export default function StockDetailSheetV2({
                 const { range, interval } = rangeMap[activeRange] || rangeMap['1M'];
 
                 // Normalize symbol
-                let symbol = stockAsset.assetSymbol;
-                if (!symbol) return;
-
-                if (isKRStock && !symbol.includes('.')) {
-                    symbol = `${symbol}.KS`;
-                }
+                if (!stockAsset.assetSymbol) return;
+                const symbol = getNormalizedTicker(stockAsset.assetSymbol);
 
                 const res = await fetch(`/api/stock-history?symbol=${symbol}&range=${range}&interval=${interval}`);
                 if (!res.ok) throw new Error('Failed to fetch chart data');
@@ -378,7 +376,7 @@ export default function StockDetailSheetV2({
         };
 
         fetchHistory();
-    }, [isOpen, stockAsset?.assetSymbol, activeRange, isKRStock]);
+    }, [isOpen, stockAsset?.assetSymbol, activeRange]);
 
 
 
@@ -518,7 +516,7 @@ export default function StockDetailSheetV2({
                                         <span className="text-[10px] font-black opacity-30">[F]</span>
                                     </span>
                                     <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">
-                                        {isKRStock ? (koreanNameMap[stockAsset?.assetSymbol || ''] || title || stockAsset?.assetSymbol || '---') : (title || stockAsset?.assetSymbol || '---')}
+                                        {getStockDisplayName(stockAsset?.assetSymbol, title, priceData)}
                                     </h2>
                                 </div>
                                 <div className="flex items-end gap-3">

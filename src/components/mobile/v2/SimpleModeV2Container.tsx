@@ -15,7 +15,7 @@ import { bulkInsertTestData, bulkDeleteTestData } from '@/lib/test-actions';
 import { backupDatabase, getBackupList, restoreDatabase } from '@/lib/db-actions';
 import BackupRestoreSheet from './BackupRestoreSheet';
 import { getWatchlistStocks, syncWatchlist, toggleWatchlistStock } from '@/lib/watchlist-actions';
-import { koreanNameMap } from '@/lib/koreanNameMap';
+import { isKoreanStock, getStockDisplayName } from '@/lib/stock-utils';
 import { AssetItem, getAssets, getMemos, getPredefinedAccounts } from '@/lib/actions';
 import { calculateNetWorth, MarketPrices, GOLD_TROY_OUNCE_GRAMS } from '@/lib/calculations';
 import { cn } from '@/lib/utils';
@@ -119,14 +119,14 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
 
     const handleToggleWatchlist = async (ticker: string) => {
         try {
-            const type = (ticker.endsWith('.KS') || ticker.endsWith('.KQ')) ? 'KR' : 'US';
+            const type = isKoreanStock(ticker) ? 'KR' : 'US';
             await toggleWatchlistStock(ticker, type);
             const dbStocks = await getWatchlistStocks();
             const mappedStocks = dbStocks.map((s: { ticker: string, type: string }) => ({
                 id: s.ticker + Date.now().toString(),
                 ticker: s.ticker,
                 type: s.type as any,
-                name: koreanNameMap[s.ticker] || s.ticker,
+                name: getStockDisplayName(s.ticker),
                 currentPrice: 0,
                 changeAmount: 0,
                 changeRate: 0,
@@ -164,7 +164,7 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                     id: s.ticker + Date.now(), // Temporary ID for Reorder
                     ticker: s.ticker,
                     type: s.type as any,
-                    name: koreanNameMap[s.ticker] || s.ticker,
+                    name: getStockDisplayName(s.ticker),
                     currentPrice: 0,
                     changeAmount: 0,
                     changeRate: 0,
@@ -235,7 +235,7 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                     if (qData) {
                         return {
                             ...s,
-                            name: s.type === 'KR' ? (koreanNameMap[s.ticker] || qData.shortName || s.name) : (qData.shortName || s.name),
+                            name: getStockDisplayName(s.ticker, s.name, qData),
                             currentPrice: qData.price,
                             changeAmount: qData.change || 0,
                             changeRate: qData.changePercent || 0,
@@ -768,6 +768,7 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                 totalNetWorth={totalNetWorth}
                 isWatchlisted={selectedAsset ? myStocks.some(s => s.ticker === selectedAsset.assetSymbol) : false}
                 onToggleWatchlist={handleToggleWatchlist}
+                priceData={selectedAsset ? marketPrices?.stockPrices?.[selectedAsset.assetSymbol?.toUpperCase() || ''] : undefined}
             />
 
             {/* Total Analysis Sheet (Always rendered for exit animation) */}

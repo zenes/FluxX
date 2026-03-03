@@ -6,7 +6,7 @@ import { AssetItem } from '@/lib/actions';
 import { Building2, Plus, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { MarketPrices } from '@/lib/calculations';
-import { koreanNameMap } from '@/lib/koreanNameMap';
+import { getStockDisplayName } from '@/lib/stock-utils';
 
 interface AssetListGroupCardProps {
     title: string;
@@ -140,9 +140,7 @@ export default function AssetListGroupCard({
                                     {/* Left: Ticker & Name */}
                                     <div className="flex flex-col gap-0.5 flex-1 min-w-0 pr-2">
                                         <span className="text-[15px] font-bold text-zinc-900 dark:text-white uppercase tracking-tight truncate">
-                                            {(asset.assetSymbol?.endsWith('.KS') || asset.assetSymbol?.endsWith('.KQ'))
-                                                ? (koreanNameMap[asset.assetSymbol || ''] || priceData?.shortName || asset.assetSymbol)
-                                                : asset.assetSymbol}
+                                            {getStockDisplayName(asset.assetSymbol, asset.assetSymbol, priceData)}
                                         </span>
                                         <span className="text-[12px] text-zinc-500 dark:text-zinc-400 line-clamp-1 break-all uppercase font-bold tracking-tighter">
                                             {asset.amount.toLocaleString()}주 보유 • {isUSD ? '$' : '₩'}{formatPrice(asset.currency || 'USD', marketValue)}
@@ -193,9 +191,7 @@ export default function AssetListGroupCard({
                                     <div className="flex flex-col gap-0.5 min-w-0">
                                         <span className="text-[15px] font-black text-zinc-900 dark:text-white uppercase tracking-tight truncate">
                                             {isStock
-                                                ? ((asset.assetSymbol?.endsWith('.KS') || asset.assetSymbol?.endsWith('.KQ'))
-                                                    ? (koreanNameMap[asset.assetSymbol || ''] || priceData?.shortName || asset.assetSymbol)
-                                                    : asset.assetSymbol)
+                                                ? getStockDisplayName(asset.assetSymbol, asset.assetSymbol, priceData)
                                                 : mainLabel}
                                         </span>
                                         <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-tighter truncate">

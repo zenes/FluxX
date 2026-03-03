@@ -16,7 +16,7 @@ import {
     Bar,
     ComposedChart
 } from 'recharts';
-import { koreanNameMap } from '@/lib/koreanNameMap';
+import { getStockDisplayName, getNormalizedTicker, isKoreanStock } from '@/lib/stock-utils';
 import { Sparkline } from './Sparkline';
 import { toggleWatchlistStock } from '@/lib/watchlist-actions';
 
@@ -142,10 +142,7 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
                 const { range, interval } = rangeMap[selectedRange] || rangeMap['1일'];
 
                 // Add suffix for KR stocks if missing
-                let symbol = selectedAsset.ticker;
-                if (selectedAsset.type === 'KR' && !symbol.includes('.')) {
-                    symbol = `${symbol}.KS`;
-                }
+                const symbol = getNormalizedTicker(selectedAsset.ticker);
 
                 const response = await fetch(`/api/stock-history?symbol=${symbol}&range=${range}&interval=${interval}`);
                 if (!response.ok) throw new Error('Failed to fetch chart');
@@ -199,8 +196,7 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
                 const data = await response.json();
                 if (data.results) {
                     const processedResults = data.results.map((item: any) => {
-                        const fallbackName = koreanNameMap[item.symbol];
-                        return fallbackName ? { ...item, shortname: fallbackName } : item;
+                        return { ...item, shortname: getStockDisplayName(item.symbol, item.shortname || item.longName) };
                     });
                     setSearchResults(processedResults);
                 }
@@ -225,7 +221,7 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
 
     const inferAssetType = (result: any): AssetType => {
         const exchange = result.exchange;
-        if (exchange === 'KSC' || exchange === 'KSD' || exchange === 'KOE' || (result.symbol && /^[0-9]{6}\.(KS|KQ)$/.test(result.symbol))) return 'KR';
+        if (exchange === 'KSC' || exchange === 'KSD' || exchange === 'KOE' || isKoreanStock(result.symbol)) return 'KR';
         if (exchange === 'NMS' || exchange === 'NYQ' || exchange === 'ASE') return 'US';
         if (result.quoteType === 'CURRENCY') return 'FX';
         if (result.quoteType === 'INDEX') return 'INDEX';
@@ -245,7 +241,7 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
         const newAsset: MarketAsset = {
             id: pendingAsset.symbol + Date.now(),
             type: inferAssetType(pendingAsset),
-            name: pendingAsset.shortname || pendingAsset.symbol,
+            name: getStockDisplayName(pendingAsset.symbol, pendingAsset.shortname || pendingAsset.longName),
             ticker: pendingAsset.symbol,
             currentPrice: 0,
             changeAmount: 0,
@@ -336,7 +332,7 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
                             {/* Left: Ticker & Name */}
                             <div className="flex flex-col gap-0.5 flex-1 min-w-0 pr-2">
                                 <span className="text-[15px] font-bold text-zinc-900 dark:text-white uppercase tracking-tight truncate">
-                                    {item.type === 'KR' ? (koreanNameMap[item.ticker] || item.name) : item.ticker}
+                                    {getStockDisplayName(item.ticker, item.name)}
                                 </span>
                                 <span className="text-[12px] text-zinc-500 dark:text-zinc-400 line-clamp-1 break-all uppercase font-bold tracking-tighter">
                                     {item.type === 'KR' ? item.ticker : item.name}

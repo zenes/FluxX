@@ -8,7 +8,7 @@ import { calculateNetWorth, GOLD_TROY_OUNCE_GRAMS, MarketPrices } from '@/lib/ca
 import { AssetItem } from '@/lib/actions';
 import StockDetailSheetV2 from './StockDetailSheetV2';
 import AssetGrowthDetailSheetV2 from './AssetGrowthDetailSheetV2';
-import { koreanNameMap } from '@/lib/koreanNameMap';
+import { getStockDisplayName } from '@/lib/stock-utils';
 
 interface SimpleModeV2CardProps {
     id: string | number;
@@ -116,10 +116,7 @@ export default function SimpleModeV2Card({
             ? stockAsset.amount * stockPriceInfo.price * (stockPriceInfo.currency === 'USD' ? (initialExchange?.rate || 1400) : 1)
             : stockAsset.amount * (stockAsset.avgPrice || 0) * (stockAsset.currency === 'USD' ? (initialExchange?.rate || 1400) : 1);
 
-        const isKR = stockAsset.assetSymbol?.endsWith('.KS') || stockAsset.assetSymbol?.endsWith('.KQ');
-        title = isKR
-            ? (koreanNameMap[stockAsset.assetSymbol || ''] || stockPriceInfo?.shortName || stockAsset.assetSymbol || "Unknown")
-            : (stockAsset.assetSymbol || "Unknown");
+        title = getStockDisplayName(stockAsset.assetSymbol, stockAsset.assetSymbol, stockPriceInfo);
 
         subtitle = `${stockAsset.amount.toLocaleString()}주 보유`;
         icon = (
