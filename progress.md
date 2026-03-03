@@ -1,3 +1,11 @@
+# Project Progress - 2026-03-03
+
+## [2026-03-03] Mac 개발 환경 최적화 및 의존성 해결
+- **Mac 전용 개발 서버 스크립트 추가**: Homebrew로 설치된 `node@20` 경로 설정 및 3000번 포트 자동 정리를 포함한 `npm run dev:mac` 명령어를 `package.json`에 추가하여 실행 편의성을 높임.
+- **의존성 오류 수정**: 서버 실행 시 발생하던 `rss-parser` 모듈 누락 문제를 `npm install`을 통해 해결.
+- **모바일 접속 보안 설정**: 모바일 기기 브라우저에서 접속 시 발생하는 Cross Origin 경고를 방지하기 위해 `next.config.mjs`에 `experimental.allowedDevOrigins` 설정을 추가함.
+- **문서 및 워크플로우 보완**: Mac 환경에서의 특이사항과 해결 방법을 `docs/MOBILE_CONNECTION.md` 및 `.agents/workflows/setup-env.md`에 반영함.
+
 # Project Progress - 2026-03-02
 
 ## [2026-03-02 21:00] 자산 계산 로직 일원화 (카드 A vs D+E 합계 일치)

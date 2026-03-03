@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:mobile": "next dev -H 0.0.0.0",
+    "dev:mac": "export PATH=\"/usr/local/opt/node@20/bin:$PATH\" && lsof -t -i:3000 | xargs kill -9 2>/dev/null; npm run dev:mobile",
     "build": "next build",
     "start": "next start -H 0.0.0.0",
     "lint": "next lint"

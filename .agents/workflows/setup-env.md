@@ -31,4 +31,7 @@ description: 프로젝트 로컬 개발 환경 설정을 자동화합니다. (No
    npm run dev
    ```
 
+> [!TIP]
+> Mac 환경에서 `node@20` 경로 문제나 포트 충돌이 발생할 경우 `npm run dev:mac` 명령어를 사용하면 편리합니다.
+
 서버가 실행되면 [http://localhost:3000](http://localhost:3000)에서 결과를 확인할 수 있습니다.
