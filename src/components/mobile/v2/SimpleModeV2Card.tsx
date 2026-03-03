@@ -8,7 +8,7 @@ import { calculateNetWorth, GOLD_TROY_OUNCE_GRAMS, MarketPrices } from '@/lib/ca
 import { AssetItem } from '@/lib/actions';
 import StockDetailSheetV2 from './StockDetailSheetV2';
 import AssetGrowthDetailSheetV2 from './AssetGrowthDetailSheetV2';
-import { getStockDisplayName } from '@/lib/stock-utils';
+import { getStockDisplayName, getQuoteFromResults } from '@/lib/stock-utils';
 
 interface SimpleModeV2CardProps {
     id: string | number;
@@ -42,83 +42,72 @@ export default function SimpleModeV2Card({
     const [isLoading, setIsLoading] = useState(true);
     const [marketPrices, setMarketPrices] = useState<MarketPrices | null>(null);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            if (forcedValue !== undefined && isTotal) {
-                setNetWorth(forcedValue);
-                if (externalMarketPrices) setMarketPrices(externalMarketPrices);
-                setIsLoading(false);
-                return;
-            }
-
-            setIsLoading(true);
-            try {
-                if (stockAsset && stockAsset.assetSymbol) {
-                    const res = await fetch(`/api/stock-price?symbols=${stockAsset.assetSymbol}`);
-                    const data = await res.json();
-                    const quote = data.quotes?.[stockAsset.assetSymbol];
-                    if (quote) {
-                        setStockPriceInfo({
-                            price: quote.price,
-                            currency: quote.currency || 'USD',
-                            change: quote.change,
-                            changePercent: quote.changePercent,
-                            shortName: quote.shortName
-                        });
-                    }
-                } else if (id === 'total' && initialAssets) {
-                    const symbols = initialAssets
-                        .filter(a => a.assetType === 'stock' && a.assetSymbol)
-                        .map(a => a.assetSymbol)
-                        .join(',');
-
-                    let stockPrices = {};
-                    if (symbols) {
-                        const res = await fetch(`/api/stock-price?symbols=${symbols}`);
-                        const data = await res.json();
-                        stockPrices = data.quotes || {};
-                    }
-
-                    const prices: MarketPrices = {
-                        usdKrw: initialExchange?.rate || 1400,
-                        goldUsd: initialGold?.price || 2600,
-                        stockPrices: stockPrices as any,
-                    };
-                    setMarketPrices(prices);
-                    const calculatedValue = calculateNetWorth(initialAssets, prices);
-                    setNetWorth(calculatedValue);
-                }
-            } catch (err) {
-                console.error("Failed to fetch data:", err);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchData();
-    }, [id, initialAssets, initialExchange, initialGold, stockAsset, forcedValue, externalMarketPrices]);
-
     const isTotal = id === 'total';
     const isStock = !!stockAsset;
     const isOtherAsset = !!assetItem;
+
+    useEffect(() => {
+        // 1. Use externalMarketPrices provided by parent (Single Source of Truth)
+        if (externalMarketPrices) {
+            const symbol = stockAsset?.assetSymbol || assetItem?.assetSymbol || '';
+            const quote = getQuoteFromResults(symbol, externalMarketPrices.stockPrices);
+
+            if (quote && quote.price > 0) {
+                setStockPriceInfo({
+                    price: quote.price,
+                    currency: quote.currency || 'USD',
+                    change: quote.change,
+                    changePercent: quote.changePercent,
+                    shortName: quote.shortName
+                });
+            }
+
+            // Sync marketPrices for local calculations (Fx/Gold)
+            setMarketPrices(externalMarketPrices);
+
+            if (isTotal && forcedValue !== undefined) {
+                setNetWorth(forcedValue);
+            }
+
+            setIsLoading(false);
+            return;
+        }
+
+        // 2. If no external prices and its a total card with forced value
+        if (forcedValue !== undefined && isTotal) {
+            setNetWorth(forcedValue);
+            setIsLoading(false);
+        } else {
+            // If no external prices and not a total card with forced value,
+            // we can assume no specific price info is available for stocks
+            // and rely on initial values for other assets.
+            // Set loading to false as no fetch is happening.
+            setIsLoading(false);
+        }
+    }, [externalMarketPrices, stockAsset?.assetSymbol, assetItem?.assetSymbol, forcedValue, isTotal]);
 
     let displayValue = 0;
     let title = "";
     let subtitle = "";
     let icon = null;
 
+    // Helper to get exchange rate (prioritize external -> marketPrices -> default)
+    const currentFxRate = externalMarketPrices?.usdKrw || marketPrices?.usdKrw || initialExchange?.rate || 1400;
+    const currentGoldPrice = externalMarketPrices?.goldUsd || marketPrices?.goldUsd || initialGold?.price || 2600;
+
     if (isTotal) {
-        displayValue = netWorth || 0;
+        displayValue = forcedValue || netWorth || 0;
         title = "총 자산 현황";
         icon = <div className="size-2 rounded-full bg-[#38C798]" />;
     } else if (isStock && stockAsset) {
-        displayValue = stockPriceInfo
-            ? stockAsset.amount * stockPriceInfo.price * (stockPriceInfo.currency === 'USD' ? (initialExchange?.rate || 1400) : 1)
-            : stockAsset.amount * (stockAsset.avgPrice || 0) * (stockAsset.currency === 'USD' ? (initialExchange?.rate || 1400) : 1);
+        // Prioritize last known good price over 0
+        const price = stockPriceInfo?.price || stockAsset.avgPrice || 0;
+        const currency = stockPriceInfo?.currency || stockAsset.currency || 'KRW';
 
+        displayValue = stockAsset.amount * price * (currency === 'USD' ? currentFxRate : 1);
         title = getStockDisplayName(stockAsset.assetSymbol, stockAsset.assetSymbol, stockPriceInfo);
-
         subtitle = `${stockAsset.amount.toLocaleString()}주 보유`;
+
         icon = (
             <div className="size-10 rounded-xl bg-[#F5F5F7] dark:bg-white/5 flex items-center justify-center font-black text-[#2B364B] dark:text-white/80">
                 {title.charAt(0)}
@@ -131,12 +120,12 @@ export default function SimpleModeV2Card({
             title = "현금 (KRW)";
             icon = <div className="size-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center"><CreditCard className="size-5 text-blue-500" /></div>;
         } else if (assetItem.assetType === 'usd') {
-            displayValue = assetItem.amount * (initialExchange?.rate || 1400);
+            displayValue = assetItem.amount * currentFxRate;
             title = "달러 (USD)";
             subtitle = `$${assetItem.amount.toLocaleString()}`;
             icon = <div className="size-10 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center"><DollarSign className="size-5 text-green-500" /></div>;
         } else if (assetItem.assetType === 'gold') {
-            displayValue = (assetItem.amount / GOLD_TROY_OUNCE_GRAMS) * (initialGold?.price || 2300) * (initialExchange?.rate || 1400);
+            displayValue = (assetItem.amount / GOLD_TROY_OUNCE_GRAMS) * currentGoldPrice * currentFxRate;
             title = "금 (Gold)";
             subtitle = `${assetItem.amount.toLocaleString()}g`;
             icon = <div className="size-10 rounded-xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center"><Coins className="size-5 text-orange-500" /></div>;

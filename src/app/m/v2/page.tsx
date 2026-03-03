@@ -1,30 +1,51 @@
-import { getAssets, getPredefinedAccounts, getUserSettings } from "@/lib/actions";
-import yahooFinance from 'yahoo-finance2';
+import { getAssets, getUserSettings, AssetItem, getPredefinedAccounts } from "@/lib/actions";
 import SimpleModeV2Container from '@/components/mobile/v2/SimpleModeV2Container';
+import { getStockQuotes } from "@/lib/stock-service";
+import { getNormalizedTicker } from "@/lib/stock-utils";
+import { getWatchlistStocks } from "@/lib/watchlist-actions";
 
-async function getInitialMarketData() {
+async function getInitialMarketData(allSymbols: string[]) {
     try {
-        const [fxQuote, goldQuote, accounts] = await Promise.all([
-            yahooFinance.quote('KRW=X'),
-            yahooFinance.quote('GC=F'),
+        const [quotes, accounts] = await Promise.all([
+            getStockQuotes(allSymbols),
             getPredefinedAccounts()
         ]);
+
+        const fxRate = quotes['KRW=X']?.price || 1400;
+        const goldPrice = quotes['GC=F']?.price || 2600;
+
         return {
-            exchange: fxQuote ? { rate: (fxQuote as any).regularMarketPrice } : null,
-            gold: goldQuote ? { price: (goldQuote as any).regularMarketPrice } : null,
+            exchange: { rate: fxRate },
+            gold: { price: goldPrice },
+            stockPrices: quotes,
             accounts
         };
     } catch (e) {
-        return { exchange: null, gold: null, accounts: [] };
+        return { exchange: null, gold: null, stockPrices: {}, accounts: [] };
     }
 }
 
 export default async function SimpleModeV2Page() {
-    const [assets, marketData, userSettings] = await Promise.all([
+    const [assets, watchlist, userSettings] = await Promise.all([
         getAssets(),
-        getInitialMarketData(),
+        getWatchlistStocks(),
         getUserSettings()
     ]);
+
+    // Gather all unique symbols for initial pre-fetch
+    const assetSymbols = assets
+        .filter((a: AssetItem) => a.assetType === 'stock' && a.assetSymbol)
+        .map((a: AssetItem) => getNormalizedTicker(a.assetSymbol));
+    const watchlistSymbols = watchlist.map((s: { ticker: string }) => getNormalizedTicker(s.ticker));
+
+    const allSymbols = Array.from(new Set([
+        'KRW=X',
+        'GC=F',
+        ...assetSymbols,
+        ...watchlistSymbols
+    ])).filter(Boolean) as string[];
+
+    const marketData = await getInitialMarketData(allSymbols);
 
     return (
         <div className="min-h-screen bg-[#edf0f4] dark:bg-[#0D0D0E]">

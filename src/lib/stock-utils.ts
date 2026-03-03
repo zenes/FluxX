@@ -58,10 +58,21 @@ export function getStockDisplayName(
         if (koreanNameMap[withKS]) return koreanNameMap[withKS];
         if (koreanNameMap[withKQ]) return koreanNameMap[withKQ];
     }
-
-    // 4. Try price data name
-    if (priceData?.shortName) return priceData.shortName;
-
     // 5. Fallback to passed name or ticker
     return fallbackName || symbol;
+}
+
+/**
+ * Robustly find a quote in the API results map
+ */
+export function getQuoteFromResults(symbol: string | null | undefined, results: Record<string, any>): any {
+    if (!symbol || !results) return null;
+    const normalized = symbol.toUpperCase();
+    const withoutSuffix = normalized.split('.')[0];
+
+    // Try exact match, then with suffixes, then without suffix
+    return results[normalized] ||
+        results[`${withoutSuffix}.KS`] ||
+        results[`${withoutSuffix}.KQ`] ||
+        results[withoutSuffix];
 }

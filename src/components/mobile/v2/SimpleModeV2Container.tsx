@@ -15,7 +15,7 @@ import { bulkInsertTestData, bulkDeleteTestData } from '@/lib/test-actions';
 import { backupDatabase, getBackupList, restoreDatabase } from '@/lib/db-actions';
 import BackupRestoreSheet from './BackupRestoreSheet';
 import { getWatchlistStocks, syncWatchlist, toggleWatchlistStock } from '@/lib/watchlist-actions';
-import { isKoreanStock, getStockDisplayName } from '@/lib/stock-utils';
+import { isKoreanStock, getStockDisplayName, getQuoteFromResults, getNormalizedTicker } from '@/lib/stock-utils';
 import { AssetItem, getAssets, getMemos, getPredefinedAccounts } from '@/lib/actions';
 import { calculateNetWorth, MarketPrices, GOLD_TROY_OUNCE_GRAMS } from '@/lib/calculations';
 import { cn } from '@/lib/utils';
@@ -30,6 +30,7 @@ interface SimpleModeV2ContainerProps {
     marketData: {
         exchange: { rate: number } | null;
         gold: { price: number } | null;
+        stockPrices?: Record<string, any>;
         accounts: any[];
     };
     initialHideAssets?: boolean;
@@ -77,7 +78,16 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
         setIsAssetEntryOpen(true);
     };
     const [totalNetWorth, setTotalNetWorth] = useState<number>(0);
-    const [marketPrices, setMarketPrices] = useState<MarketPrices | null>(null);
+    const [marketPrices, setMarketPrices] = useState<MarketPrices | null>(() => {
+        if (marketData.stockPrices) {
+            return {
+                usdKrw: marketData.exchange?.rate || 1400,
+                goldUsd: marketData.gold?.price || 2600,
+                stockPrices: marketData.stockPrices
+            };
+        }
+        return null;
+    });
     const [isLoadingTotal, setIsLoadingTotal] = useState(false);
 
     // Merge helper for Stock Assets with same symbol
@@ -159,23 +169,35 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
             // 2. Fetch from DB
             const dbStocks = await getWatchlistStocks();
             if (dbStocks.length > 0) {
-                // We need to map DB stocks back to MarketAsset structure
-                const mappedStocks = dbStocks.map((s: { ticker: string, type: string }) => ({
-                    id: s.ticker + Date.now(), // Temporary ID for Reorder
-                    ticker: s.ticker,
-                    type: s.type as any,
-                    name: getStockDisplayName(s.ticker),
-                    currentPrice: 0,
-                    changeAmount: 0,
-                    changeRate: 0,
-                }));
+                // Map DB stocks and inject initial prices from server if available
+                const mappedStocks = dbStocks.map((s: { ticker: string, type: string }) => {
+                    const qData = getQuoteFromResults(s.ticker, marketData.stockPrices || {});
+                    return {
+                        id: s.ticker + Date.now().toString(),
+                        ticker: s.ticker,
+                        type: s.type as any,
+                        name: getStockDisplayName(s.ticker, undefined, qData),
+                        currentPrice: qData?.price || 0,
+                        changeAmount: qData?.change || 0,
+                        changeRate: qData?.changePercent || 0,
+                        sparkline: qData?.sparkline || []
+                    };
+                });
                 setMyStocks(mappedStocks);
             }
             setIsHydrated(true);
         };
 
         initWatchlist();
-    }, []);
+    }, [marketData.stockPrices]);
+
+    // Initial total net worth calculation after hydration
+    useEffect(() => {
+        if (isHydrated && marketPrices) {
+            const calculatedValue = calculateNetWorth(assets, marketPrices);
+            setTotalNetWorth(calculatedValue);
+        }
+    }, [isHydrated, assets, marketPrices]);
 
     // Keep selectedAsset in sync with updated assets prop after router.refresh()
     useEffect(() => {
@@ -194,106 +216,76 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
 
     // Remove the localStorage persistence effect as DB is now primary
 
-    const refreshAllQuotes = async () => {
-        if (myStocks.length === 0) return;
-
+    const refreshAll = async () => {
+        setIsLoadingTotal(true);
         try {
-            // Yahoo Finance friendly symbols
-            const symbols = [
+            // 1. Collect all unique symbols (Watchlist + Net Worth assets)
+            const watchlistSymbols = myStocks.map(s => getNormalizedTicker(s.ticker));
+            const assetSymbols = assets
+                .filter(a => a.assetType === 'stock' && a.assetSymbol)
+                .map(a => getNormalizedTicker(a.assetSymbol));
+
+            const allSymbols = Array.from(new Set([
                 'KRW=X',
                 'GC=F',
-                ...myStocks.map(s => {
-                    if (s.type === 'KR' && !s.ticker.includes('.')) {
-                        return `${s.ticker}.KS`;
-                    }
-                    return s.ticker;
-                })
-            ].filter(Boolean).join(',');
+                ...watchlistSymbols,
+                ...assetSymbols
+            ])).filter(Boolean).join(',');
 
-            const response = await fetch(`/api/stock-price?symbols=${symbols}`);
+            // 2. Single fetch for everything
+            const response = await fetch(`/api/stock-price?symbols=${allSymbols}`);
             if (!response.ok) throw new Error('Failed to fetch prices');
 
             const data = await response.json();
-            const quotes = data.quotes;
+            const quotes = data.quotes || {};
 
-            if (quotes) {
-                // Update marketPrices if FX/Gold is present
-                const fxRate = (quotes['KRW=X'] as any)?.price || marketPrices?.usdKrw || marketData.exchange?.rate || 1400;
-                const goldPrice = (quotes['GC=F'] as any)?.price || marketPrices?.goldUsd || marketData.gold?.price || 2300;
+            // 3. Update marketPrices state (Merge with latest previous state)
+            setMarketPrices(prev => {
+                const fxRate = (getQuoteFromResults('KRW=X', quotes))?.price || prev?.usdKrw || marketData.exchange?.rate || 1400;
+                const goldPrice = (getQuoteFromResults('GC=F', quotes))?.price || prev?.goldUsd || marketData.gold?.price || 2300;
 
-                setMarketPrices(prev => ({
+                const newPrices: MarketPrices = {
                     usdKrw: fxRate,
                     goldUsd: goldPrice,
-                    stockPrices: { ...(prev?.stockPrices || {}), ...(quotes as any) }
-                }));
+                    stockPrices: { ...(prev?.stockPrices || {}), ...quotes }
+                };
 
-                setMyStocks(prev => prev.map(s => {
-                    // Match with possible suffixes
-                    const ticker = s.ticker;
-                    const qData = quotes[ticker] || quotes[`${ticker}.KS`] || quotes[`${ticker}.KQ`];
+                // 4. Calculate Net Worth using the latest merged prices
+                const calculatedValue = calculateNetWorth(assets, newPrices);
+                setTotalNetWorth(calculatedValue);
 
-                    if (qData) {
-                        return {
-                            ...s,
-                            name: getStockDisplayName(s.ticker, s.name, qData),
-                            currentPrice: qData.price,
-                            changeAmount: qData.change || 0,
-                            changeRate: qData.changePercent || 0,
-                            sparkline: qData.sparkline
-                        };
-                    }
-                    return s;
-                }));
-            }
+                return newPrices;
+            });
+
+            // 5. Update Watchlist (myStocks)
+            setMyStocks(prev => prev.map(s => {
+                const qData = getQuoteFromResults(s.ticker, quotes);
+                if (qData) {
+                    return {
+                        ...s,
+                        name: getStockDisplayName(s.ticker, s.name, qData),
+                        currentPrice: qData.price,
+                        changeAmount: qData.change || 0,
+                        changeRate: qData.changePercent || 0,
+                        sparkline: qData.sparkline
+                    };
+                }
+                return s;
+            }));
+
         } catch (e) {
-            console.error("Refresh failed:", e);
+            console.error("Master refresh failed:", e);
+        } finally {
+            setIsLoadingTotal(false);
         }
     };
 
     // Initial refresh after hydration
     useEffect(() => {
         if (isHydrated) {
-            refreshAllQuotes();
-
-            // Calculate Total Net Worth
-            const fetchTotalData = async () => {
-                setIsLoadingTotal(true);
-                try {
-                    const symbols = [
-                        'KRW=X', // USD/KRW
-                        'GC=F',  // Gold
-                        ...assets
-                            .filter(a => a.assetType === 'stock' && a.assetSymbol)
-                            .map(a => a.assetSymbol?.toUpperCase() || '')
-                    ].filter(Boolean).join(',');
-
-                    let stockPrices = {};
-                    if (symbols) {
-                        const res = await fetch(`/api/stock-price?symbols=${symbols}`);
-                        const data = await res.json();
-                        stockPrices = data.quotes || {};
-                    }
-
-                    const fxRate = (stockPrices as any)['KRW=X']?.price || marketData.exchange?.rate || 1400;
-                    const goldPrice = (stockPrices as any)['GC=F']?.price || marketData.gold?.price || 2300;
-
-                    const prices: MarketPrices = {
-                        usdKrw: fxRate,
-                        goldUsd: goldPrice,
-                        stockPrices: stockPrices as any,
-                    };
-                    setMarketPrices(prices);
-                    const calculatedValue = calculateNetWorth(assets, prices);
-                    setTotalNetWorth(calculatedValue);
-                } catch (err) {
-                    console.error("Failed to fetch total net worth data:", err);
-                } finally {
-                    setIsLoadingTotal(false);
-                }
-            };
-            fetchTotalData();
+            refreshAll();
         }
-    }, [isHydrated, assets, marketData]);
+    }, [isHydrated]);
 
     const containerRef = React.useRef<HTMLDivElement>(null);
     const dragX = useMotionValue(0);
@@ -581,7 +573,7 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                             myStocks={myStocks}
                             setMyStocks={setMyStocks}
                             onModalToggle={setIsAnyModalOpen}
-                            onRefresh={refreshAllQuotes}
+                            onRefresh={refreshAll}
                         />
 
                         <InvestmentNewsCardV2

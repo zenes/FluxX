@@ -106,7 +106,11 @@ export default function InvestmentNewsCardV2({ myStocks, onModalToggle, isHydrat
 
     useEffect(() => {
         if (isHydrated) {
-            fetchNews();
+            // De-prioritize news fetch to ensure price data (A, B) loads first
+            const timer = setTimeout(() => {
+                fetchNews();
+            }, 1500);
+            return () => clearTimeout(timer);
         }
     }, [fetchNews, isHydrated]);
 
