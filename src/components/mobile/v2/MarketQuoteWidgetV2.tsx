@@ -401,10 +401,14 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
                             initial={{ y: "100%" }}
                             animate={{ y: 0 }}
                             exit={{ y: "100%" }}
-                            transition={{ type: 'tween', ease: 'easeInOut', duration: 0.15 }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                            drag="y"
+                            dragConstraints={{ top: 0 }}
+                            dragElastic={{ top: 0 }}
+                            onDragEnd={(_, info) => {
+                                if (info.offset.y > 100 || info.velocity.y > 500) setIsSheetOpen(false);
+                            }}
                             className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#1A1A1E] rounded-t-[32px] shadow-2xl z-[110] max-h-[85vh] flex flex-col border-t border-zinc-100 dark:border-white/10"
-                            onTouchStart={(e) => e.stopPropagation()}
-                            onTouchMove={(e) => e.stopPropagation()}
                         >
                             <div className="mx-auto w-12 h-1.5 bg-zinc-200 dark:bg-white/10 rounded-full mt-3 mb-1" />
 
@@ -549,9 +553,13 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
                             animate={{ y: 0 }}
                             exit={{ y: "100%" }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                            drag="y"
+                            dragConstraints={{ top: 0 }}
+                            dragElastic={{ top: 0 }}
+                            onDragEnd={(_, info) => {
+                                if (info.offset.y > 100 || info.velocity.y > 500) setSelectedAsset(null);
+                            }}
                             className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#1A1A1E] rounded-t-[32px] shadow-2xl z-[130] max-h-[90vh] flex flex-col"
-                            onTouchStart={(e) => e.stopPropagation()}
-                            onTouchMove={(e) => e.stopPropagation()}
                         >
                             {/* Handle & Close */}
                             <div className="relative pt-3 pb-2 flex justify-center shrink-0">

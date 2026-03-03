@@ -1,11 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import {
-    Sheet,
-    SheetContent,
-    SheetTitle,
-} from '@/components/ui/sheet';
+
 import {
     X,
     TrendingUp,
@@ -20,6 +16,7 @@ import {
 } from 'lucide-react';
 import { AssetItem, deleteStockAssetAllEntries, deleteStockEntry } from '@/lib/actions';
 import { cn } from '@/lib/utils';
+import { koreanNameMap } from '@/lib/koreanNameMap';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 
 // --- Sub-component for individual history entry with sticky swipe ---
@@ -457,333 +454,353 @@ export default function StockDetailSheetV2({
     };
 
     return (
-        <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <SheetContent
-                side="bottom"
-                className="h-auto max-h-[92vh] rounded-t-[40px] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-[#121214] flex flex-col [&>button]:hidden"
-            >
-                {/* Handle */}
-                <div className="relative pt-3 pb-2 flex justify-center shrink-0">
-                    <div className="w-12 h-1 bg-zinc-200 dark:bg-zinc-800 rounded-full" />
+        <AnimatePresence>
+            {isOpen && (
+                <>
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.1 }}
+                        className="fixed inset-0 bg-black/50 backdrop-blur-[2px] z-[120]"
+                        onClick={onClose}
+                    />
+                    <motion.div
+                        initial={{ y: "100%" }}
+                        animate={{ y: 0 }}
+                        exit={{ y: "100%" }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                        drag="y"
+                        dragConstraints={{ top: 0 }}
+                        dragElastic={{ top: 0 }}
+                        onDragEnd={(_, info) => {
+                            if (info.offset.y > 100 || info.velocity.y > 500) onClose();
+                        }}
+                        className="fixed bottom-0 left-0 right-0 h-auto max-h-[92vh] rounded-t-[40px] p-0 overflow-hidden border-none shadow-2xl bg-white dark:bg-[#121214] flex flex-col z-[130] [&>button]:hidden"
+                    >
+                        {/* Handle */}
+                        <div className="relative pt-3 pb-2 flex justify-center shrink-0">
+                            <div className="w-12 h-1 bg-zinc-200 dark:bg-zinc-800 rounded-full" />
 
-                    <div className="absolute right-6 top-[14px] flex items-center gap-2">
-                        {/* Star Toggle */}
-                        {stockAsset?.assetSymbol && (
-                            <button
-                                onClick={handleToggle}
-                                className={cn(
-                                    "p-2 rounded-full transition-all active:scale-95",
-                                    localWatchlisted
-                                        ? "bg-yellow-400/10 text-yellow-500"
-                                        : "bg-zinc-100 dark:bg-white/5 text-zinc-400"
+                            <div className="absolute right-6 top-[14px] flex items-center gap-2">
+                                {/* Star Toggle */}
+                                {stockAsset?.assetSymbol && (
+                                    <button
+                                        onClick={handleToggle}
+                                        className={cn(
+                                            "p-2 rounded-full transition-all active:scale-95",
+                                            localWatchlisted
+                                                ? "bg-yellow-400/10 text-yellow-500"
+                                                : "bg-zinc-100 dark:bg-white/5 text-zinc-400"
+                                        )}
+                                    >
+                                        <Star
+                                            className={cn("size-5", localWatchlisted && "fill-yellow-500")}
+                                        />
+                                    </button>
                                 )}
-                            >
-                                <Star
-                                    className={cn("size-5", localWatchlisted && "fill-yellow-500")}
-                                />
-                            </button>
-                        )}
 
-                        <button
-                            onClick={onClose}
-                            className="p-2 rounded-full bg-zinc-100 dark:bg-white/5 text-zinc-500 dark:text-zinc-400 transition-all active:scale-95"
-                        >
-                            <X className="size-5" />
-                        </button>
-                    </div>
-                </div>
-
-                <div className="overflow-y-auto hide-scrollbar pb-10">
-                    {/* Header Info */}
-                    <div className="px-6 pt-4 mb-6">
-                        <div className="flex flex-col gap-1 mb-4">
-                            <span className="text-[13px] font-black text-zinc-400 uppercase tracking-widest flex items-center gap-1">
-                                {stockAsset?.assetSymbol || '---'}
-                                <span className="text-[10px] font-black opacity-30">[F]</span>
-                            </span>
-                            <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">
-                                {title || stockAsset?.assetSymbol || '---'}
-                            </h2>
-                        </div>
-                        <div className="flex items-end gap-3">
-                            <span className={cn(
-                                "text-3xl font-black transition-colors",
-                                hoveredData ? "text-[#38C798]" : "text-zinc-900 dark:text-white"
-                            )}>
-                                {isUSD ? '$' : '₩'}{formatPriceLocal(hoveredData ? hoveredData.price : (currentPrice || computedAvgPrice))}
-                            </span>
-                            {!hoveredData && (
-                                <div className={cn(
-                                    "flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-black text-white mb-1",
-                                    (changePercent || 0) >= 0 ? "bg-[#FF3B2F]" : "bg-[#35C759]"
-                                )}>
-                                    {(changePercent || 0) >= 0 ? "+" : ""}{(changePercent || 0).toFixed(2)}%
-                                </div>
-                            )}
-                            {hoveredData && (
-                                <div className="text-[11px] font-bold text-zinc-500 mb-1.5 uppercase tracking-wider">
-                                    {hoveredData.time}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Range Selectors */}
-                    <div className="px-6 mb-4">
-                        <div className="flex items-center justify-between bg-zinc-50 dark:bg-white/5 p-1 rounded-xl gap-0.5">
-                            {['1D', '1W', '1M', '3M', '6M', 'YTD', '1Y'].map((range) => (
                                 <button
-                                    key={range}
-                                    onClick={() => setActiveRange(range)}
-                                    className={cn(
-                                        "flex-1 py-1.5 text-[11px] font-black rounded-lg transition-all",
-                                        activeRange === range
-                                            ? "bg-zinc-800 text-white dark:bg-white dark:text-zinc-900 shadow-lg"
-                                            : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
-                                    )}
+                                    onClick={onClose}
+                                    className="p-2 rounded-full bg-zinc-100 dark:bg-white/5 text-zinc-500 dark:text-zinc-400 transition-all active:scale-95"
                                 >
-                                    {range}
+                                    <X className="size-5" />
                                 </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Detailed Chart (Synchronized with Watchlist) */}
-                    <div className="px-4 mb-8">
-                        <div className="w-full h-72 bg-white dark:bg-[#1A1A1E] rounded-[32px] border border-zinc-100 dark:border-white/5 relative overflow-hidden flex flex-col pt-8 pb-4">
-                            <div className="flex-1 w-full px-2 relative">
-                                {isLoadingChart ? (
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <div className="w-8 h-8 border-2 border-zinc-200 dark:border-zinc-800 border-t-[#38C798] rounded-full animate-spin" />
-                                    </div>
-                                ) : chartData.length > 0 ? (
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <ComposedChart
-                                            data={chartData}
-                                            margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
-                                        >
-                                            <defs>
-                                                <linearGradient id="colorPriceSheet" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor={chartColor} stopOpacity={0.15} />
-                                                    <stop offset="95%" stopColor={chartColor} stopOpacity={0} />
-                                                </linearGradient>
-                                            </defs>
-                                            <CartesianGrid vertical={false} strokeDasharray="3 3" strokeOpacity={0.1} />
-                                            <XAxis dataKey="time" hide />
-                                            <YAxis
-                                                yAxisId="price"
-                                                domain={['auto', 'auto']}
-                                                orientation="right"
-                                                axisLine={false}
-                                                tickLine={false}
-                                                tick={{ fontSize: 10, fontWeight: 'bold', fill: '#A1A1AA' }}
-                                                mirror
-                                            />
-                                            <YAxis
-                                                yAxisId="volume"
-                                                orientation="left"
-                                                domain={[0, (dataMax: number) => dataMax * 3.5]}
-                                                hide={true}
-                                            />
-                                            <Tooltip content={<CustomTooltip />} />
-                                            <Bar
-                                                yAxisId="volume"
-                                                dataKey="volume"
-                                                fill="#A1A1AA"
-                                                opacity={0.3}
-                                                barSize={1.5}
-                                            />
-                                            <Area
-                                                yAxisId="price"
-                                                type="monotone"
-                                                dataKey="price"
-                                                stroke={chartColor}
-                                                strokeWidth={2.5}
-                                                fillOpacity={1}
-                                                fill="url(#colorPriceSheet)"
-                                                animationDuration={1000}
-                                                dot={false}
-                                                activeDot={{ r: 6, strokeWidth: 0, fill: chartColor }}
-                                            />
-                                        </ComposedChart>
-                                    </ResponsiveContainer>
-                                ) : (
-                                    <div className="absolute inset-0 flex items-center justify-center text-zinc-400 font-bold text-sm">
-                                        데이터를 불러올 수 없습니다.
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Time Labels Overlay */}
-                            <div className="mt-2 px-8 flex justify-between text-[10px] font-black text-zinc-300 dark:text-zinc-600 tracking-tighter">
-                                <span>{chartData[0]?.time}</span>
-                                <span>{chartData[Math.floor(chartData.length / 2)]?.time}</span>
-                                <span>{chartData[chartData.length - 1]?.time}</span>
-                            </div>
-
-                            <div className="absolute top-4 left-6 flex items-center gap-2">
-                                <div className="size-1.5 rounded-full bg-red-500 animate-pulse" />
-                                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
-                                    {activeRange === '1D' ? 'REALTIME 1D' : `${activeRange} TREND`}
-                                </span>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Key Statistics Grid */}
-                    <div className="px-6">
-                        <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-4 px-1">주요 통계</h3>
-                        <div className="grid grid-cols-2 gap-3">
-                            {[
-                                { label: '보유 수량', value: `${(stockAsset?.amount || 0).toLocaleString()}주` },
-                                { label: '평가 금액', value: `₩${totalValueKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}` },
-                                { label: '평균 단가', value: `${isUSD ? '$' : '₩'}${formatPriceLocal(computedAvgPrice)}` },
-                                { label: '현재가', value: `${isUSD ? '$' : '₩'}${formatPriceLocal(currentPrice || computedAvgPrice || 0)}` },
-                                { label: '보유 기간', value: '1일' },
-                                {
-                                    label: '평가 손익',
-                                    value: (
-                                        <span className={cn(unrealizedPnl >= 0 ? "text-[#FF4F60]" : "text-[#35C759]")}>
-                                            ₩{unrealizedPnl.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                                            <span className="text-[10px] ml-1 opacity-60 font-bold">({returnRate.toFixed(2)}%)</span>
-                                        </span>
-                                    ),
-                                    isCustomValue: true
-                                },
-                            ].map((stat) => (
-                                <div key={stat.label} className="bg-zinc-50 dark:bg-white/5 p-4 rounded-2xl flex flex-col gap-1">
-                                    <span className="text-[11px] font-bold text-zinc-400">{stat.label}</span>
-                                    <span className={cn(
-                                        "text-[15px] font-black",
-                                        !(stat as any).isCustomValue && "text-zinc-900 dark:text-white"
-                                    )}>
-                                        {stat.value}
+                        <div className="overflow-y-auto hide-scrollbar pb-10">
+                            {/* Header Info */}
+                            <div className="px-6 pt-4 mb-6">
+                                <div className="flex flex-col gap-1 mb-4">
+                                    <span className="text-[13px] font-black text-zinc-400 uppercase tracking-widest flex items-center gap-1">
+                                        {isKRStock ? stockAsset?.assetSymbol : (title || stockAsset?.assetSymbol || '---')}
+                                        <span className="text-[10px] font-black opacity-30">[F]</span>
                                     </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Purchase History Section */}
-                    {stockAsset?.entries && stockAsset.entries.length > 0 && (
-                        <div className="px-6 mt-10">
-                            <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-4 px-1">매수 이력</h3>
-                            <div className="space-y-3">
-                                {stockAsset.entries.map((entry, idx) => (
-                                    <PurchaseHistoryItem
-                                        key={entry.id || idx}
-                                        entry={entry}
-                                        idx={idx}
-                                        isUSD={isUSD}
-                                        exchangeRate={exchangeRate}
-                                        currentPrice={currentPrice}
-                                        isKRStock={isKRStock}
-                                        handleDeleteEntry={handleDeleteEntry}
-                                        handleEditEntry={(entry) => onEditEntry?.({ ...entry, tickerSymbol: stockAsset.assetSymbol })}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="px-6 mt-10 mb-20 grid grid-cols-2 gap-3">
-                        <button
-                            onClick={() => {
-                                onClose();
-                                setTimeout(() => {
-                                    onAddAsset?.(stockAsset?.assetSymbol || undefined);
-                                }, 300);
-                            }}
-                            className="py-4 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-dashed border-zinc-200 dark:border-white/10 flex items-center justify-center gap-2 group active:scale-[0.98] transition-all"
-                        >
-                            <div className="size-6 rounded-full bg-zinc-200 dark:bg-white/10 text-zinc-500 group-hover:bg-[#38C798] group-hover:text-white transition-all flex items-center justify-center">
-                                <Plus className="size-3.5" />
-                            </div>
-                            <span className="text-[13px] font-black text-zinc-400 group-hover:text-[#38C798] transition-colors uppercase tracking-tight">자산 추가</span>
-                        </button>
-
-                        <button
-                            onClick={handleDelete}
-                            className="py-4 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-dashed border-zinc-200 dark:border-white/10 flex items-center justify-center gap-2 group active:scale-[0.98] transition-all hover:bg-red-50 dark:hover:bg-red-900/10 hover:border-red-200 dark:hover:border-red-900/20"
-                        >
-                            <div className="size-6 rounded-full bg-zinc-200 dark:bg-white/10 text-zinc-500 group-hover:bg-red-500 group-hover:text-white transition-all flex items-center justify-center">
-                                <Trash2 className="size-3.5" />
-                            </div>
-                            <span className="text-[13px] font-black text-zinc-400 group-hover:text-red-500 transition-colors uppercase tracking-tight">자산 삭제</span>
-                        </button>
-                    </div>
-
-
-                    {/* Verification Modal Overlay (Moved inside SheetContent for correct event handling) */}
-                    {/* Full-screen Keypad Verification Modal */}
-                    <AnimatePresence>
-                        {verification.isOpen && (
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="fixed inset-0 z-[300] bg-white dark:bg-black flex flex-col items-center justify-center transition-colors duration-300"
-                            >
-                                {/* Header: Target & Input */}
-                                <div className="flex flex-col items-center mb-16">
-                                    <h2 className="text-[64px] font-light text-zinc-900 dark:text-white tracking-widest mb-2 leading-none">
-                                        {verification.targetPin}
+                                    <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">
+                                        {isKRStock ? (koreanNameMap[stockAsset?.assetSymbol || ''] || title || stockAsset?.assetSymbol || '---') : (title || stockAsset?.assetSymbol || '---')}
                                     </h2>
-                                    <div className="flex gap-3 h-8 items-center justify-center">
-                                        {verification.currentInput.split('').map((char, idx) => (
-                                            <div key={idx} className="size-2.5 rounded-full bg-zinc-900 dark:bg-white animate-pulse" />
-                                        ))}
-                                        {Array.from({ length: 4 - verification.currentInput.length }).map((_, idx) => (
-                                            <div key={idx} className="size-2.5 rounded-full bg-zinc-100 dark:bg-zinc-800" />
-                                        ))}
-                                    </div>
                                 </div>
+                                <div className="flex items-end gap-3">
+                                    <span className={cn(
+                                        "text-3xl font-black transition-colors",
+                                        hoveredData ? "text-[#38C798]" : "text-zinc-900 dark:text-white"
+                                    )}>
+                                        {isUSD ? '$' : '₩'}{formatPriceLocal(hoveredData ? hoveredData.price : (currentPrice || computedAvgPrice))}
+                                    </span>
+                                    {!hoveredData && (
+                                        <div className={cn(
+                                            "flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-black text-white mb-1",
+                                            (changePercent || 0) >= 0 ? "bg-[#FF3B2F]" : "bg-[#35C759]"
+                                        )}>
+                                            {(changePercent || 0) >= 0 ? "+" : ""}{(changePercent || 0).toFixed(2)}%
+                                        </div>
+                                    )}
+                                    {hoveredData && (
+                                        <div className="text-[11px] font-bold text-zinc-500 mb-1.5 uppercase tracking-wider">
+                                            {hoveredData.time}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
 
-                                {/* Keypad Grid */}
-                                <div className="grid grid-cols-3 gap-x-6 gap-y-5 mb-12">
-                                    {[
-                                        '1', '2', '3',
-                                        '4', '5', '6',
-                                        '7', '8', '9',
-                                        '*', '0', '#'
-                                    ].map((n) => (
+                            {/* Range Selectors */}
+                            <div className="px-6 mb-4">
+                                <div className="flex items-center justify-between bg-zinc-50 dark:bg-white/5 p-1 rounded-xl gap-0.5">
+                                    {['1D', '1W', '1M', '3M', '6M', 'YTD', '1Y'].map((range) => (
                                         <button
-                                            key={n}
-                                            onClick={() => {
-                                                if (n !== '*' && n !== '#') handlePinInput(n);
-                                            }}
+                                            key={range}
+                                            onClick={() => setActiveRange(range)}
                                             className={cn(
-                                                "size-20 rounded-full flex flex-col items-center justify-center transition-all active:bg-zinc-200 dark:active:bg-zinc-700",
-                                                n === '*' || n === '#' ? "invisible" : "bg-zinc-50 dark:bg-zinc-900"
+                                                "flex-1 py-1.5 text-[11px] font-black rounded-lg transition-all",
+                                                activeRange === range
+                                                    ? "bg-zinc-800 text-white dark:bg-white dark:text-zinc-900 shadow-lg"
+                                                    : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
                                             )}
                                         >
-                                            <span className="text-3xl font-normal text-zinc-900 dark:text-white leading-none">{n}</span>
+                                            {range}
                                         </button>
                                     ))}
                                 </div>
+                            </div>
 
-                                {/* Bottom Actions: Cancel & Delete */}
-                                <div className="flex items-center justify-between w-full max-w-[280px] px-6">
-                                    <button
-                                        onClick={() => setVerification(v => ({ ...v, isOpen: false }))}
-                                        className="text-zinc-900 dark:text-white text-lg font-light active:opacity-50"
-                                    >
-                                        Cancel
-                                    </button>
+                            {/* Detailed Chart (Synchronized with Watchlist) */}
+                            <div className="px-4 mb-8">
+                                <div className="w-full h-72 bg-white dark:bg-[#1A1A1E] rounded-[32px] border border-zinc-100 dark:border-white/5 relative overflow-hidden flex flex-col pt-8 pb-4">
+                                    <div className="flex-1 w-full px-2 relative">
+                                        {isLoadingChart ? (
+                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                <div className="w-8 h-8 border-2 border-zinc-200 dark:border-zinc-800 border-t-[#38C798] rounded-full animate-spin" />
+                                            </div>
+                                        ) : chartData.length > 0 ? (
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <ComposedChart
+                                                    data={chartData}
+                                                    margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+                                                >
+                                                    <defs>
+                                                        <linearGradient id="colorPriceSheet" x1="0" y1="0" x2="0" y2="1">
+                                                            <stop offset="5%" stopColor={chartColor} stopOpacity={0.15} />
+                                                            <stop offset="95%" stopColor={chartColor} stopOpacity={0} />
+                                                        </linearGradient>
+                                                    </defs>
+                                                    <CartesianGrid vertical={false} strokeDasharray="3 3" strokeOpacity={0.1} />
+                                                    <XAxis dataKey="time" hide />
+                                                    <YAxis
+                                                        yAxisId="price"
+                                                        domain={['auto', 'auto']}
+                                                        orientation="right"
+                                                        axisLine={false}
+                                                        tickLine={false}
+                                                        tick={{ fontSize: 10, fontWeight: 'bold', fill: '#A1A1AA' }}
+                                                        mirror
+                                                    />
+                                                    <YAxis
+                                                        yAxisId="volume"
+                                                        orientation="left"
+                                                        domain={[0, (dataMax: number) => dataMax * 3.5]}
+                                                        hide={true}
+                                                    />
+                                                    <Tooltip content={<CustomTooltip />} />
+                                                    <Bar
+                                                        yAxisId="volume"
+                                                        dataKey="volume"
+                                                        fill="#A1A1AA"
+                                                        opacity={0.3}
+                                                        barSize={1.5}
+                                                    />
+                                                    <Area
+                                                        yAxisId="price"
+                                                        type="monotone"
+                                                        dataKey="price"
+                                                        stroke={chartColor}
+                                                        strokeWidth={2.5}
+                                                        fillOpacity={1}
+                                                        fill="url(#colorPriceSheet)"
+                                                        animationDuration={1000}
+                                                        dot={false}
+                                                        activeDot={{ r: 6, strokeWidth: 0, fill: chartColor }}
+                                                    />
+                                                </ComposedChart>
+                                            </ResponsiveContainer>
+                                        ) : (
+                                            <div className="absolute inset-0 flex items-center justify-center text-zinc-400 font-bold text-sm">
+                                                데이터를 불러올 수 없습니다.
+                                            </div>
+                                        )}
+                                    </div>
 
-                                    <button
-                                        onClick={() => setVerification(v => ({ ...v, currentInput: v.currentInput.slice(0, -1) }))}
-                                        className="size-12 flex items-center justify-center text-zinc-300 dark:text-zinc-500 active:text-zinc-900 dark:active:text-white"
-                                    >
-                                        <X className="size-8" />
-                                    </button>
+                                    {/* Time Labels Overlay */}
+                                    <div className="mt-2 px-8 flex justify-between text-[10px] font-black text-zinc-300 dark:text-zinc-600 tracking-tighter">
+                                        <span>{chartData[0]?.time}</span>
+                                        <span>{chartData[Math.floor(chartData.length / 2)]?.time}</span>
+                                        <span>{chartData[chartData.length - 1]?.time}</span>
+                                    </div>
+
+                                    <div className="absolute top-4 left-6 flex items-center gap-2">
+                                        <div className="size-1.5 rounded-full bg-red-500 animate-pulse" />
+                                        <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+                                            {activeRange === '1D' ? 'REALTIME 1D' : `${activeRange} TREND`}
+                                        </span>
+                                    </div>
                                 </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
-            </SheetContent>
+                            </div>
 
-        </Sheet>
+                            {/* Key Statistics Grid */}
+                            <div className="px-6">
+                                <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-4 px-1">주요 통계</h3>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {[
+                                        { label: '보유 수량', value: `${(stockAsset?.amount || 0).toLocaleString()}주` },
+                                        { label: '평가 금액', value: `₩${totalValueKrw.toLocaleString(undefined, { maximumFractionDigits: 0 })}` },
+                                        { label: '평균 단가', value: `${isUSD ? '$' : '₩'}${formatPriceLocal(computedAvgPrice)}` },
+                                        { label: '현재가', value: `${isUSD ? '$' : '₩'}${formatPriceLocal(currentPrice || computedAvgPrice || 0)}` },
+                                        { label: '보유 기간', value: '1일' },
+                                        {
+                                            label: '평가 손익',
+                                            value: (
+                                                <span className={cn(unrealizedPnl >= 0 ? "text-[#FF4F60]" : "text-[#35C759]")}>
+                                                    ₩{unrealizedPnl.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                                    <span className="text-[10px] ml-1 opacity-60 font-bold">({returnRate.toFixed(2)}%)</span>
+                                                </span>
+                                            ),
+                                            isCustomValue: true
+                                        },
+                                    ].map((stat) => (
+                                        <div key={stat.label} className="bg-zinc-50 dark:bg-white/5 p-4 rounded-2xl flex flex-col gap-1">
+                                            <span className="text-[11px] font-bold text-zinc-400">{stat.label}</span>
+                                            <span className={cn(
+                                                "text-[15px] font-black",
+                                                !(stat as any).isCustomValue && "text-zinc-900 dark:text-white"
+                                            )}>
+                                                {stat.value}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Purchase History Section */}
+                            {stockAsset?.entries && stockAsset.entries.length > 0 && (
+                                <div className="px-6 mt-10">
+                                    <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-4 px-1">매수 이력</h3>
+                                    <div className="space-y-3">
+                                        {stockAsset.entries.map((entry, idx) => (
+                                            <PurchaseHistoryItem
+                                                key={entry.id || idx}
+                                                entry={entry}
+                                                idx={idx}
+                                                isUSD={isUSD}
+                                                exchangeRate={exchangeRate}
+                                                currentPrice={currentPrice}
+                                                isKRStock={isKRStock}
+                                                handleDeleteEntry={handleDeleteEntry}
+                                                handleEditEntry={(entry) => onEditEntry?.({ ...entry, tickerSymbol: stockAsset.assetSymbol })}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="px-6 mt-10 mb-20 grid grid-cols-2 gap-3">
+                                <button
+                                    onClick={() => {
+                                        onClose();
+                                        setTimeout(() => {
+                                            onAddAsset?.(stockAsset?.assetSymbol || undefined);
+                                        }, 300);
+                                    }}
+                                    className="py-4 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-dashed border-zinc-200 dark:border-white/10 flex items-center justify-center gap-2 group active:scale-[0.98] transition-all"
+                                >
+                                    <div className="size-6 rounded-full bg-zinc-200 dark:bg-white/10 text-zinc-500 group-hover:bg-[#38C798] group-hover:text-white transition-all flex items-center justify-center">
+                                        <Plus className="size-3.5" />
+                                    </div>
+                                    <span className="text-[13px] font-black text-zinc-400 group-hover:text-[#38C798] transition-colors uppercase tracking-tight">자산 추가</span>
+                                </button>
+
+                                <button
+                                    onClick={handleDelete}
+                                    className="py-4 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-dashed border-zinc-200 dark:border-white/10 flex items-center justify-center gap-2 group active:scale-[0.98] transition-all hover:bg-red-50 dark:hover:bg-red-900/10 hover:border-red-200 dark:hover:border-red-900/20"
+                                >
+                                    <div className="size-6 rounded-full bg-zinc-200 dark:bg-white/10 text-zinc-500 group-hover:bg-red-500 group-hover:text-white transition-all flex items-center justify-center">
+                                        <Trash2 className="size-3.5" />
+                                    </div>
+                                    <span className="text-[13px] font-black text-zinc-400 group-hover:text-red-500 transition-colors uppercase tracking-tight">자산 삭제</span>
+                                </button>
+                            </div>
+
+
+                            {/* Verification Modal Overlay (Moved inside SheetContent for correct event handling) */}
+                            {/* Full-screen Keypad Verification Modal */}
+                            <AnimatePresence>
+                                {verification.isOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="fixed inset-0 z-[300] bg-white dark:bg-black flex flex-col items-center justify-center transition-colors duration-300"
+                                    >
+                                        {/* Header: Target & Input */}
+                                        <div className="flex flex-col items-center mb-16">
+                                            <h2 className="text-[64px] font-light text-zinc-900 dark:text-white tracking-widest mb-2 leading-none">
+                                                {verification.targetPin}
+                                            </h2>
+                                            <div className="flex gap-3 h-8 items-center justify-center">
+                                                {verification.currentInput.split('').map((char, idx) => (
+                                                    <div key={idx} className="size-2.5 rounded-full bg-zinc-900 dark:bg-white animate-pulse" />
+                                                ))}
+                                                {Array.from({ length: 4 - verification.currentInput.length }).map((_, idx) => (
+                                                    <div key={idx} className="size-2.5 rounded-full bg-zinc-100 dark:bg-zinc-800" />
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Keypad Grid */}
+                                        <div className="grid grid-cols-3 gap-x-6 gap-y-5 mb-12">
+                                            {[
+                                                '1', '2', '3',
+                                                '4', '5', '6',
+                                                '7', '8', '9',
+                                                '*', '0', '#'
+                                            ].map((n) => (
+                                                <button
+                                                    key={n}
+                                                    onClick={() => {
+                                                        if (n !== '*' && n !== '#') handlePinInput(n);
+                                                    }}
+                                                    className={cn(
+                                                        "size-20 rounded-full flex flex-col items-center justify-center transition-all active:bg-zinc-200 dark:active:bg-zinc-700",
+                                                        n === '*' || n === '#' ? "invisible" : "bg-zinc-50 dark:bg-zinc-900"
+                                                    )}
+                                                >
+                                                    <span className="text-3xl font-normal text-zinc-900 dark:text-white leading-none">{n}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        {/* Bottom Actions: Cancel & Delete */}
+                                        <div className="flex items-center justify-between w-full max-w-[280px] px-6">
+                                            <button
+                                                onClick={() => setVerification(v => ({ ...v, isOpen: false }))}
+                                                className="text-zinc-900 dark:text-white text-lg font-light active:opacity-50"
+                                            >
+                                                Cancel
+                                            </button>
+
+                                            <button
+                                                onClick={() => setVerification(v => ({ ...v, currentInput: v.currentInput.slice(0, -1) }))}
+                                                className="size-12 flex items-center justify-center text-zinc-300 dark:text-zinc-500 active:text-zinc-900 dark:active:text-white"
+                                            >
+                                                <X className="size-8" />
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    </motion.div>
+                </>
+            )}
+        </AnimatePresence>
     );
 }
