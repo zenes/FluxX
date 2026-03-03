@@ -1,15 +1,17 @@
 # Project Progress - 2026-03-03
 
-## [2026-03-03 12:15] 모바일 V2 관심 종목(Watchlist) 기능 완성 및 데이터 동기화
+## [2026-03-03 12:44] 모바일 V2 관심 종목(Watchlist) 고도화 및 데이터 동기화
 - **관심 종목 데이터베이스 완전 연동**: 
     - `WatchlistStock` 테이블을 생성하고 서버 액션을 통해 관심 종목 추가/삭제 시 DB와 실시간 동기화되도록 구현함.
     - `npx prisma db push`를 통해 기존 데이터를 유지하면서 새로운 스키마를 안전하게 반영함.
 - **모바일 최적화 및 UX 강화**:
     - **Optimistic UI 적용**: 별표 토글 시 서버 응답을 기다리지 않고 로컬 상태(`localWatchlisted`)를 즉시 업데이트하여 모바일에서의 반응성을 극대화함.
     - **인터랙션 정교화**: 별표 아이콘에 `active:scale-95` 효과와 전용 하이라이트 배경을 적용하여 터치 피드백을 강화함.
+- **디자인 일관성 확보 및 버그 수정 (UI Refinement)**: 
+    - `MarketQuoteWidgetV2` (Card B)에서 한국 주식의 경우 티커 번호 대신 종목명(한글)이 최상위 제목으로 표시되도록 수정하여 `AssetListGroupCard` (Card D)와 시각적 통일성을 맞춤.
+    - `SimpleModeV2Container`의 실시간 가격 새로고침(`refreshAllQuotes`) 시 API 응답에 의해 한글 종목명이 유실되는 버그를 `koreanNameMap`을 재매핑하여 해결함.
 - **안정성 및 디버깅 가시성 확보**:
-    - 개발 모드 Fallback 로직을 `watchlist-actions.ts`에도 적용하여 모바일 테스트 시 인증 오류를 원천 차단함.
-    - 서버 에러 발생 시 상세 메시지를 클라이언트로 전달하도록 예외 처리 로직을 보강함.
+    - 개발 모드 Fallback 로직을 `watchlist-actions.ts`에도 적용하여 모바일 테스트 시 인증 오류를 원천 차단.
 
 ## [2026-03-03 10:50] 모바일 V2 인증 안정화 및 데이터 백업/복구 기능 구현
 - **인증 시스템 유연화 (Auth Fallback)**: 로컬 네트워크를 통한 모바일 접속 시 세션 쿠키 유실로 발생하는 'Unauthorized' 에러를 해결하기 위해, 개발 모드(`development`)에서는 세션이 없어도 시스템의 첫 번째 사용자로 자동 인증되는 Fallback 로직을 모든 주요 서버 액션(`actions.ts`, `test-actions.ts`)에 적용함.

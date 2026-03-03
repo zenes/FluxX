@@ -235,6 +235,7 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                     if (qData) {
                         return {
                             ...s,
+                            name: s.type === 'KR' ? (koreanNameMap[s.ticker] || qData.shortName || s.name) : (qData.shortName || s.name),
                             currentPrice: qData.price,
                             changeAmount: qData.change || 0,
                             changeRate: qData.changePercent || 0,

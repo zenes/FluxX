@@ -335,11 +335,11 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
                         >
                             {/* Left: Ticker & Name */}
                             <div className="flex flex-col gap-0.5 flex-1 min-w-0 pr-2">
-                                <span className="text-[15px] font-bold text-zinc-900 dark:text-white uppercase tracking-tight">
-                                    {item.ticker}
+                                <span className="text-[15px] font-bold text-zinc-900 dark:text-white uppercase tracking-tight truncate">
+                                    {item.type === 'KR' ? (koreanNameMap[item.ticker] || item.name) : item.ticker}
                                 </span>
-                                <span className="text-[12px] text-zinc-500 dark:text-zinc-400 line-clamp-1 break-all">
-                                    {item.name}
+                                <span className="text-[12px] text-zinc-500 dark:text-zinc-400 line-clamp-1 break-all uppercase font-bold tracking-tighter">
+                                    {item.type === 'KR' ? item.ticker : item.name}
                                 </span>
                             </div>
 
