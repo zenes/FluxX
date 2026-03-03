@@ -6,10 +6,19 @@ import { encrypt } from '@/lib/encryption';
 import { revalidatePath } from 'next/cache';
 
 export async function bulkDeleteTestData() {
-    const session = await auth();
-    if (!session?.user?.id) throw new Error('Unauthorized');
+    let session = await auth();
+    let userId = session?.user?.id;
 
-    const userId = session.user.id;
+    // In development mode, if no session exists, try to fallback to the first user found in system
+    if (!userId && process.env.NODE_ENV === 'development') {
+        const firstUser = await prisma.user.findFirst();
+        if (firstUser) {
+            userId = firstUser.id;
+            console.log(`[DEV MODE] No session found, falling back to user ${firstUser.email} (${userId})`);
+        }
+    }
+
+    if (!userId) throw new Error('Unauthorized: No session or default user found.');
 
     try {
         // Validate models exist at runtime
@@ -46,10 +55,19 @@ export async function bulkDeleteTestData() {
 }
 
 export async function bulkInsertTestData() {
-    const session = await auth();
-    if (!session?.user?.id) throw new Error('Unauthorized');
+    let session = await auth();
+    let userId = session?.user?.id;
 
-    const userId = session.user.id;
+    // In development mode, if no session exists, try to fallback to the first user found in system
+    if (!userId && process.env.NODE_ENV === 'development') {
+        const firstUser = await prisma.user.findFirst();
+        if (firstUser) {
+            userId = firstUser.id;
+            console.log(`[DEV MODE] No session found, falling back to user ${firstUser.email} (${userId})`);
+        }
+    }
+
+    if (!userId) throw new Error('Unauthorized: No session or default user found.');
 
     try {
         // 1. Clear existing data first

@@ -12,6 +12,8 @@ import prisma from '@/lib/prisma';
 import { encrypt, decrypt } from '@/lib/encryption';
 import { revalidatePath } from 'next/cache';
 import { bulkInsertTestData, bulkDeleteTestData } from '@/lib/test-actions';
+import { backupDatabase, getBackupList, restoreDatabase } from '@/lib/db-actions';
+import BackupRestoreSheet from './BackupRestoreSheet';
 import { getWatchlistStocks, syncWatchlist } from '@/lib/watchlist-actions';
 import { koreanNameMap } from '@/lib/koreanNameMap';
 import { AssetItem, getAssets, getMemos, getPredefinedAccounts } from '@/lib/actions';
@@ -59,6 +61,8 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
     const [entryType, setEntryType] = useState<'stock' | 'other'>('stock');
     const [prefilledSymbol, setPrefilledSymbol] = useState<string | undefined>(undefined);
     const [editingEntry, setEditingEntry] = useState<any | null>(null);
+    const [isBackupRestoreOpen, setIsBackupRestoreOpen] = useState(false);
+    const [backups, setBackups] = useState<any[]>([]);
 
     const handleAddAssetEntry = (symbol?: string) => {
         setEntryType('stock');
@@ -349,18 +353,52 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
 
     const [isPending, setIsPending] = useState(false);
 
-    const handleInsertTestData = async () => {
+    const handleBackup = async () => {
         if (isPending) return;
         setIsPending(true);
         try {
-            await bulkInsertTestData();
-            // Refresh market data if needed, but revalidatePath should handle it
-            window.location.reload(); // Force reload to see changes clearly
+            const result = await backupDatabase();
+            if (result.success) {
+                alert(result.message);
+            } else {
+                alert(result.message);
+            }
         } catch (e) {
             console.error(e);
-            alert("입력 실패: " + e);
+            alert("백업 실패: " + e);
         } finally {
             setIsPending(false);
+        }
+    };
+
+    const handleShowRestore = async () => {
+        try {
+            const list = await getBackupList();
+            setBackups(list);
+            setIsBackupRestoreOpen(true);
+        } catch (e) {
+            console.error(e);
+            alert("백업 목록을 가져오는데 실패했습니다.");
+        }
+    };
+
+    const handleRestore = async (filename: string) => {
+        if (!window.confirm("정말로 이 백업으로 복구하시겠습니까? 현재 데이터가 대체됩니다.")) return;
+        setIsPending(true);
+        try {
+            const result = await restoreDatabase(filename);
+            if (result.success) {
+                alert(result.message);
+                window.location.reload();
+            } else {
+                alert(result.message);
+            }
+        } catch (e) {
+            console.error(e);
+            alert("복구 실패: " + e);
+        } finally {
+            setIsPending(false);
+            setIsBackupRestoreOpen(false);
         }
     };
 
@@ -449,11 +487,18 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
 
                             <div className="flex gap-1 ml-1">
                                 <button
-                                    onClick={handleInsertTestData}
+                                    onClick={handleBackup}
                                     disabled={isPending}
                                     className="px-2 py-1 text-[10px] font-bold bg-[#38C798]/10 text-[#38C798] rounded-md border border-[#38C798]/20 active:scale-95 transition-all disabled:opacity-50"
                                 >
-                                    {isPending ? "..." : "데이터 입력"}
+                                    {isPending ? "..." : "백업"}
+                                </button>
+                                <button
+                                    onClick={handleShowRestore}
+                                    disabled={isPending}
+                                    className="px-2 py-1 text-[10px] font-bold bg-blue-500/10 text-blue-500 rounded-md border border-blue-500/20 active:scale-95 transition-all disabled:opacity-50"
+                                >
+                                    {isPending ? "..." : "복구"}
                                 </button>
                                 <button
                                     onClick={handleDeleteTestData}
@@ -720,6 +765,13 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                 initialSymbol={prefilledSymbol}
                 editingEntry={editingEntry}
                 type={entryType}
+            />
+
+            <BackupRestoreSheet
+                isOpen={isBackupRestoreOpen}
+                onClose={() => setIsBackupRestoreOpen(false)}
+                backups={backups}
+                onRestore={handleRestore}
             />
         </div>
     );

@@ -27,12 +27,18 @@ export async function authenticate(
 }
 
 export async function getUserSettings() {
-    const session = await auth();
-    if (!session?.user?.id) return { hideAssets: false };
+    let session = await auth();
+    let userId = session?.user?.id;
+
+    if (!userId && process.env.NODE_ENV === 'development') {
+        userId = (await prisma.user.findFirst())?.id;
+    }
+
+    if (!userId) return { hideAssets: false };
 
     try {
         const user = await prisma.user.findUnique({
-            where: { id: session.user.id },
+            where: { id: userId },
             select: { hideAssets: true } as any
         });
         return { hideAssets: !!(user as any)?.hideAssets };
@@ -43,13 +49,19 @@ export async function getUserSettings() {
 }
 
 export async function updateUserPrivacy(hideAssets: boolean) {
-    const session = await auth();
-    if (!session?.user?.id) throw new Error('Unauthorized');
+    let session = await auth();
+    let userId = session?.user?.id;
+
+    if (!userId && process.env.NODE_ENV === 'development') {
+        userId = (await prisma.user.findFirst())?.id;
+    }
+
+    if (!userId) throw new Error('Unauthorized');
 
     try {
-        console.log(`Attempting to update privacy for user ${session.user.id} to ${hideAssets}`);
+        console.log(`Attempting to update privacy for user ${userId} to ${hideAssets}`);
         await (prisma.user as any).update({
-            where: { id: session.user.id },
+            where: { id: userId },
             data: { hideAssets }
         });
         revalidatePath('/m/v2');
@@ -86,20 +98,29 @@ export type AssetItem = {
 };
 
 export async function getAssets(): Promise<AssetItem[]> {
-    const session = await auth();
-    console.log('getAssets: Session user ID:', session?.user?.id);
-    if (!session?.user?.id) {
+    let session = await auth();
+    let userId = session?.user?.id;
+
+    if (!userId && process.env.NODE_ENV === 'development') {
+        const firstUser = await prisma.user.findFirst();
+        if (firstUser) {
+            userId = firstUser.id;
+            console.log(`[DEV MODE] getAssets: No session found, falling back to user ${firstUser.email} (${userId})`);
+        }
+    }
+
+    if (!userId) {
         return [];
     }
 
     const assets = await prisma.asset.findMany({
-        where: { userId: session.user.id },
+        where: { userId: userId },
     });
     console.log('getAssets: Found', assets.length, 'raw assets in DB');
 
     // Fetch associated stock entries with their predefined accounts for aliases
     const allStockEntries = await prisma.stockEntry.findMany({
-        where: { userId: session.user.id },
+        where: { userId: userId },
         include: { predefinedAccount: true }
     });
 
@@ -154,8 +175,14 @@ export async function getAssets(): Promise<AssetItem[]> {
 }
 
 export async function upsertAsset(assetType: string, amount: number, predefinedAccountId?: string) {
-    const session = await auth();
-    if (!session?.user?.id) {
+    let session = await auth();
+    let userId = session?.user?.id;
+
+    if (!userId && process.env.NODE_ENV === 'development') {
+        userId = (await prisma.user.findFirst())?.id;
+    }
+
+    if (!userId) {
         throw new Error('Unauthorized');
     }
 
@@ -164,7 +191,7 @@ export async function upsertAsset(assetType: string, amount: number, predefinedA
     // Check if asset exists for this user + type + account combination
     const existingAsset = await (prisma.asset as any).findFirst({
         where: {
-            userId: session.user.id,
+            userId: userId,
             assetType: assetType,
             predefinedAccountId: predefinedAccountId || null
         }
@@ -178,7 +205,7 @@ export async function upsertAsset(assetType: string, amount: number, predefinedA
     } else {
         await (prisma.asset as any).create({
             data: {
-                userId: session.user.id,
+                userId: userId,
                 assetType,
                 amountEncrypted,
                 predefinedAccountId: predefinedAccountId || null
@@ -207,8 +234,14 @@ export async function addStockEntry(data: {
     dividendMonths?: string;
     initialMemo?: string;
 }) {
-    const session = await auth();
-    if (!session?.user?.id) {
+    let session = await auth();
+    let userId = session?.user?.id;
+
+    if (!userId && process.env.NODE_ENV === 'development') {
+        userId = (await prisma.user.findFirst())?.id;
+    }
+
+    if (!userId) {
         throw new Error('Unauthorized');
     }
 
@@ -216,7 +249,7 @@ export async function addStockEntry(data: {
         const { predefinedAccountId, initialMemo, ...rest } = data;
         const entry = await prisma.stockEntry.create({
             data: {
-                userId: session.user.id,
+                userId,
                 ...rest,
                 predefinedAccountId: predefinedAccountId || null,
                 dividendPerShare: data.dividendPerShare,
@@ -225,7 +258,7 @@ export async function addStockEntry(data: {
             }
         });
 
-        await recalculateStockAsset(session.user.id, data.tickerSymbol);
+        await recalculateStockAsset(userId, data.tickerSymbol);
 
         // Auto-generate AssetMemo for this transaction
         let memoContent = `[SYSTEM] Purchased ${data.quantity.toLocaleString(undefined, { maximumFractionDigits: 4 })} shares at ${(data.totalPurchaseAmount / data.quantity).toLocaleString(undefined, { maximumFractionDigits: data.currency === 'KRW' ? 0 : 2, minimumFractionDigits: data.currency === 'KRW' ? 0 : 2 })} ${data.currency} via ${data.brokerName} - ${data.accountOwner}${data.accountNumber ? ` (${data.accountNumber})` : ''}. Total cost: ${data.totalPurchaseAmount.toLocaleString(undefined, { maximumFractionDigits: data.currency === 'KRW' ? 0 : 2, minimumFractionDigits: data.currency === 'KRW' ? 0 : 2 })} ${data.currency}`;
@@ -237,7 +270,7 @@ export async function addStockEntry(data: {
 
         await (prisma as any).assetMemo.create({
             data: {
-                userId: session.user.id,
+                userId,
                 tickerSymbol: data.tickerSymbol,
                 content: memoContent
             }
@@ -252,12 +285,18 @@ export async function addStockEntry(data: {
 }
 
 export async function getPredefinedAccounts() {
-    const session = await auth();
-    if (!session?.user?.id) return [];
+    let session = await auth();
+    let userId = session?.user?.id;
+
+    if (!userId && process.env.NODE_ENV === 'development') {
+        userId = (await prisma.user.findFirst())?.id;
+    }
+
+    if (!userId) return [];
 
     try {
         const accounts = await prisma.predefinedAccount.findMany({
-            where: { userId: session.user.id },
+            where: { userId },
             orderBy: { createdAt: 'desc' },
         });
         return accounts;
@@ -273,13 +312,19 @@ export async function addPredefinedAccount(data: {
     accountNumber: string;
     owner: string;
 }) {
-    const session = await auth();
-    if (!session?.user?.id) throw new Error('Unauthorized');
+    let session = await auth();
+    let userId = session?.user?.id;
+
+    if (!userId && process.env.NODE_ENV === 'development') {
+        userId = (await prisma.user.findFirst())?.id;
+    }
+
+    if (!userId) throw new Error('Unauthorized');
 
     try {
         const account = await prisma.predefinedAccount.create({
             data: {
-                userId: session.user.id,
+                userId,
                 ...data
             }
         });
@@ -398,16 +443,22 @@ async function recalculateStockAsset(userId: string, tickerSymbol: string) {
     });
 }
 export async function deleteStockEntry(entryId: string, tickerSymbol: string) {
-    const session = await auth();
-    if (!session?.user?.id) throw new Error('Unauthorized');
+    let session = await auth();
+    let userId = session?.user?.id;
+
+    if (!userId && process.env.NODE_ENV === 'development') {
+        userId = (await prisma.user.findFirst())?.id;
+    }
+
+    if (!userId) throw new Error('Unauthorized');
 
     try {
-        console.log(`deleteStockEntry: Attempting to delete entryId: ${entryId} for userId: ${session.user.id}`);
+        console.log(`deleteStockEntry: Attempting to delete entryId: ${entryId} for userId: ${userId}`);
         const result = await prisma.stockEntry.delete({
-            where: { id: entryId, userId: session.user.id }
+            where: { id: entryId, userId: userId }
         });
         console.log(`deleteStockEntry: Successfully deleted record:`, result);
-        await recalculateStockAsset(session.user.id, tickerSymbol);
+        await recalculateStockAsset(userId, tickerSymbol);
         revalidatePath('/operations');
         revalidatePath('/m/v2');
         return { success: true };
@@ -415,7 +466,7 @@ export async function deleteStockEntry(entryId: string, tickerSymbol: string) {
         if (e.code === 'P2025') {
             console.warn('deleteStockEntry: Record already deleted or not found:', entryId);
             // Even if not found, we want the UI to sync, so we still revalidate and return success
-            await recalculateStockAsset(session.user.id, tickerSymbol);
+            await recalculateStockAsset(userId, tickerSymbol);
             revalidatePath('/operations');
             revalidatePath('/m/v2');
             return { success: true };
@@ -426,14 +477,20 @@ export async function deleteStockEntry(entryId: string, tickerSymbol: string) {
 }
 
 export async function deleteStockAssetAllEntries(tickerSymbol: string) {
-    const session = await auth();
-    if (!session?.user?.id) throw new Error('Unauthorized');
+    let session = await auth();
+    let userId = session?.user?.id;
+
+    if (!userId && process.env.NODE_ENV === 'development') {
+        userId = (await prisma.user.findFirst())?.id;
+    }
+
+    if (!userId) throw new Error('Unauthorized');
 
     try {
         await prisma.stockEntry.deleteMany({
-            where: { tickerSymbol, userId: session.user.id }
+            where: { tickerSymbol, userId: userId }
         });
-        await recalculateStockAsset(session.user.id, tickerSymbol);
+        await recalculateStockAsset(userId, tickerSymbol);
         revalidatePath('/operations');
         return { success: true };
     } catch (e) {
@@ -459,13 +516,19 @@ export async function editStockEntry(
     },
     tickerSymbol: string
 ) {
-    const session = await auth();
-    if (!session?.user?.id) throw new Error('Unauthorized');
+    let session = await auth();
+    let userId = session?.user?.id;
+
+    if (!userId && process.env.NODE_ENV === 'development') {
+        userId = (await prisma.user.findFirst())?.id;
+    }
+
+    if (!userId) throw new Error('Unauthorized');
 
     try {
         const { predefinedAccountId, initialMemo, ...rest } = data;
         await (prisma as any).stockEntry.update({
-            where: { id: entryId, userId: session.user.id },
+            where: { id: entryId, userId: userId },
             data: {
                 ...rest,
                 predefinedAccountId: predefinedAccountId || null,
@@ -474,7 +537,7 @@ export async function editStockEntry(
                 dividendMonths: data.dividendMonths
             }
         });
-        await recalculateStockAsset(session.user.id, tickerSymbol);
+        await recalculateStockAsset(userId, tickerSymbol);
         revalidatePath('/operations');
         return { success: true };
     } catch (e: any) {

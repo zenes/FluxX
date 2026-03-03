@@ -1,10 +1,15 @@
 # Project Progress - 2026-03-03
 
-## [2026-03-03] Mac 개발 환경 최적화 및 의존성 해결
-- **Mac 전용 개발 서버 스크립트 추가**: Homebrew로 설치된 `node@20` 경로 설정 및 3000번 포트 자동 정리를 포함한 `npm run dev:mac` 명령어를 `package.json`에 추가하여 실행 편의성을 높임.
-- **의존성 오류 수정**: 서버 실행 시 발생하던 `rss-parser` 모듈 누락 문제를 `npm install`을 통해 해결.
-- **모바일 접속 보안 설정**: 모바일 기기 브라우저에서 접속 시 발생하는 Cross Origin 경고를 방지하기 위해 `next.config.mjs`에 `experimental.allowedDevOrigins` 설정을 추가함.
-- **문서 및 워크플로우 보완**: Mac 환경에서의 특이사항과 해결 방법을 `docs/MOBILE_CONNECTION.md` 및 `.agents/workflows/setup-env.md`에 반영함.
+## [2026-03-03 10:50] 모바일 V2 인증 안정화 및 데이터 백업/복구 기능 구현
+- **인증 시스템 유연화 (Auth Fallback)**: 로컬 네트워크를 통한 모바일 접속 시 세션 쿠키 유실로 발생하는 'Unauthorized' 에러를 해결하기 위해, 개발 모드(`development`)에서는 세션이 없어도 시스템의 첫 번째 사용자로 자동 인증되는 Fallback 로직을 모든 주요 서버 액션(`actions.ts`, `test-actions.ts`)에 적용함.
+- **데이터 관리 UI 혁신 (Backup & Restore)**: 
+    - **백업/복구 버튼 신설**: 모바일 V2 대시보드 상단에서 기존 '데이터 입력' 버튼을 제거하고, 실무적인 '백업' 및 '복구' 버튼을 배치함.
+    - **복구 전용 시트(BackupRestoreSheet)**: 서버에 저장된 `.db` 백업 파일 리스트를 시각화하고, 선택한 시점으로 데이터를 즉시 복원할 수 있는 인터페이스를 구축함.
+- **환경 최적화 및 버그 수정**:
+    - **Mac 서버 스크립트(`dev:mac`)**: Node.js 경로 설정 및 포트 충돌 자동 해결 스크립트를 추가하여 개발 편의성을 증대함.
+    - **의존성 및 설정 해결**: 누락된 `rss-parser`를 설치하고, 모바일 접속 시 발생하는 Next.js 크로스 오리진 경고를 `allowedDevOrigins` 설정을 통해 제거함.
+    - **삭제 기능 복구**: 소스 코드에서 누락되었던 `handleDeleteTestData` 핸들러를 복구하고 동작을 검증함.
+- **코드 품질 및 안전성 강화**: 서버 액션 내에서 `session` 객체를 안전하게 처리하고, 모든 DB 쿼리에서 신규 `userId` 변수를 사용하도록 리팩토링하여 TypeScript 린트 에러를 전면 수정함.
 
 # Project Progress - 2026-03-02
 
