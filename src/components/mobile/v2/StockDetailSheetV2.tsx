@@ -16,6 +16,7 @@ import {
     Trash2,
     Plus,
     Pencil,
+    Star,
 } from 'lucide-react';
 import { AssetItem, deleteStockAssetAllEntries, deleteStockEntry } from '@/lib/actions';
 import { cn } from '@/lib/utils';
@@ -175,6 +176,8 @@ interface StockDetailSheetV2Props {
     exchangeRate: number;
     totalNetWorth: number;
     title?: string;
+    isWatchlisted?: boolean;
+    onToggleWatchlist?: (ticker: string) => void;
 }
 
 const RANGES = ['1D', '1W', '1M', '3M', '6M', 'YTD', '1Y', 'MAX'];
@@ -191,6 +194,8 @@ export default function StockDetailSheetV2({
     totalNetWorth,
     title,
     onEditEntry,
+    isWatchlisted = false,
+    onToggleWatchlist,
 }: StockDetailSheetV2Props) {
     const [activeRange, setActiveRange] = useState('1M');
     const [chartData, setChartData] = useState<any[]>([]);
@@ -213,6 +218,19 @@ export default function StockDetailSheetV2({
         currentInput: '',
         isDeleting: false,
     });
+
+    const [localWatchlisted, setLocalWatchlisted] = useState(isWatchlisted);
+
+    useEffect(() => {
+        setLocalWatchlisted(isWatchlisted);
+    }, [isWatchlisted, isOpen]);
+
+    const handleToggle = async () => {
+        if (!stockAsset?.assetSymbol) return;
+        // Optimistic update
+        setLocalWatchlisted(!localWatchlisted);
+        onToggleWatchlist?.(stockAsset.assetSymbol);
+    };
 
     const router = useRouter();
 
@@ -447,12 +465,32 @@ export default function StockDetailSheetV2({
                 {/* Handle */}
                 <div className="relative pt-3 pb-2 flex justify-center shrink-0">
                     <div className="w-12 h-1 bg-zinc-200 dark:bg-zinc-800 rounded-full" />
-                    <button
-                        onClick={onClose}
-                        className="absolute right-6 top-[18px] z-50 p-2 rounded-full bg-zinc-100 dark:bg-white/5 text-zinc-500 dark:text-zinc-400 transition-all active:scale-95"
-                    >
-                        <X className="size-5" />
-                    </button>
+
+                    <div className="absolute right-6 top-[14px] flex items-center gap-2">
+                        {/* Star Toggle */}
+                        {stockAsset?.assetSymbol && (
+                            <button
+                                onClick={handleToggle}
+                                className={cn(
+                                    "p-2 rounded-full transition-all active:scale-95",
+                                    localWatchlisted
+                                        ? "bg-yellow-400/10 text-yellow-500"
+                                        : "bg-zinc-100 dark:bg-white/5 text-zinc-400"
+                                )}
+                            >
+                                <Star
+                                    className={cn("size-5", localWatchlisted && "fill-yellow-500")}
+                                />
+                            </button>
+                        )}
+
+                        <button
+                            onClick={onClose}
+                            className="p-2 rounded-full bg-zinc-100 dark:bg-white/5 text-zinc-500 dark:text-zinc-400 transition-all active:scale-95"
+                        >
+                            <X className="size-5" />
+                        </button>
+                    </div>
                 </div>
 
                 <div className="overflow-y-auto hide-scrollbar pb-10">

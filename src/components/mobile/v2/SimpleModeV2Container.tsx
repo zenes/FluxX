@@ -14,7 +14,7 @@ import { revalidatePath } from 'next/cache';
 import { bulkInsertTestData, bulkDeleteTestData } from '@/lib/test-actions';
 import { backupDatabase, getBackupList, restoreDatabase } from '@/lib/db-actions';
 import BackupRestoreSheet from './BackupRestoreSheet';
-import { getWatchlistStocks, syncWatchlist } from '@/lib/watchlist-actions';
+import { getWatchlistStocks, syncWatchlist, toggleWatchlistStock } from '@/lib/watchlist-actions';
 import { koreanNameMap } from '@/lib/koreanNameMap';
 import { AssetItem, getAssets, getMemos, getPredefinedAccounts } from '@/lib/actions';
 import { calculateNetWorth, MarketPrices, GOLD_TROY_OUNCE_GRAMS } from '@/lib/calculations';
@@ -115,6 +115,26 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
         });
 
         return [...Object.values(merged), ...nonStocks];
+    };
+
+    const handleToggleWatchlist = async (ticker: string) => {
+        try {
+            const type = (ticker.endsWith('.KS') || ticker.endsWith('.KQ')) ? 'KR' : 'US';
+            await toggleWatchlistStock(ticker, type);
+            const dbStocks = await getWatchlistStocks();
+            const mappedStocks = dbStocks.map((s: { ticker: string, type: string }) => ({
+                id: s.ticker + Date.now().toString(),
+                ticker: s.ticker,
+                type: s.type as any,
+                name: koreanNameMap[s.ticker] || s.ticker,
+                currentPrice: 0,
+                changeAmount: 0,
+                changeRate: 0,
+            }));
+            setMyStocks(mappedStocks);
+        } catch (e) {
+            console.error("Failed to toggle watchlist:", e);
+        }
     };
 
     // Persistence: Load stocks from DB and sync from localStorage if needed
@@ -742,6 +762,8 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                 changePercent={selectedAsset ? (marketPrices?.stockPrices?.[selectedAsset.assetSymbol?.toUpperCase() || '']?.changePercent || 0) : 0}
                 exchangeRate={marketData.exchange?.rate || 1400}
                 totalNetWorth={totalNetWorth}
+                isWatchlisted={selectedAsset ? myStocks.some(s => s.ticker === selectedAsset.assetSymbol) : false}
+                onToggleWatchlist={handleToggleWatchlist}
             />
 
             {/* Total Analysis Sheet (Always rendered for exit animation) */}
