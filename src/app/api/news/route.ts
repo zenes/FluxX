@@ -28,7 +28,7 @@ export async function GET(request: Request) {
                         yTicker = `${ticker}.KS`;
                     }
 
-                    const searchResults = await yahooFinance.search(yTicker, { newsCount: 10 });
+                    const searchResults = await yahooFinance.search(yTicker, { newsCount: 10 }, { validateResult: false }) as any;
                     return (searchResults.news || []).map((item: any) => ({
                         title: item.title,
                         link: item.link,
