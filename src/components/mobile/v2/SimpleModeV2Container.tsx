@@ -23,6 +23,7 @@ import { motion, animate, useMotionValue } from 'framer-motion';
 import { Briefcase, Coins, PieChart, TrendingUp, Landmark, Plus } from 'lucide-react';
 import V2AuthProfileIcon from './V2AuthProfileIcon';
 import Link from 'next/link';
+import SettingsSheetV2 from './SettingsSheetV2';
 import { MarketAsset, INITIAL_STOCKS } from './typesV2';
 
 interface SimpleModeV2ContainerProps {
@@ -63,6 +64,7 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
     const [prefilledSymbol, setPrefilledSymbol] = useState<string | undefined>(undefined);
     const [editingEntry, setEditingEntry] = useState<any | null>(null);
     const [isBackupRestoreOpen, setIsBackupRestoreOpen] = useState(false);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [backups, setBackups] = useState<any[]>([]);
 
     const handleAddAssetEntry = (symbol?: string) => {
@@ -545,12 +547,12 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                                 <svg className="size-5 text-[#2B364B] dark:text-white dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                                 <svg className="size-5 text-[#2B364B] dark:text-white hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
                             </button>
-                            <Link href="/settings" className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                            <button onClick={() => setIsSettingsOpen(true)} className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
                                 <svg className="size-5 text-[#2B364B] dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <circle cx="12" cy="12" r="3"></circle>
                                     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                                 </svg>
-                            </Link>
+                            </button>
                             <V2AuthProfileIcon />
                         </div>
                     </header>
@@ -791,6 +793,11 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                 onClose={() => setIsBackupRestoreOpen(false)}
                 backups={backups}
                 onRestore={handleRestore}
+            />
+
+            <SettingsSheetV2
+                isOpen={isSettingsOpen}
+                onClose={() => setIsSettingsOpen(false)}
             />
         </div>
     );

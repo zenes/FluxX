@@ -6,9 +6,19 @@ import { uploadProfilePicture } from '@/lib/actions';
 import { Camera, Loader2, X, Check } from 'lucide-react';
 import Cropper from 'react-easy-crop';
 import { getCroppedImg } from '@/lib/cropImage';
+import { useLanguage } from '@/contexts/LanguageContext';
 
-export default function ProfilePictureUpload({ currentImage, userEmail }: { currentImage?: string | null, userEmail: string }) {
+export default function ProfilePictureUpload({
+    currentImage,
+    userEmail,
+    variant = 'default'
+}: {
+    currentImage?: string | null,
+    userEmail: string,
+    variant?: 'default' | 'ios'
+}) {
     const { update } = useSession();
+    const { t } = useLanguage();
     const [isUploading, setIsUploading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string | null>(currentImage || null);
 
@@ -26,7 +36,7 @@ export default function ProfilePictureUpload({ currentImage, userEmail }: { curr
 
         // Limit to 5MB before even trying to crop
         if (file.size > 5 * 1024 * 1024) {
-            alert('Image must be less than 5MB');
+            alert(t('settings.image_too_large'));
             return;
         }
 
@@ -72,38 +82,45 @@ export default function ProfilePictureUpload({ currentImage, userEmail }: { curr
         }
     };
 
+    const isIOS = variant === 'ios';
+
     return (
-        <div className="flex items-center gap-6 py-4 border-b border-border/50">
-            {/* Main Display Area */}
-            <div className="relative group shrink-0">
-                <div className="w-16 h-16 rounded-full overflow-hidden bg-muted flex items-center justify-center border-2 border-primary/20">
-                    {previewUrl ? (
-                        <img src={previewUrl} alt="Profile" className="w-full h-full object-cover" />
-                    ) : (
-                        <span className="text-xl font-bold text-muted-foreground uppercase">
-                            {userEmail?.charAt(0) || 'U'}
-                        </span>
-                    )}
+        <>
+            <div className={isIOS ? "flex flex-col items-center justify-center w-fit" : "flex items-center gap-6 py-4 border-b border-border/50"}>
+                {/* Main Display Area */}
+                <div className={`relative group shrink-0 ${isIOS ? 'w-[100px] h-[100px]' : 'w-16 h-16'}`}>
+                    <div className={`w-full h-full rounded-full overflow-hidden bg-muted flex items-center justify-center border-2 ${isIOS ? 'border-border/30 shadow-sm' : 'border-primary/20'}`}>
+                        {previewUrl ? (
+                            <img src={previewUrl} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                            <span className={`${isIOS ? 'text-4xl' : 'text-xl'} font-bold text-muted-foreground uppercase`}>
+                                {userEmail?.charAt(0) || 'U'}
+                            </span>
+                        )}
+                    </div>
+
+                    <button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading || !!imageSrc}
+                        className={`absolute inset-0 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${isIOS ? 'bg-black/40 active:opacity-100' : 'bg-black/60'}`}
+                    >
+                        {isUploading ? (
+                            <Loader2 size={isIOS ? 28 : 20} className="text-white animate-spin" />
+                        ) : (
+                            <Camera size={isIOS ? 28 : 20} className={`text-white ${isIOS ? 'opacity-90' : ''}`} />
+                        )}
+                    </button>
                 </div>
 
-                <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading || !!imageSrc}
-                    className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    {isUploading ? (
-                        <Loader2 size={20} className="text-white animate-spin" />
-                    ) : (
-                        <Camera size={20} className="text-white" />
-                    )}
-                </button>
-            </div>
+                {!isIOS && (
+                    <div className="flex-1">
+                        <h4 className="font-medium text-sm">{t('settings.profile_picture')}</h4>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            {t('settings.profile_picture_desc')}
+                        </p>
+                    </div>
+                )}
 
-            <div className="flex-1">
-                <h4 className="font-medium text-sm">Profile Picture</h4>
-                <p className="text-xs text-muted-foreground mt-1">
-                    Click the image to upload a new avatar. Maximum size is 5MB.
-                </p>
                 <input
                     type="file"
                     ref={fileInputRef}
@@ -118,7 +135,7 @@ export default function ProfilePictureUpload({ currentImage, userEmail }: { curr
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
                     <div className="bg-card w-full max-w-md rounded-xl border border-border shadow-2xl overflow-hidden flex flex-col">
                         <div className="p-4 border-b flex justify-between items-center bg-muted/30">
-                            <h3 className="font-semibold text-lg tracking-tight">Crop Image</h3>
+                            <h3 className="font-semibold text-lg tracking-tight">{t('settings.crop_image')}</h3>
                             <button
                                 onClick={() => setImageSrc(null)}
                                 className="p-1.5 rounded-md hover:bg-muted text-muted-foreground transition-colors"
@@ -144,7 +161,7 @@ export default function ProfilePictureUpload({ currentImage, userEmail }: { curr
 
                         <div className="p-4 bg-muted/30 flex flex-col gap-4">
                             <div className="flex items-center gap-4 px-2">
-                                <span className="text-xs font-mono text-muted-foreground">Zoom</span>
+                                <span className="text-xs font-mono text-muted-foreground">{t('settings.zoom')}</span>
                                 <input
                                     type="range"
                                     value={zoom}
@@ -163,7 +180,7 @@ export default function ProfilePictureUpload({ currentImage, userEmail }: { curr
                                     disabled={isUploading}
                                     className="px-4 py-2 text-sm font-medium hover:bg-muted rounded-md transition-colors disabled:opacity-50"
                                 >
-                                    Cancel
+                                    {t('settings.cancel')}
                                 </button>
                                 <button
                                     onClick={handleCropAndSave}
@@ -171,9 +188,9 @@ export default function ProfilePictureUpload({ currentImage, userEmail }: { curr
                                     className="flex items-center gap-2 px-4 py-2 text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 rounded-md shadow-md transition-colors disabled:opacity-50"
                                 >
                                     {isUploading ? (
-                                        <><Loader2 size={16} className="animate-spin" /> Saving...</>
+                                        <><Loader2 size={16} className="animate-spin" /> {t('settings.saving')}</>
                                     ) : (
-                                        <><Check size={16} /> Crop & Save</>
+                                        <><Check size={16} /> {t('settings.crop_and_save')}</>
                                     )}
                                 </button>
                             </div>
@@ -181,6 +198,6 @@ export default function ProfilePictureUpload({ currentImage, userEmail }: { curr
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 }

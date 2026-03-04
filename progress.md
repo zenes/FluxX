@@ -1,5 +1,11 @@
 # Project Progress - 2026-03-04
 
+## [2026-03-04 15:48] V2 모바일 설정(Settings) 시트 및 프로필 관리 UI 고도화
+- **설정 시트(SettingsSheetV2) 통일**: 메인 화면에서 설정 진입 시 단순 페이지 이동이 아닌, 전체 화면 슬라이드 인(Slide-in) 애니메이션이 적용된 모바일 전용 시트로 전환하여 UX 일관성과 몰입감을 향상함.
+- **프로필 이미지 편집 시스템 추가**: 사용자 프로필 사진 업로드 및 자르기(Crop/Zoom)가 가능한 `ProfilePictureUpload` 컴포넌트를 신설하여 사용자 개인화 인터페이스를 강화함.
+- **프리셋 계좌 시스템(Predefined Accounts) 확장**: 복수의 테스트용 로그인 계좌(프리셋)를 직접 추가, 수정, 관리할 수 있는 전용 인터페이스(`PredefinedAccountsManager`)를 구축함.
+- **다국어(i18n) 지원 및 보완**: 위 기능들에 필요한 권한, 이메일, 계좌 정보 등의 한글(`ko.ts`) 및 영문(`en.ts`) 번역 항목을 대규모로 추가 선언함.
+
 ## [2026-03-04 11:12] 계좌 수정 시트(AssetEntrySheetV2) z-index 겹침 현상 해결
 - **z-index 속성 제어 기능 추가**: 공통 `Sheet` 컴포넌트(`src/components/ui/sheet.tsx`)에 `overlayClassName` 속성을 추가하여, 시트 배경(Overlay) 및 콘텐츠의 z-index 계층을 유연하게 오버라이드할 수 있도록 개선함.
 - **상위 레이어 노출 보장**: 자산 상세 시트(`StockDetailSheetV2`, `z-[130]`)에서 호출되는 계좌 수정 시트(`AssetEntrySheetV2`)의 z-index를 `140`으로 상향 지정함. 이를 통해 수정 카드가 상세 카드 뒤로 밀려 가려지는 버그를 완벽하게 해결하고 정상적인 모바일 UX 플로우를 복구함.
