@@ -28,7 +28,8 @@ export default function AssetEntrySheetV2({ isOpen, onClose, initialSymbol, type
         <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <SheetContent
                 side="bottom"
-                className="h-[92vh] rounded-t-[32px] bg-[#edf0f4] dark:bg-[#0D0D0E] border-none px-0 pb-0 overflow-hidden flex flex-col [&>button]:hidden"
+                overlayClassName="z-[140]"
+                className="z-[140] h-[92vh] rounded-t-[32px] bg-[#edf0f4] dark:bg-[#0D0D0E] border-none px-0 pb-0 overflow-hidden flex flex-col [&>button]:hidden"
             >
                 {/* Custom Header Area */}
                 <div className="px-6 pt-6 pb-2 flex items-center justify-between shrink-0 relative">

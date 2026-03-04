@@ -1,3 +1,9 @@
+# Project Progress - 2026-03-04
+
+## [2026-03-04 11:12] 계좌 수정 시트(AssetEntrySheetV2) z-index 겹침 현상 해결
+- **z-index 속성 제어 기능 추가**: 공통 `Sheet` 컴포넌트(`src/components/ui/sheet.tsx`)에 `overlayClassName` 속성을 추가하여, 시트 배경(Overlay) 및 콘텐츠의 z-index 계층을 유연하게 오버라이드할 수 있도록 개선함.
+- **상위 레이어 노출 보장**: 자산 상세 시트(`StockDetailSheetV2`, `z-[130]`)에서 호출되는 계좌 수정 시트(`AssetEntrySheetV2`)의 z-index를 `140`으로 상향 지정함. 이를 통해 수정 카드가 상세 카드 뒤로 밀려 가려지는 버그를 완벽하게 해결하고 정상적인 모바일 UX 플로우를 복구함.
+
 # Project Progress - 2026-03-03
 
 ## [2026-03-03 18:25] 시세 데이터 신뢰성 및 성능 최적화 (Server-Side Pre-fetching 도입)
