@@ -292,7 +292,14 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
     const containerRef = React.useRef<HTMLDivElement>(null);
     const dragX = useMotionValue(0);
 
-    const width = typeof window !== 'undefined' ? window.innerWidth : 390;
+    const [width, setWidth] = useState(390);
+
+    useEffect(() => {
+        setWidth(window.innerWidth);
+        const handleResize = () => setWidth(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const displayAssets = mergeStockAssets(assets);
 
