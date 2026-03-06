@@ -702,12 +702,7 @@ export default function StockDetailSheetV2({
 
                             <div className="px-6 mt-10 mb-20 grid grid-cols-2 gap-3">
                                 <button
-                                    onClick={() => {
-                                        onClose();
-                                        setTimeout(() => {
-                                            onAddAsset?.(stockAsset?.assetSymbol || undefined);
-                                        }, 300);
-                                    }}
+                                    onClick={() => onAddAsset?.(stockAsset?.assetSymbol || undefined)}
                                     className="py-4 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-dashed border-zinc-200 dark:border-white/10 flex items-center justify-center gap-2 group active:scale-[0.98] transition-all"
                                 >
                                     <div className="size-6 rounded-full bg-zinc-200 dark:bg-white/10 text-zinc-500 group-hover:bg-[#38C798] group-hover:text-white transition-all flex items-center justify-center">
