@@ -5,6 +5,28 @@
 - **레이어 우선순위 최적화 (z-index)**: `AssetEntrySheetV2` (입력 폼)의 z-index를 `z-[200]`으로 상향 조정하여, `StockDetailSheetV2` (`z-[130]`) 위로 항상 정확하게 나타나도록 레이어 중첩 문제를 완벽히 해결함.
 - **UX 일관성 강화**: '추가'와 '수정' 경로 모두에서 동일한 시트 중첩 체계를 적용하여, 어떤 작업 중에도 Context(상세 화면 상태)를 잃지 않는 매끄러운 사용자 경험을 구축함.
 
+# Project Progress - 2026-03-04
+
+## [2026-03-04 16:30] React Hydration 에러 및 모바일 Pull-to-Refresh 방지 적용
+- **Pull-to-Refresh 비활성화**: 모바일 브라우저(특히 Safari)에서 화면을 아래로 당길 때 나타나는 기본 새로고침 동작을 방지하기 위해 `globals.css`의 `body` 태그에 `overscroll-behavior-y: none;` 속성을 적용함.
+- **Hydration 불일치 해결**:
+  - `SimpleModeV2Container.tsx` 내에서 서버 렌더링 시점에 정의될 수 없는 `window.innerWidth` 직접 참조를 `useEffect`를 통한 클라이언트 렌더링 이후 상태 업데이트 방식으로 수정하여 초기 UI 불일치를 방지함.
+  - `Sparkline.tsx`의 차트 그라디언트 ID 및 랜더링 부분에서 사용하는 `Math.random()` 난수 생성 로직을 `useId`와 하이드레이션 상태 체크(`isHydrated`)로 변경하여 서버/클라이언트 단의 불일치 이슈를 완벽히 해결함.
+  - iOS Safari의 전화번호 감지 기능(Data Detectors)이 `5555-5555` 등의 계좌번호를 전화번호용 자동 링크(`<a href="tel:...">`)로 변환하여 발생하는 심각한 렌더링 오작동을 `layout.tsx` 내 `formatDetection: { telephone: false }` 메타태그 설정을 통해 원천봉쇄함.
+
+## [2026-03-04 15:58] 뉴스 API(Yahoo Finance) 스키마 유효성 검사 에러 처리 최적화
+- **불필요한 에러 로그 차단**: `yahoo-finance2` 라이브러리를 통한 뉴스 검색 시 발생하는 스키마 불일치 에러(`FailedYahooValidationError`)가 터미널 로그를 채우는 현상을 방지하기 위해 검색 옵션에 `{ validateResult: false }` 파라미터를 명시적으로 추가하여 로직을 최적화함.
+
+## [2026-03-04 15:48] V2 모바일 설정(Settings) 시트 및 프로필 관리 UI 고도화
+- **설정 시트(SettingsSheetV2) 통일**: 메인 화면에서 설정 진입 시 단순 페이지 이동이 아닌, 전체 화면 슬라이드 인(Slide-in) 애니메이션이 적용된 모바일 전용 시트로 전환하여 UX 일관성과 몰입감을 향상함.
+- **프로필 이미지 편집 시스템 추가**: 사용자 프로필 사진 업로드 및 자르기(Crop/Zoom)가 가능한 `ProfilePictureUpload` 컴포넌트를 신설하여 사용자 개인화 인터페이스를 강화함.
+- **프리셋 계좌 시스템(Predefined Accounts) 확장**: 복수의 테스트용 로그인 계좌(프리셋)를 직접 추가, 수정, 관리할 수 있는 전용 인터페이스(`PredefinedAccountsManager`)를 구축함.
+- **다국어(i18n) 지원 및 보완**: 위 기능들에 필요한 권한, 이메일, 계좌 정보 등의 한글(`ko.ts`) 및 영문(`en.ts`) 번역 항목을 대규모로 추가 선언함.
+
+## [2026-03-04 11:12] 계좌 수정 시트(AssetEntrySheetV2) z-index 겹침 현상 해결
+- **z-index 속성 제어 기능 추가**: 공통 `Sheet` 컴포넌트(`src/components/ui/sheet.tsx`)에 `overlayClassName` 속성을 추가하여, 시트 배경(Overlay) 및 콘텐츠의 z-index 계층을 유연하게 오버라이드할 수 있도록 개선함.
+- **상위 레이어 노출 보장**: 자산 상세 시트(`StockDetailSheetV2`, `z-[130]`)에서 호출되는 계좌 수정 시트(`AssetEntrySheetV2`)의 z-index를 `140`으로 상향 지정함. 이를 통해 수정 카드가 상세 카드 뒤로 밀려 가려지는 버그를 완벽하게 해결하고 정상적인 모바일 UX 플로우를 복구함.
+
 # Project Progress - 2026-03-03
 
 ## [2026-03-03 18:25] 시세 데이터 신뢰성 및 성능 최적화 (Server-Side Pre-fetching 도입)

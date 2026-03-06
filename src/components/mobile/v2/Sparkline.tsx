@@ -1,10 +1,16 @@
 'use client';
 
-import React from 'react';
+import React, { useId, useEffect, useState } from 'react';
 
 export const Sparkline = ({ isUp, data }: { isUp: boolean, data?: number[] }) => {
     const color = isUp ? "#FF3B2F" : "#35C759";
-    const gradientId = `sparkline-gradient-${isUp ? (data ? 'real' : 'sim') : (data ? 'real-down' : 'sim-down')}-${Math.random().toString(36).substr(2, 9)}`;
+    const reactId = useId();
+    const gradientId = `sparkline-gradient-${reactId.replace(/:/g, '')}`;
+    const [isHydrated, setIsHydrated] = useState(false);
+
+    useEffect(() => {
+        setIsHydrated(true);
+    }, []);
 
     // Normalize data points to fit the 0-20 height range if real data provided
     const normalizedPoints = React.useMemo(() => {
@@ -23,6 +29,7 @@ export const Sparkline = ({ isUp, data }: { isUp: boolean, data?: number[] }) =>
     // Generate a very detailed realistic path if no data is provided
     const points = React.useMemo(() => {
         if (normalizedPoints) return normalizedPoints;
+        if (!isHydrated) return [10, 10]; // Stable dummy line for SSR
 
         // Simulation: 30 points with random walk
         const count = 30;
@@ -42,7 +49,7 @@ export const Sparkline = ({ isUp, data }: { isUp: boolean, data?: number[] }) =>
         else pts[count - 1] = Math.max(pts[count - 1], pts[0] + 2);
 
         return pts;
-    }, [isUp, normalizedPoints]);
+    }, [isUp, normalizedPoints, isHydrated]);
 
     const width = 56;
     const height = 20;

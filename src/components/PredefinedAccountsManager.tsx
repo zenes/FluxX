@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { addPredefinedAccount, deletePredefinedAccount, editPredefinedAccount } from '@/lib/actions';
 import { Plus, Trash2, Building2, UserCircle2, Hash, Pencil, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 type Account = {
     id: string;
@@ -14,6 +15,7 @@ type Account = {
 };
 
 export default function PredefinedAccountsManager({ initialAccounts }: { initialAccounts: Account[] }) {
+    const { t } = useLanguage();
     const [accounts, setAccounts] = useState<Account[]>(initialAccounts);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editId, setEditId] = useState<string | null>(null);
@@ -84,128 +86,130 @@ export default function PredefinedAccountsManager({ initialAccounts }: { initial
     };
 
     return (
-        <div className="bg-card border border-input rounded-md p-6 shadow-sm flex flex-col h-full">
-            <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-bold tracking-tight flex items-center gap-2">
-                    <span className="w-1.5 h-4 bg-primary rounded-sm"></span> Account Presets
-                </h3>
-                <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest bg-muted px-2 py-0.5 rounded-sm">
-                    {accounts.length} Saved
+        <div className="flex flex-col w-full">
+            <div className="flex items-center justify-between mb-3 px-1">
+                <span className="text-[13px] font-semibold text-[#8E8E93] uppercase tracking-wide">
+                    {accounts.length} Saved {t('settings.account_presets')}
                 </span>
             </div>
 
-            <form onSubmit={handleSubmit} className={`space-y-4 mb-8 p-4 rounded-md border transition-colors ${editId ? 'bg-primary/5 border-primary/30' : 'bg-muted/20 border-border/50'}`}>
-                <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground">
-                        {editId ? 'Editing Account Preset' : 'Add New Account Preset'}
+            <form onSubmit={handleSubmit} className={`mb-6 rounded-[14px] overflow-hidden transition-colors ${editId ? 'bg-[#1C1C1E] border border-[#0A84FF]/50 ring-1 ring-[#0A84FF]/20' : 'bg-[#1C1C1E]'}`}>
+                <div className="flex items-center justify-between px-4 py-3 border-b border-[#38383A] bg-[#2C2C2E]/50">
+                    <span className="text-[15px] font-semibold tracking-tight text-white">
+                        {editId ? t('settings.edit_preset') : t('settings.add_new_preset')}
                     </span>
                     {editId && (
                         <button
                             type="button"
                             onClick={resetForm}
-                            className="text-[10px] font-bold uppercase text-destructive hover:underline flex items-center gap-1"
+                            className="text-[15px] font-medium text-white active:opacity-70 transition-opacity flex items-center gap-1"
                         >
                             <X size={10} /> Cancel Edit
                         </button>
                     )}
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Alias (e.g. Main Trading)</label>
+
+                <div className="flex flex-col divide-y divide-[#38383A]">
+                    <div className="flex items-center px-4 py-3">
+                        <label className="text-[16px] text-white w-28 shrink-0">{t('settings.alias_label')}</label>
                         <input
                             required
                             type="text"
                             value={formData.alias}
                             onChange={(e) => setFormData({ ...formData, alias: e.target.value })}
-                            className="flex h-9 text-xs w-full rounded-sm border border-input bg-transparent px-3 py-1 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                            placeholder="Alias name"
+                            className="flex-1 text-[16px] text-white bg-transparent outline-none placeholder:text-[#8E8E93]"
+                            placeholder={t('settings.alias_placeholder')}
                         />
                     </div>
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Broker</label>
+                    <div className="flex items-center px-4 py-3">
+                        <label className="text-[16px] text-white w-28 shrink-0">{t('settings.broker_label')}</label>
                         <input
                             required
                             type="text"
                             value={formData.broker}
                             onChange={(e) => setFormData({ ...formData, broker: e.target.value })}
-                            className="flex h-9 text-xs w-full rounded-sm border border-input bg-transparent px-3 py-1 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                            placeholder="e.g. Kiwoom"
+                            className="flex-1 text-[16px] text-white bg-transparent outline-none placeholder:text-[#8E8E93]"
+                            placeholder={t('settings.broker_placeholder')}
                         />
                     </div>
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Account Number</label>
+                    <div className="flex items-center px-4 py-3">
+                        <label className="text-[16px] text-white w-28 shrink-0">{t('settings.account_number_label')}</label>
                         <input
                             required
                             type="text"
                             value={formData.accountNumber}
                             onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })}
-                            className="flex h-9 text-xs font-mono w-full rounded-sm border border-input bg-transparent px-3 py-1 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                            placeholder="123-456-***"
+                            className="flex-1 text-[16px] text-white bg-transparent outline-none placeholder:text-[#8E8E93] font-mono"
+                            placeholder={t('settings.account_number_placeholder')}
                         />
                     </div>
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Owner</label>
+                    <div className="flex items-center px-4 py-3">
+                        <label className="text-[16px] text-white w-28 shrink-0">{t('settings.owner_label')}</label>
                         <input
                             required
                             type="text"
                             value={formData.owner}
                             onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
-                            className="flex h-9 text-xs w-full rounded-sm border border-input bg-transparent px-3 py-1 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                            placeholder="Owner name"
+                            className="flex-1 text-[16px] text-white bg-transparent outline-none placeholder:text-[#8E8E93]"
+                            placeholder={t('settings.owner_placeholder')}
                         />
                     </div>
                 </div>
-                <div className="flex justify-end pt-2">
+
+                <div className="flex justify-end p-3 bg-[#2C2C2E]/30 border-t border-[#38383A]">
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="inline-flex items-center justify-center whitespace-nowrap rounded-sm text-xs font-bold tracking-widest uppercase bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-6 transition-colors shadow-sm disabled:opacity-50 gap-2"
+                        className="flex items-center justify-center rounded-[8px] text-[15px] font-semibold bg-[#0A84FF] text-white active:bg-[#0A84FF]/80 py-2 px-5 transition-colors disabled:opacity-50 gap-2"
                     >
                         {isSubmitting ? (
                             <span className="w-4 h-4 border-2 border-background/30 border-t-background rounded-full animate-spin"></span>
                         ) : (
                             editId ? <Pencil size={16} /> : <Plus size={16} />
                         )}
-                        {editId ? 'Update Preset' : 'Add Preset'}
+                        {editId ? t('settings.update_preset') : t('settings.add_preset')}
                     </button>
                 </div>
             </form>
 
-            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3">
+            <div className="flex flex-col rounded-[14px] overflow-hidden bg-[#1C1C1E] divide-y divide-[#38383A]">
                 {accounts.length === 0 ? (
-                    <div className="text-center py-10 text-muted-foreground font-mono text-xs opacity-50 flex flex-col items-center gap-2 border border-dashed rounded-md border-border/50">
-                        <Building2 size={24} className="opacity-20" />
-                        No account presets saved.
+                    <div className="text-center py-8 text-[#8E8E93] text-[15px] flex flex-col items-center gap-2">
+                        <Building2 size={32} className="opacity-30 mb-1" />
+                        {t('settings.no_presets_saved')}
                     </div>
                 ) : (
                     accounts.map(account => (
-                        <div key={account.id} className={`group flex items-center justify-between p-3 rounded-md border bg-card transition-all shadow-sm ${editId === account.id ? 'border-primary ring-1 ring-primary/20' : 'border-input hover:border-primary/30'}`}>
-                            <div className="flex flex-col gap-1.5">
-                                <span className="text-sm font-bold tracking-tight text-primary flex items-center gap-2">
-                                    {account.alias}
-                                    {editId === account.id && <span className="text-[8px] bg-primary text-primary-foreground px-1 py-0.5 rounded-full uppercase tracking-tighter">Editing</span>}
-                                </span>
-                                <div className="flex flex-wrap items-center gap-3 text-[10px] font-mono text-muted-foreground">
-                                    <span className="flex items-center gap-1"><Building2 size={12} /> {account.broker}</span>
-                                    <span className="flex items-center gap-1"><UserCircle2 size={12} /> {account.owner}</span>
-                                    <span className="flex items-center gap-1"><Hash size={12} /> {account.accountNumber}</span>
+                        <div key={account.id} className={`flex items-center justify-between py-3 px-4 transition-colors ${editId === account.id ? 'bg-[#2C2C2E]' : ''}`}>
+                            <div className="flex flex-col gap-1 w-full">
+                                <div className="flex items-center justify-between w-full">
+                                    <span className="text-[17px] tracking-tight text-white flex items-center gap-2">
+                                        {account.alias}
+                                        {editId === account.id && <span className="text-[11px] bg-[#0A84FF]/20 text-[#0A84FF] px-2 py-0.5 rounded-full font-semibold">Editing</span>}
+                                    </span>
+
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            onClick={() => handleEditClick(account)}
+                                            className="text-white active:opacity-70 transition-opacity p-1"
+                                        >
+                                            <Pencil size={18} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(account.id)}
+                                            className="text-white active:opacity-70 transition-opacity p-1"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="flex items-center gap-1">
-                                <button
-                                    onClick={() => handleEditClick(account)}
-                                    className={`p-2 rounded-sm transition-colors ${editId === account.id ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-primary hover:bg-primary/5 opacity-0 group-hover:opacity-100 focus:opacity-100'}`}
-                                    title="Edit Preset"
-                                >
-                                    <Pencil size={16} />
-                                </button>
-                                <button
-                                    onClick={() => handleDelete(account.id)}
-                                    className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-sm transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
-                                    title="Delete Preset"
-                                >
-                                    <Trash2 size={16} />
-                                </button>
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[14px] text-[#8E8E93] mt-0.5">
+                                    <span>{account.broker}</span>
+                                    <span className="w-1 h-1 rounded-full bg-[#8E8E93]/50"></span>
+                                    <span>{account.owner}</span>
+                                    <span className="w-1 h-1 rounded-full bg-[#8E8E93]/50"></span>
+                                    <span className="font-mono">{account.accountNumber}</span>
+                                </div>
                             </div>
                         </div>
                     ))

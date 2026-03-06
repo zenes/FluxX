@@ -8,6 +8,9 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 export const metadata: Metadata = {
   title: "FluxX",
   description: "Personal Asset Management",
+  formatDetection: {
+    telephone: false,
+  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
