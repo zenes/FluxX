@@ -53,11 +53,6 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{
           __html: `
           (function() {
-            var c = document.cookie;
-            if (c.indexOf('view-mode=') === -1 && window.innerWidth <= 768) {
-              document.cookie = 'view-mode=mobile; path=/; max-age=86400';
-              window.location.reload();
-            }
             if ('serviceWorker' in navigator) {
               window.addEventListener('load', function() {
                 navigator.serviceWorker.register('/sw.js').then(function(reg) {
