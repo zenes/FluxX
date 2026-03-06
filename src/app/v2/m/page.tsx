@@ -1,5 +1,5 @@
 import { getAssets, getUserSettings, AssetItem, getPredefinedAccounts } from "@/lib/actions";
-import SimpleModeV2Container from '@/components/mobile/v2/SimpleModeV2Container';
+import SimpleModeV2Container from '@/components/v2/mobile/SimpleModeV2Container';
 import { getStockQuotes } from "@/lib/stock-service";
 import { getNormalizedTicker } from "@/lib/stock-utils";
 import { getWatchlistStocks } from "@/lib/watchlist-actions";

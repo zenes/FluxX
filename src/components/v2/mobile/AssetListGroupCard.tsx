@@ -1,0 +1,250 @@
+'use client';
+
+import React from 'react';
+import { cn } from '@/lib/utils';
+import { AssetItem } from '@/lib/actions';
+import { Building2, Plus, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { MarketPrices } from '@/lib/calculations';
+import { getStockDisplayName } from '@/lib/stock-utils';
+
+interface AssetListGroupCardProps {
+    title: string;
+    icon: React.ElementType;
+    assets: AssetItem[];
+    onAssetClick?: (asset: AssetItem) => void;
+    exchangeRate: number;
+    type: 'stock' | 'other';
+    marketPrices?: MarketPrices | null;
+    debugLabel?: string;
+    onAddClick?: () => void;
+    summary?: {
+        totalValue: number;
+        pnl: number;
+        returnRate: number;
+    };
+    isHidden?: boolean;
+}
+
+export default function AssetListGroupCard({
+    title,
+    icon: Icon,
+    assets,
+    onAssetClick,
+    exchangeRate,
+    type,
+    marketPrices,
+    debugLabel,
+    onAddClick,
+    summary,
+    isHidden = false
+}: AssetListGroupCardProps) {
+    const isEmpty = assets.length === 0;
+
+    const formatPrice = (currency: string, price: number) => {
+        return price.toLocaleString(undefined, {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: currency === 'KRW' ? 0 : 2
+        });
+    };
+
+    return (
+        <div className="bg-white dark:bg-[#1A1A1E] rounded-[32px] shadow-sm border border-zinc-100 dark:border-white/5 overflow-hidden flex flex-col">
+            <header className="px-6 pt-5 pb-2 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-zinc-100 dark:bg-white/5 text-zinc-500 dark:text-zinc-400">
+                        <Icon className="size-4" />
+                    </div>
+                    <span className="text-xs font-black text-zinc-400 uppercase tracking-widest">
+                        {title}
+                        {debugLabel && <span className="text-[10px] font-black opacity-30 ml-1">[{debugLabel}]</span>}
+                    </span>
+                </div>
+                <span className="text-[10px] font-black text-zinc-300 dark:text-zinc-600 bg-zinc-50 dark:bg-white/5 px-2 py-0.5 rounded-full uppercase">
+                    {assets.length}개 항목
+                </span>
+            </header>
+
+            {!isEmpty && summary && (
+                <div className="px-6 py-6 border-b border-zinc-100 dark:border-white/5">
+                    <div className="flex flex-col gap-1 mb-4">
+                        <span className="text-[11px] font-black text-zinc-400 uppercase tracking-widest">
+                            {type === 'stock' ? 'STOCK PORTFOLIO' : 'CASH & COMMODITIES'}
+                        </span>
+                        <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">
+                            {title} 합계
+                        </h2>
+                    </div>
+                    <div className="flex items-end gap-3">
+                        <span className={cn(
+                            "font-black text-zinc-900 dark:text-white tracking-tighter",
+                            isHidden ? "text-[32px] tracking-[0.1em] text-zinc-300 dark:text-white/10 select-none pb-1" : "text-3xl"
+                        )}>
+                            {isHidden ? "******" : `₩${Math.round(summary.totalValue).toLocaleString()}`}
+                        </span>
+                        {type === 'stock' && !isHidden && (
+                            <div className={cn(
+                                "flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-black mb-1",
+                                summary.pnl >= 0 ? "bg-[#FF3B2F] text-white" : "bg-[#35C759] text-white"
+                            )}>
+                                {summary.pnl >= 0 ? "+" : ""}{summary.returnRate.toFixed(2)}%
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            <div className="flex flex-col px-2 pb-2">
+                {isEmpty ? (
+                    <div className="py-12 flex flex-col items-center justify-center text-center px-6">
+                        <div className="size-16 rounded-3xl bg-zinc-50 dark:bg-white/5 flex items-center justify-center mb-4">
+                            <Icon className="size-8 text-zinc-200 dark:text-zinc-800" />
+                        </div>
+                        <p className="text-zinc-400 font-bold text-sm mb-1">등록된 {title} 데이터가 없습니다.</p>
+                        <p className="text-zinc-300 dark:text-zinc-600 text-[11px] font-medium uppercase tracking-widest">아래 버튼을 눌러 첫 자산을 추가해보세요</p>
+                    </div>
+                ) : (
+                    assets.map((asset, index) => {
+                        const isStock = asset.assetType === 'stock';
+                        const isUSD = asset.currency === 'USD';
+
+                        const priceData = isStock ? marketPrices?.stockPrices?.[asset.assetSymbol || ''] : null;
+                        const currentPrice = priceData?.price || asset.avgPrice || 0;
+                        const changeRate = priceData?.changePercent || 0;
+                        const isUp = changeRate >= 0;
+                        const sign = isUp ? "+" : "";
+                        const themeColorClass = isUp ? "bg-[#FF3B2F]" : "bg-[#35C759]";
+
+                        // For stock, we show ticker as primary. For others, we show assetType or symbol.
+                        const mainLabel = isStock ? asset.assetSymbol : (asset.assetType === 'krw' ? '현금 (KRW)' : (asset.assetType === 'usd' ? '현금 (USD)' : asset.assetType.toUpperCase()));
+
+                        if (isStock) {
+                            const avgPrice = asset.avgPrice || 0;
+                            const bookValue = avgPrice * asset.amount;
+                            const marketValue = currentPrice * asset.amount;
+                            const unrealizedPnl = marketValue - bookValue;
+                            const returnRate = bookValue > 0 ? (unrealizedPnl / bookValue) * 100 : 0;
+                            const isPersonalUp = unrealizedPnl >= 0;
+                            const personalSign = isPersonalUp ? "+" : "";
+                            const personalThemeColorClass = isPersonalUp ? "bg-[#FF3B2F]" : "bg-[#35C759]";
+
+                            return (
+                                <button
+                                    key={asset.id || index}
+                                    onClick={() => onAssetClick?.(asset)}
+                                    className={cn(
+                                        "flex items-center justify-between py-4 px-4 w-full text-left active:opacity-60 transition-opacity rounded-2xl hover:bg-zinc-50 dark:hover:bg-white/5",
+                                        index !== assets.length - 1 && "border-b border-zinc-100 dark:border-white/5"
+                                    )}
+                                >
+                                    {/* Left: Ticker & Name */}
+                                    <div className="flex flex-col gap-0.5 flex-1 min-w-0 pr-2">
+                                        <span className="text-[15px] font-bold text-zinc-900 dark:text-white uppercase tracking-tight truncate">
+                                            {getStockDisplayName(asset.assetSymbol, asset.assetSymbol, priceData)}
+                                        </span>
+                                        <span className="text-[12px] text-zinc-500 dark:text-zinc-400 line-clamp-1 break-all uppercase font-bold tracking-tighter">
+                                            {asset.amount.toLocaleString()}주 보유 • {isUSD ? '$' : '₩'}{formatPrice(asset.currency || 'USD', marketValue)}
+                                            {isUSD && marketPrices && (
+                                                <> • ₩{Math.round(marketValue * marketPrices.usdKrw).toLocaleString()}</>
+                                            )}
+                                        </span>
+                                    </div>
+
+                                    {/* Right Group: Profit & ROI Badge */}
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex flex-col items-end gap-1.5 min-w-[80px]">
+                                            <span className={cn(
+                                                "text-[14px] font-bold",
+                                                isPersonalUp ? "text-[#FF3B2F]" : "text-[#35C759]"
+                                            )}>
+                                                {isUSD ? '$' : '₩'}{formatPrice(asset.currency || 'USD', Math.abs(unrealizedPnl))}
+                                            </span>
+                                            <div className={cn(
+                                                "px-2 py-0.5 rounded-[6px] text-[11px] font-bold text-white min-w-[60px] text-center",
+                                                personalThemeColorClass
+                                            )}>
+                                                {personalSign}{returnRate.toFixed(2)}%
+                                            </div>
+                                        </div>
+                                    </div>
+                                </button>
+                            );
+                        }
+
+                        return (
+                            <button
+                                key={asset.id || index}
+                                onClick={() => onAssetClick?.(asset)}
+                                className={cn(
+                                    "flex items-center justify-between py-4 px-4 w-full text-left active:opacity-60 transition-opacity rounded-2xl hover:bg-zinc-50 dark:hover:bg-white/5",
+                                    index !== assets.length - 1 && "border-b border-zinc-100 dark:border-white/5"
+                                )}
+                            >
+                                <div className="flex items-center gap-3 flex-1 min-w-0 pr-2">
+                                    <div className="size-10 rounded-xl bg-zinc-50 dark:bg-white/5 flex items-center justify-center">
+                                        {isStock ? (
+                                            <span className="text-[10px] font-black text-zinc-400 uppercase">{asset.assetSymbol?.slice(0, 2)}</span>
+                                        ) : (
+                                            <Building2 className="size-5 text-zinc-300" />
+                                        )}
+                                    </div>
+                                    <div className="flex flex-col gap-0.5 min-w-0">
+                                        <span className="text-[15px] font-black text-zinc-900 dark:text-white uppercase tracking-tight truncate">
+                                            {isStock
+                                                ? getStockDisplayName(asset.assetSymbol, asset.assetSymbol, priceData)
+                                                : mainLabel}
+                                        </span>
+                                        <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-tighter truncate">
+                                            {asset.amount.toLocaleString()}{isStock ? '주' : (asset.assetType === 'gold' ? 'g' : '')} 보유
+                                        </p>
+                                        {!isStock && asset.assetType === 'gold' && marketPrices && (
+                                            <p className="text-[10px] font-bold text-[#38C798] uppercase tracking-tighter">
+                                                ₩{Math.round(marketPrices.goldUsd * marketPrices.usdKrw / 31.1035).toLocaleString()} / g
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col items-end gap-0.5">
+                                    <span className="text-[15px] font-black text-zinc-900 dark:text-white">
+                                        {(() => {
+                                            const amount = asset.amount || 0;
+                                            if (asset.assetType === 'usd' && marketPrices) return `₩${Math.round(amount * marketPrices.usdKrw).toLocaleString()}`;
+                                            if (asset.assetType === 'gold' && marketPrices) return `₩${Math.round(amount * marketPrices.goldUsd * marketPrices.usdKrw / 31.1035).toLocaleString()}`;
+                                            return `₩${Math.round(amount).toLocaleString()}`;
+                                        })()}
+                                    </span>
+                                    {type === 'stock' ? (
+                                        <div className="flex items-center gap-1 text-[10px] font-bold text-[#38C798]">
+                                            <span>구조 분석 완료</span>
+                                            <ChevronRight className="size-3" />
+                                        </div>
+                                    ) : (
+                                        <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">보유 중</p>
+                                    )}
+                                </div>
+                            </button>
+                        );
+                    })
+                )}
+            </div>
+
+            {onAddClick && (
+                <div className="px-4 pb-4 mt-2">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onAddClick();
+                        }}
+                        className="w-full py-4 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-dashed border-zinc-200 dark:border-white/10 flex items-center justify-center gap-2 group active:scale-[0.98] transition-all hover:bg-zinc-100 dark:hover:bg-white/10"
+                    >
+                        <div className="size-6 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Plus className="size-4" />
+                        </div>
+                        <span className="text-[13px] font-black text-zinc-900 dark:text-white uppercase tracking-tight">자산 추가</span>
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+}
