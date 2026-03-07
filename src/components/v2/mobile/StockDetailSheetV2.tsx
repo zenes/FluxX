@@ -14,7 +14,7 @@ import {
     Pencil,
     Star,
 } from 'lucide-react';
-import { AssetItem, deleteStockAssetAllEntries, deleteStockEntry } from '@/lib/actions';
+import { AssetItem, deleteStockAssetAllEntries, deleteStockEntry, getDividendRecordsBySymbol, addDividendRecord } from '@/lib/actions';
 import { cn } from '@/lib/utils';
 import { isKoreanStock, getNormalizedTicker, getStockDisplayName } from '@/lib/stock-utils';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
@@ -201,6 +201,24 @@ export default function StockDetailSheetV2({
     const [isLoadingChart, setIsLoadingChart] = useState(false);
     const [hoveredData, setHoveredData] = useState<{ price: number; time: string } | null>(null);
 
+    // Dividend State
+    const [dividendRecords, setDividendRecords] = useState<Array<{
+        id: string;
+        amount: number;
+        currency: string;
+        receivedAt: Date | string;
+        taxAmount: number | null;
+    }>>([]);
+    const [isLoadingDividends, setIsLoadingDividends] = useState(false);
+    const [isDividendExpanded, setIsDividendExpanded] = useState(false);
+
+    // Add Dividend Inline Form State
+    const [isAddingDividend, setIsAddingDividend] = useState(false);
+    const [newDividendAmount, setNewDividendAmount] = useState('');
+    const [newDividendDate, setNewDividendDate] = useState(new Date().toISOString().split('T')[0]);
+    const [newDividendTax, setNewDividendTax] = useState('');
+    const [isSubmittingDividend, setIsSubmittingDividend] = useState(false);
+
     // Verification Modal State
     const [verification, setVerification] = useState<{
         isOpen: boolean;
@@ -378,7 +396,54 @@ export default function StockDetailSheetV2({
         fetchHistory();
     }, [isOpen, stockAsset?.assetSymbol, activeRange]);
 
+    useEffect(() => {
+        if (!isOpen || !stockAsset?.assetSymbol) return;
 
+        const fetchDividends = async () => {
+            setIsLoadingDividends(true);
+            try {
+                const records = await getDividendRecordsBySymbol(stockAsset.assetSymbol as string);
+                setDividendRecords(records);
+            } catch (error) {
+                console.error("Failed to fetch dividend records:", error);
+            } finally {
+                setIsLoadingDividends(false);
+            }
+        };
+
+        fetchDividends();
+    }, [isOpen, stockAsset?.assetSymbol]);
+
+    const handleAddDividend = async () => {
+        if (!stockAsset?.assetSymbol || !newDividendAmount || isNaN(Number(newDividendAmount))) {
+            alert('유효한 배당금액을 입력해주세요.');
+            return;
+        }
+
+        setIsSubmittingDividend(true);
+        try {
+            const newRecord = await addDividendRecord({
+                tickerSymbol: stockAsset.assetSymbol,
+                amount: Number(newDividendAmount),
+                currency: isUSD ? 'USD' : 'KRW',
+                receivedAt: new Date(newDividendDate),
+                taxAmount: newDividendTax ? Number(newDividendTax) : undefined,
+            });
+
+            // Update local state to reflect new record
+            setDividendRecords(prev => [newRecord, ...prev].sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()));
+
+            // Reset form
+            setIsAddingDividend(false);
+            setNewDividendAmount('');
+            setNewDividendTax('');
+        } catch (error) {
+            console.error("Failed to add dividend:", error);
+            alert('배당금 추가에 실패했습니다.');
+        } finally {
+            setIsSubmittingDividend(false);
+        }
+    };
 
     const currentPriceInKrw = currentPrice
         ? (isUSD ? currentPrice * exchangeRate : currentPrice)
@@ -450,6 +515,8 @@ export default function StockDetailSheetV2({
         }
         return null;
     };
+
+    const totalDividendAmount = dividendRecords.reduce((sum, record) => sum + record.amount, 0);
 
     return (
         <AnimatePresence>
@@ -700,7 +767,153 @@ export default function StockDetailSheetV2({
                                 </div>
                             )}
 
+                            {/* Dividend History Section */}
+                            {(dividendRecords.length > 0 || isAddingDividend) && (
+                                <div className="px-6 mt-10">
+                                    <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-4 px-1">배당 내역</h3>
+
+                                    {/* Dividend Summary Card / Toggle */}
+                                    <div
+                                        onClick={() => setIsDividendExpanded(!isDividendExpanded)}
+                                        className="bg-white dark:bg-[#1C1C21] p-5 rounded-3xl border border-zinc-100 dark:border-white/5 cursor-pointer flex items-center justify-between shadow-sm active:scale-[0.98] transition-transform mb-3"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="size-10 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center">
+                                                <TrendingUp className="size-5 text-indigo-500" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[11px] font-bold text-zinc-400 uppercase mb-0.5">총 누적 배당금</p>
+                                                <p className="text-[16px] font-black text-zinc-900 dark:text-white">
+                                                    {isUSD ? '$' : '₩'}{totalDividendAmount.toLocaleString(undefined, { maximumFractionDigits: isUSD ? 2 : 0 })}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="text-zinc-300 dark:text-zinc-600">
+                                            {isDividendExpanded ? (
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                                            ) : (
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Expanded Dividend List */}
+                                    <AnimatePresence>
+                                        {isDividendExpanded && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: 'auto', opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                className="overflow-hidden mb-4"
+                                            >
+                                                <div className="space-y-2 bg-zinc-50 dark:bg-[#161618] rounded-2xl p-4 border border-zinc-100 dark:border-white/5">
+                                                    {dividendRecords.length === 0 && !isAddingDividend && (
+                                                        <div className="text-center py-4 text-zinc-400 text-sm font-medium">배당 내역이 없습니다.</div>
+                                                    )}
+                                                    {dividendRecords.map((record) => (
+                                                        <div key={record.id} className="flex justify-between items-center py-2 border-b border-zinc-200 dark:border-white/5 last:border-0 last:pb-0">
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[13px] font-bold text-zinc-900 dark:text-white">
+                                                                    {new Date(record.receivedAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                                                </span>
+                                                                {record.taxAmount && (
+                                                                    <span className="text-[10px] text-zinc-400">세금: {isUSD ? '$' : '₩'}{record.taxAmount.toLocaleString(undefined, { maximumFractionDigits: isUSD ? 2 : 0 })}</span>
+                                                                )}
+                                                            </div>
+                                                            <span className="text-[14px] font-black text-[#38C798]">
+                                                                +{isUSD ? '$' : '₩'}{record.amount.toLocaleString(undefined, { maximumFractionDigits: isUSD ? 2 : 0 })}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+
+                                    {/* Add Dividend Form */}
+                                    <AnimatePresence>
+                                        {isAddingDividend && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: 'auto', opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                className="overflow-hidden"
+                                            >
+                                                <div className="bg-white dark:bg-[#1C1C21] p-5 rounded-3xl border border-zinc-100 dark:border-white/5 mb-3 shadow-md">
+                                                    <h4 className="text-[13px] font-black text-zinc-900 dark:text-white mb-4">새 배당금 입력</h4>
+                                                    <div className="space-y-4">
+                                                        <div>
+                                                            <label className="text-[10px] font-bold text-zinc-400 uppercase block mb-1">지급일</label>
+                                                            <input
+                                                                type="date"
+                                                                value={newDividendDate}
+                                                                onChange={(e) => setNewDividendDate(e.target.value)}
+                                                                className="w-full bg-zinc-50 dark:bg-[#121214] border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-[14px] font-bold text-zinc-900 dark:text-white focus:outline-none focus:border-[#38C798] transition-colors"
+                                                            />
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            <div>
+                                                                <label className="text-[10px] font-bold text-zinc-400 uppercase block mb-1">배당 금액 ({isUSD ? 'USD' : 'KRW'})</label>
+                                                                <input
+                                                                    type="number"
+                                                                    placeholder="0.00"
+                                                                    value={newDividendAmount}
+                                                                    onChange={(e) => setNewDividendAmount(e.target.value)}
+                                                                    className="w-full bg-zinc-50 dark:bg-[#121214] border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-[14px] font-bold text-zinc-900 dark:text-white focus:outline-none focus:border-[#38C798] transition-colors"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-[10px] font-bold text-zinc-400 uppercase block mb-1">세금 (선택)</label>
+                                                                <input
+                                                                    type="number"
+                                                                    placeholder="0.00"
+                                                                    value={newDividendTax}
+                                                                    onChange={(e) => setNewDividendTax(e.target.value)}
+                                                                    className="w-full bg-zinc-50 dark:bg-[#121214] border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-[14px] font-bold text-zinc-900 dark:text-white focus:outline-none focus:border-[#38C798] transition-colors"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex gap-2 pt-2">
+                                                            <button
+                                                                onClick={() => setIsAddingDividend(false)}
+                                                                className="flex-1 py-3 rounded-xl bg-zinc-100 dark:bg-white/5 text-[13px] font-bold text-zinc-500 dark:text-zinc-400 active:scale-[0.98] transition-all"
+                                                            >
+                                                                취소
+                                                            </button>
+                                                            <button
+                                                                onClick={handleAddDividend}
+                                                                disabled={isSubmittingDividend || !newDividendAmount}
+                                                                className="flex-1 py-3 rounded-xl bg-[#38C798] text-[13px] font-black text-white active:scale-[0.98] transition-all disabled:opacity-50"
+                                                            >
+                                                                {isSubmittingDividend ? '저장 중...' : '저장하기'}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+                            )}
+
                             <div className="px-6 mt-10 mb-20 grid grid-cols-2 gap-3">
+                                <button
+                                    onClick={() => {
+                                        if (!isAddingDividend) {
+                                            setIsAddingDividend(true);
+                                            setIsDividendExpanded(true); // Auto expand to show new entry
+                                        } else {
+                                            onAddAsset?.(stockAsset?.assetSymbol || undefined);
+                                        }
+                                    }}
+                                    className="py-4 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-dashed border-zinc-200 dark:border-white/10 flex items-center justify-center gap-2 group active:scale-[0.98] transition-all col-span-2"
+                                >
+                                    <div className="size-6 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 group-hover:bg-indigo-500 group-hover:text-white transition-all flex items-center justify-center">
+                                        <Plus className="size-3.5" />
+                                    </div>
+                                    <span className="text-[13px] font-black text-zinc-400 group-hover:text-indigo-500 transition-colors uppercase tracking-tight">배당금 추가</span>
+                                </button>
+
                                 <button
                                     onClick={() => onAddAsset?.(stockAsset?.assetSymbol || undefined)}
                                     className="py-4 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-dashed border-zinc-200 dark:border-white/10 flex items-center justify-center gap-2 group active:scale-[0.98] transition-all"

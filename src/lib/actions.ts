@@ -618,6 +618,24 @@ export async function getDividendRecords() {
     }
 }
 
+export async function getDividendRecordsBySymbol(tickerSymbol: string) {
+    const session = await auth();
+    if (!session?.user?.id) return [];
+
+    try {
+        return await (prisma as any).dividendRecord.findMany({
+            where: {
+                userId: session.user.id,
+                tickerSymbol
+            },
+            orderBy: { receivedAt: 'desc' }
+        });
+    } catch (e) {
+        console.error(`Failed to fetch dividend records for ${tickerSymbol}:`, e);
+        return [];
+    }
+}
+
 // Asset Memo Management Actions
 export async function addAssetMemo(tickerSymbol: string, content: string) {
     const session = await auth();
