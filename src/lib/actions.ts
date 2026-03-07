@@ -579,6 +579,7 @@ export async function addDividendRecord(data: {
     receivedAt: Date | string;
     taxAmount?: number;
     stockEntryId?: string;
+    predefinedAccountId?: string | null;
 }) {
     const session = await auth();
     if (!session?.user?.id) throw new Error('Unauthorized');
@@ -593,7 +594,8 @@ export async function addDividendRecord(data: {
                 userId: session.user.id,
                 ...data,
                 receivedAt: new Date(data.receivedAt)
-            }
+            },
+            include: { predefinedAccount: true }
         });
         revalidatePath('/dividends');
         return record;
@@ -628,11 +630,60 @@ export async function getDividendRecordsBySymbol(tickerSymbol: string) {
                 userId: session.user.id,
                 tickerSymbol
             },
+            include: {
+                predefinedAccount: true
+            },
             orderBy: { receivedAt: 'desc' }
         });
     } catch (e) {
         console.error(`Failed to fetch dividend records for ${tickerSymbol}:`, e);
         return [];
+    }
+}
+
+export async function editDividendRecord(
+    id: string,
+    data: {
+        amount: number;
+        currency: string;
+        receivedAt: Date | string;
+        taxAmount?: number | null;
+        predefinedAccountId?: string | null;
+    }
+) {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error('Unauthorized');
+
+    try {
+        const record = await (prisma as any).dividendRecord.update({
+            where: { id, userId: session.user.id },
+            data: {
+                ...data,
+                receivedAt: new Date(data.receivedAt)
+            },
+            include: { predefinedAccount: true }
+        });
+        revalidatePath('/dividends');
+        return record;
+    } catch (e: any) {
+        console.error('Failed to edit dividend record:', e);
+        throw new Error(`Failed to edit dividend record: ${e.message || 'Unknown error'}`);
+    }
+}
+
+export async function deleteDividendRecord(id: string) {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error('Unauthorized');
+
+    try {
+        await (prisma as any).dividendRecord.delete({
+            where: { id, userId: session.user.id }
+        });
+        revalidatePath('/dividends');
+        return { success: true };
+    } catch (e: any) {
+        console.error('Failed to delete dividend record:', e);
+        throw new Error(`Failed to delete dividend record: ${e.message || 'Unknown error'}`);
     }
 }
 

@@ -1,5 +1,13 @@
 # Project Progress - 2026-03-07
 
+## [2026-03-07 16:55] V2 모바일 배당금 내역 계좌 선택 기능 및 버그 수정
+- **데이터베이스 스키마 확장**: `DividendRecord` 모델에 `predefinedAccountId` 필드를 추가하여 배당금 수령 계좌 추적 가능하도록 구조 개선.
+- **서버 API 고도화**: 배당금 추가/수정 API(`addDividendRecord`, `editDividendRecord`) 및 특정 종목 배당 조회 API(`getDividendRecordsBySymbol`)에서 계좌 정보(`predefinedAccount`)를 동기화 및 즉각 반환하도록 수정하여 딜레이 없이 UI 갱신 확보.
+- **배당금 폼 계좌 선택 UI 적용**: 종목 상세(`StockDetailSheetV2`)의 배당금 입력/수정 폼에 기존 자산 추가와 일관된 수평 스크롤형 계좌 선택 버튼 추가. 입력 시 어떤 증권사 계좌에서 배당을 받았는지 명확하게 지정 가능.
+- **히스토리 내 뱃지 표시**: 배당금 리스트 각 항목의 지급일 옆에 선택된 증권사 아이콘과 이름을 뱃지 형태로 표기해 가시성 대폭 향상.
+- **버그 수정**:
+  - 종목 상세 화면에서 상단 휴지통 아이콘(자산 삭제) 클릭 시 정상적으로 PIN 확인 모달이 열리지 않던 로직(`isOpen: false` 오타)을 정상(`isOpen: true`)으로 수정하여 삭제 기능 정상화.
+
 ## [2026-03-07 16:03] 모바일 V2 종목 상세 배당금 내역 UI 구현
 - **배당금 조회 API 추가**: 특정 종목의 배당금 내역만 효율적으로 가져오는 `getDividendRecordsBySymbol` 서버 액션을 구현함.
 - **종목 상세 시트(StockDetailSheetV2) 배당 UI 추가**:

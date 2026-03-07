@@ -14,7 +14,7 @@ import {
     Pencil,
     Star,
 } from 'lucide-react';
-import { AssetItem, deleteStockAssetAllEntries, deleteStockEntry, getDividendRecordsBySymbol, addDividendRecord } from '@/lib/actions';
+import { AssetItem, deleteStockAssetAllEntries, deleteStockEntry, getDividendRecordsBySymbol, addDividendRecord, editDividendRecord, deleteDividendRecord, getPredefinedAccounts } from '@/lib/actions';
 import { cn } from '@/lib/utils';
 import { isKoreanStock, getNormalizedTicker, getStockDisplayName } from '@/lib/stock-utils';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
@@ -208,16 +208,34 @@ export default function StockDetailSheetV2({
         currency: string;
         receivedAt: Date | string;
         taxAmount: number | null;
+        predefinedAccountId?: string | null;
+        predefinedAccount?: {
+            id: string;
+            alias: string;
+        } | null;
     }>>([]);
     const [isLoadingDividends, setIsLoadingDividends] = useState(false);
     const [isDividendExpanded, setIsDividendExpanded] = useState(false);
 
-    // Add Dividend Inline Form State
+    // Add/Edit Dividend Inline Form State
     const [isAddingDividend, setIsAddingDividend] = useState(false);
+    const [editingDividendId, setEditingDividendId] = useState<string | null>(null);
     const [newDividendAmount, setNewDividendAmount] = useState('');
     const [newDividendDate, setNewDividendDate] = useState(new Date().toISOString().split('T')[0]);
     const [newDividendTax, setNewDividendTax] = useState('');
+    const [newDividendAccountId, setNewDividendAccountId] = useState<string | null>(null);
     const [isSubmittingDividend, setIsSubmittingDividend] = useState(false);
+
+    // Accounts State
+    const [accounts, setAccounts] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchAccounts = async () => {
+            const data = await getPredefinedAccounts();
+            setAccounts(data);
+        };
+        fetchAccounts();
+    }, []);
 
     // Verification Modal State
     const [verification, setVerification] = useState<{
@@ -414,6 +432,18 @@ export default function StockDetailSheetV2({
         fetchDividends();
     }, [isOpen, stockAsset?.assetSymbol]);
 
+    // Reset UI state when the sheet is closed or opened with a new symbol
+    useEffect(() => {
+        if (!isOpen) {
+            setIsDividendExpanded(false);
+            setIsAddingDividend(false);
+            setEditingDividendId(null);
+            setNewDividendAmount('');
+            setNewDividendTax('');
+            setNewDividendAccountId(null);
+        }
+    }, [isOpen]);
+
     const handleAddDividend = async () => {
         if (!stockAsset?.assetSymbol || !newDividendAmount || isNaN(Number(newDividendAmount))) {
             alert('유효한 배당금액을 입력해주세요.');
@@ -422,24 +452,63 @@ export default function StockDetailSheetV2({
 
         setIsSubmittingDividend(true);
         try {
-            const newRecord = await addDividendRecord({
-                tickerSymbol: stockAsset.assetSymbol,
-                amount: Number(newDividendAmount),
-                currency: isUSD ? 'USD' : 'KRW',
-                receivedAt: new Date(newDividendDate),
-                taxAmount: newDividendTax ? Number(newDividendTax) : undefined,
-            });
-
-            // Update local state to reflect new record
-            setDividendRecords(prev => [newRecord, ...prev].sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()));
+            if (editingDividendId) {
+                const updatedRecord = await editDividendRecord(
+                    editingDividendId,
+                    {
+                        amount: Number(newDividendAmount),
+                        currency: isUSD ? 'USD' : 'KRW',
+                        receivedAt: new Date(newDividendDate),
+                        taxAmount: newDividendTax ? Number(newDividendTax) : undefined,
+                        predefinedAccountId: newDividendAccountId
+                    }
+                );
+                setDividendRecords(prev => prev.map(r => r.id === editingDividendId ? updatedRecord : r).sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()));
+            } else {
+                const newRecord = await addDividendRecord({
+                    tickerSymbol: stockAsset.assetSymbol,
+                    amount: Number(newDividendAmount),
+                    currency: isUSD ? 'USD' : 'KRW',
+                    receivedAt: new Date(newDividendDate),
+                    taxAmount: newDividendTax ? Number(newDividendTax) : undefined,
+                    predefinedAccountId: newDividendAccountId
+                });
+                setDividendRecords(prev => [newRecord, ...prev].sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()));
+            }
 
             // Reset form
             setIsAddingDividend(false);
+            setEditingDividendId(null);
             setNewDividendAmount('');
             setNewDividendTax('');
+            setNewDividendAccountId(null);
         } catch (error) {
-            console.error("Failed to add dividend:", error);
-            alert('배당금 추가에 실패했습니다.');
+            console.error("Failed to save dividend:", error);
+            alert('배당금 저장에 실패했습니다.');
+        } finally {
+            setIsSubmittingDividend(false);
+        }
+    };
+
+    const handleDeleteDividend = async () => {
+        if (!editingDividendId) return;
+
+        if (!window.confirm('이 배당금 내역을 삭제하시겠습니까?')) return;
+
+        setIsSubmittingDividend(true);
+        try {
+            await deleteDividendRecord(editingDividendId);
+            setDividendRecords(prev => prev.filter(r => r.id !== editingDividendId));
+
+            // Reset form
+            setIsAddingDividend(false);
+            setEditingDividendId(null);
+            setNewDividendAmount('');
+            setNewDividendTax('');
+            setNewDividendAccountId(null);
+        } catch (error) {
+            console.error("Failed to delete dividend:", error);
+            alert('배당금 삭제에 실패했습니다.');
         } finally {
             setIsSubmittingDividend(false);
         }
@@ -811,10 +880,27 @@ export default function StockDetailSheetV2({
                                                         <div className="text-center py-4 text-zinc-400 text-sm font-medium">배당 내역이 없습니다.</div>
                                                     )}
                                                     {dividendRecords.map((record) => (
-                                                        <div key={record.id} className="flex justify-between items-center py-2 border-b border-zinc-200 dark:border-white/5 last:border-0 last:pb-0">
+                                                        <div
+                                                            key={record.id}
+                                                            onClick={() => {
+                                                                setEditingDividendId(record.id);
+                                                                setNewDividendDate(new Date(record.receivedAt).toISOString().split('T')[0]);
+                                                                setNewDividendAmount(record.amount.toString());
+                                                                setNewDividendTax(record.taxAmount ? record.taxAmount.toString() : '');
+                                                                setNewDividendAccountId(record.predefinedAccountId || null);
+                                                                setIsAddingDividend(true);
+                                                            }}
+                                                            className="flex justify-between items-center py-2 px-2 border-b border-zinc-200 dark:border-white/5 last:border-0 last:pb-0 cursor-pointer active:bg-zinc-200/50 dark:active:bg-white/5 rounded-lg transition-colors"
+                                                        >
                                                             <div className="flex flex-col">
-                                                                <span className="text-[13px] font-bold text-zinc-900 dark:text-white">
+                                                                <span className="text-[13px] font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
                                                                     {new Date(record.receivedAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                                                    {record.predefinedAccount && (
+                                                                        <span className="bg-zinc-100 dark:bg-white/10 text-zinc-500 dark:text-zinc-400 text-[9px] px-1.5 py-0.5 rounded-md font-black tracking-tight flex items-center gap-1">
+                                                                            <Building2 className="size-2.5" />
+                                                                            {record.predefinedAccount.alias}
+                                                                        </span>
+                                                                    )}
                                                                 </span>
                                                                 {record.taxAmount && (
                                                                     <span className="text-[10px] text-zinc-400">세금: {isUSD ? '$' : '₩'}{record.taxAmount.toLocaleString(undefined, { maximumFractionDigits: isUSD ? 2 : 0 })}</span>
@@ -840,8 +926,44 @@ export default function StockDetailSheetV2({
                                                 className="overflow-hidden"
                                             >
                                                 <div className="bg-white dark:bg-[#1C1C21] p-5 rounded-3xl border border-zinc-100 dark:border-white/5 mb-3 shadow-md">
-                                                    <h4 className="text-[13px] font-black text-zinc-900 dark:text-white mb-4">새 배당금 입력</h4>
+                                                    <h4 className="text-[13px] font-black text-zinc-900 dark:text-white mb-4">
+                                                        {editingDividendId ? '배당금 수정' : '새 배당금 입력'}
+                                                    </h4>
                                                     <div className="space-y-4">
+                                                        {accounts.length > 0 && (
+                                                            <div>
+                                                                <label className="text-[10px] font-bold text-zinc-400 uppercase block mb-2">계좌 선택 (선택)</label>
+                                                                <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
+                                                                    {accounts.map((acc) => {
+                                                                        const isSelected = newDividendAccountId === acc.id;
+                                                                        return (
+                                                                            <button
+                                                                                key={acc.id}
+                                                                                type="button"
+                                                                                onClick={() => setNewDividendAccountId(isSelected ? null : acc.id)}
+                                                                                className={cn(
+                                                                                    "shrink-0 flex items-center gap-2 px-3 py-2.5 rounded-xl border active:scale-95 transition-all text-left",
+                                                                                    isSelected
+                                                                                        ? "bg-[#38C798] border-[#38C798] shadow-lg shadow-[#38C798]/20"
+                                                                                        : "bg-white dark:bg-white/5 border-zinc-100 dark:border-white/5"
+                                                                                )}
+                                                                            >
+                                                                                <Building2 className={cn(
+                                                                                    "size-3.5",
+                                                                                    isSelected ? "text-white" : "text-zinc-400"
+                                                                                )} />
+                                                                                <span className={cn(
+                                                                                    "text-[12px] font-black",
+                                                                                    isSelected ? "text-white" : "text-zinc-600 dark:text-zinc-300"
+                                                                                )}>
+                                                                                    {acc.alias}
+                                                                                </span>
+                                                                            </button>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                         <div>
                                                             <label className="text-[10px] font-bold text-zinc-400 uppercase block mb-1">지급일</label>
                                                             <input
@@ -874,8 +996,23 @@ export default function StockDetailSheetV2({
                                                             </div>
                                                         </div>
                                                         <div className="flex gap-2 pt-2">
+                                                            {editingDividendId && (
+                                                                <button
+                                                                    onClick={handleDeleteDividend}
+                                                                    disabled={isSubmittingDividend}
+                                                                    className="flex-1 py-3 rounded-xl bg-red-50 dark:bg-red-500/10 text-[13px] font-bold text-red-500 active:scale-[0.98] transition-all disabled:opacity-50"
+                                                                >
+                                                                    삭제
+                                                                </button>
+                                                            )}
                                                             <button
-                                                                onClick={() => setIsAddingDividend(false)}
+                                                                onClick={() => {
+                                                                    setIsAddingDividend(false);
+                                                                    setEditingDividendId(null);
+                                                                    setNewDividendAmount('');
+                                                                    setNewDividendTax('');
+                                                                    setNewDividendAccountId(null);
+                                                                }}
                                                                 className="flex-1 py-3 rounded-xl bg-zinc-100 dark:bg-white/5 text-[13px] font-bold text-zinc-500 dark:text-zinc-400 active:scale-[0.98] transition-all"
                                                             >
                                                                 취소
@@ -883,7 +1020,7 @@ export default function StockDetailSheetV2({
                                                             <button
                                                                 onClick={handleAddDividend}
                                                                 disabled={isSubmittingDividend || !newDividendAmount}
-                                                                className="flex-1 py-3 rounded-xl bg-[#38C798] text-[13px] font-black text-white active:scale-[0.98] transition-all disabled:opacity-50"
+                                                                className="flex-[2] py-3 rounded-xl bg-[#38C798] text-[13px] font-black text-white active:scale-[0.98] transition-all disabled:opacity-50"
                                                             >
                                                                 {isSubmittingDividend ? '저장 중...' : '저장하기'}
                                                             </button>
@@ -899,12 +1036,13 @@ export default function StockDetailSheetV2({
                             <div className="px-6 mt-10 mb-20 grid grid-cols-2 gap-3">
                                 <button
                                     onClick={() => {
-                                        if (!isAddingDividend) {
-                                            setIsAddingDividend(true);
-                                            setIsDividendExpanded(true); // Auto expand to show new entry
-                                        } else {
-                                            onAddAsset?.(stockAsset?.assetSymbol || undefined);
-                                        }
+                                        setEditingDividendId(null);
+                                        setNewDividendAmount('');
+                                        setNewDividendTax('');
+                                        setNewDividendDate(new Date().toISOString().split('T')[0]);
+                                        setNewDividendAccountId(null);
+                                        setIsAddingDividend(true);
+                                        setIsDividendExpanded(true); // Auto expand to show new entry
                                     }}
                                     className="py-4 rounded-2xl bg-zinc-50 dark:bg-white/5 border border-dashed border-zinc-200 dark:border-white/10 flex items-center justify-center gap-2 group active:scale-[0.98] transition-all col-span-2"
                                 >

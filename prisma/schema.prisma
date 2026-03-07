@@ -110,6 +110,9 @@ model DividendRecord {
   stockEntryId   String?
   stockEntry     StockEntry? @relation(fields: [stockEntryId], references: [id], onDelete: SetNull)
   
+  predefinedAccountId String?
+  predefinedAccount   PredefinedAccount? @relation(fields: [predefinedAccountId], references: [id], onDelete: SetNull)
+  
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
@@ -127,6 +130,7 @@ model PredefinedAccount {
   
   stockEntries  StockEntry[]
   assets        Asset[]
+  dividendRecords DividendRecord[]
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
