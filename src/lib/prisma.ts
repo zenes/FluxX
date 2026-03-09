@@ -24,6 +24,13 @@ if (process.env.NODE_ENV !== 'production') {
 
 export default prisma
 
+export const resetPrisma = () => {
+    if (globalThis.prismaGlobal) {
+        (globalThis.prismaGlobal as any).$disconnect()
+        globalThis.prismaGlobal = undefined
+    }
+}
+
 if (process.env.NODE_ENV !== 'production') {
     globalThis.prismaGlobal = prisma
 }

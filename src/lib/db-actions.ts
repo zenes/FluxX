@@ -10,6 +10,11 @@ const BACKUP_DIR = path.join(process.cwd(), 'backups');
 import prisma, { resetPrisma } from './prisma';
 
 export async function backupDatabase() {
+    // SQLite 파일이 없는 환경 (Vercel/PostgreSQL)에서는 작동하지 않음
+    if (process.env.DATABASE_URL?.startsWith('postgres')) {
+        return { success: false, message: '클라우드 DB 환경에서는 로컬 백업 기능을 지원하지 않습니다. Supabase 대시보드에서 백업을 확인하세요.' };
+    }
+
     try {
         // Ensure WAL changes are flushed to main DB file before copying
         try {
@@ -39,6 +44,10 @@ export async function backupDatabase() {
 }
 
 export async function getBackupList() {
+    if (process.env.DATABASE_URL?.startsWith('postgres')) {
+        return [];
+    }
+
     try {
         try {
             await fs.access(BACKUP_DIR);
@@ -71,6 +80,10 @@ export async function getBackupList() {
 }
 
 export async function restoreDatabase(filename: string) {
+    if (process.env.DATABASE_URL?.startsWith('postgres')) {
+        return { success: false, message: '클라우드 DB 환경에서는 로컬 복구 기능을 지원하지 않습니다.' };
+    }
+
     try {
         const backupPath = path.join(BACKUP_DIR, filename);
 

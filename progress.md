@@ -1,3 +1,18 @@
+# Project Progress - 2026-03-09
+
+## [2026-03-09 23:10] Supabase(PostgreSQL) 전환 및 Vercel 배포 최적화
+- **데이터베이스 클라우드 이전 (Supabase)**:
+    - Prisma 데이터베이스 공급자를 SQLite에서 PostgreSQL로 변경.
+    - Supabase의 IPv6 전용 환경 문제를 해결하기 위해 Transaction/Session Pooler(연결 풀러) 주소 체계를 도입하여 마이그레이션 성공.
+- **Vercel 빌드 환경 안정화**:
+    - Build 스크립트에 `prisma generate`를 추가하여 배포 시 Prisma Client 누락 문제 원천 차단.
+    - `prisma.ts` 내 싱글톤 관리 로직 보완 및 `resetPrisma` 내보내기 추가로 빌드 시 임포트 에러 해결.
+    - Vercel에서 인식하지 못하는 `next.config.mjs` 내 `experimental` 설정 정리.
+- **환경별 가드 로직 도입**:
+    - `db-actions.ts` 내 SQLite 전용 백업/복구 로직이 PostgreSQL 환경에서 에러를 유발하지 않도록 환경 변수 기반 분기 처리 추가.
+- **Todo 및 배포 가이드 업데이트**:
+    - `todo.md`를 최신화하여 Vercel 배포 후속 단계를 명확히 함.
+
 # Project Progress - 2026-03-08
 
 ## [2026-03-08 23:01] NAS 배포 준비 및 Todo 스킬 추가
