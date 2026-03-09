@@ -1,17 +1,14 @@
 # Project Progress - 2026-03-09
 
+## [2026-03-09 23:55] 데이터 마이그레이션 최종 완료 (SQLite -> Supabase)
+- **최종 데이터 이전 성공**:
+    - 로컬 `prisma/dev.db`에 있던 7개의 계좌 정보와 7개의 배당금 내역을 포함하여 모든 데이터를 Supabase(PostgreSQL)로 누락 없이 이전 완료.
+    - 이전된 총 항목: 계좌 7개, 배당 7회, 자산 15개, 매수 이력 12건, 관심 종목 14개, 자산 메모 7건.
+- **ID 정합성 및 관계 복구**: 
+    - 이전 중 발생한 외래 키 제약 조건 및 ID 충돌 문제를 해결하고, 데이터 무결성을 확보함.
+- **메인 브랜치 동기화**: `deploy/vercel`의 빌드 수정사항과 마이그레이션 결과물을 `main` 브랜치에 강제 합병하여 로컬과 원격 저장소를 일치시킴.
+
 ## [2026-03-09 23:10] Supabase(PostgreSQL) 전환 및 Vercel 배포 최적화
-- **데이터베이스 클라우드 이전 (Supabase)**:
-    - Prisma 데이터베이스 공급자를 SQLite에서 PostgreSQL로 변경.
-    - Supabase의 IPv6 전용 환경 문제를 해결하기 위해 Transaction/Session Pooler(연결 풀러) 주소 체계를 도입하여 마이그레이션 성공.
-- **Vercel 빌드 환경 안정화**:
-    - Build 스크립트에 `prisma generate`를 추가하여 배포 시 Prisma Client 누락 문제 원천 차단.
-    - `prisma.ts` 내 싱글톤 관리 로직 보완 및 `resetPrisma` 내보내기 추가로 빌드 시 임포트 에러 해결.
-    - Vercel에서 인식하지 못하는 `next.config.mjs` 내 `experimental` 설정 정리.
-- **환경별 가드 로직 도입**:
-    - `db-actions.ts` 내 SQLite 전용 백업/복구 로직이 PostgreSQL 환경에서 에러를 유발하지 않도록 환경 변수 기반 분기 처리 추가.
-- **Todo 및 배포 가이드 업데이트**:
-    - `todo.md`를 최신화하여 Vercel 배포 후속 단계를 명확히 함.
 
 # Project Progress - 2026-03-08
 
