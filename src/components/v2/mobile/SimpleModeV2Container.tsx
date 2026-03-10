@@ -801,28 +801,31 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                             </div>
                         </div>
 
-                        {/* Enhanced Monthly Chart */}
-                        <div className="py-2">
-                            <MonthlyDividendChartV2 
-                                data={selectedMonthlyData} 
-                                height={180} 
-                                year={selectedDividendYear}
-                            />
-                        </div>
-
-                        {/* Allocation Link Card */}
-                        <div className="bg-white dark:bg-[#1A1A1E] rounded-[24px] p-4 flex items-center justify-between shadow-sm border border-zinc-100 dark:border-white/5 active:scale-[0.98] transition-transform">
-                            <div className="flex items-center gap-3">
-                                <div className="size-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                                    <PieChart className="size-5 text-blue-500" />
-                                </div>
-                                <span className="font-bold text-zinc-900 dark:text-white">배당 비중</span>
+                        {/* Chart and Allocation Link Card with tighter spacing */}
+                        <div className="space-y-1">
+                            {/* Enhanced Monthly Chart */}
+                            <div className="py-2">
+                                <MonthlyDividendChartV2 
+                                    data={selectedMonthlyData} 
+                                    height={180} 
+                                    year={selectedDividendYear}
+                                />
                             </div>
-                            <ChevronRight className="size-5 text-zinc-300" />
+
+                            {/* Allocation Link Card */}
+                            <div className="bg-white dark:bg-[#1A1A1E] rounded-[24px] p-4 flex items-center justify-between shadow-sm border border-zinc-100 dark:border-white/5 active:scale-[0.98] transition-transform">
+                                <div className="flex items-center gap-3">
+                                    <div className="size-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                                        <PieChart className="size-5 text-blue-500" />
+                                    </div>
+                                    <span className="font-bold text-zinc-900 dark:text-white">배당 비중</span>
+                                </div>
+                                <ChevronRight className="size-5 text-zinc-300" />
+                            </div>
                         </div>
 
                         {/* Interactive Monthly Breakdown List */}
-                        <div className="space-y-4 pb-10 border-t border-zinc-100 dark:border-white/5 pt-6">
+                        <div className="space-y-4 pb-10 border-t border-zinc-100 dark:border-white/5 pt-4">
                             {monthlyRecords.length > 0 ? (
                                 monthlyRecords.map((m) => (
                                     <DividendBreakdownListV2 
