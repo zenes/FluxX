@@ -27,6 +27,7 @@ import SettingsSheetV2 from './SettingsSheetV2';
 import { MarketAsset, INITIAL_STOCKS } from './typesV2';
 import DividendDetailSheetV2 from './DividendDetailSheetV2';
 import { calculateMonthlyDividends, calculateHistoricalMonthlyDividends, calculateHistoricalYearlyDividends } from '@/lib/dividend-utils';
+import YearlyDividendChartV2 from './YearlyDividendChartV2';
 
 interface SimpleModeV2ContainerProps {
     assets: AssetItem[];
@@ -707,11 +708,19 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                             </div>
                         </div>
 
-                        <div className="bg-white dark:bg-[#1A1A1E] rounded-[24px] p-6 shadow-sm border border-zinc-100 dark:border-white/5 h-64 flex flex-col items-center justify-center gap-3">
-                            <div className="size-16 rounded-2xl bg-zinc-50 dark:bg-white/5 flex items-center justify-center">
-                                <TrendingUp className="size-8 text-zinc-200 dark:text-zinc-800" />
+                        <div className="bg-white dark:bg-[#1A1A1E] rounded-[24px] p-6 shadow-sm border border-zinc-100 dark:border-white/5 flex flex-col gap-4">
+                            <div className="flex justify-between items-center">
+                                <h3 className="text-sm font-black text-zinc-900 dark:text-white flex items-center gap-2">
+                                    연도별 추이
+                                </h3>
+                                <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Year-over-Year</p>
                             </div>
-                            <p className="text-zinc-400 font-bold">배당 차트 준비 중...</p>
+                            <div className="h-40 w-full">
+                                <YearlyDividendChartV2 
+                                    yearlyHistorical={dividendData.yearlyHistorical} 
+                                    height={160} 
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
