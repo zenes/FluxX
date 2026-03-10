@@ -28,6 +28,7 @@ import { MarketAsset, INITIAL_STOCKS } from './typesV2';
 import DividendDetailSheetV2 from './DividendDetailSheetV2';
 import { calculateMonthlyDividends, calculateHistoricalMonthlyDividends, calculateHistoricalYearlyDividends } from '@/lib/dividend-utils';
 import YearlyDividendChartV2 from './YearlyDividendChartV2';
+import MonthlyDividendChartV2 from './MonthlyDividendChartV2';
 
 interface SimpleModeV2ContainerProps {
     assets: AssetItem[];
@@ -73,6 +74,7 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [backups, setBackups] = useState<any[]>([]);
     const [isDividendDetailOpen, setIsDividendDetailOpen] = useState(false);
+    const [selectedDividendYear, setSelectedDividendYear] = useState<number>(new Date().getFullYear());
 
     const handleAddAssetEntry = (symbol?: string) => {
         setEntryType('stock');
@@ -395,6 +397,34 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
         };
     }, [assets, dividendRecords, marketPrices?.usdKrw]);
 
+    const availableDividendYears = React.useMemo(() => {
+        const years = dividendData.yearlyHistorical.map(y => y.year).sort((a, b) => b - a);
+        return years.length > 0 ? years : [new Date().getFullYear()];
+    }, [dividendData.yearlyHistorical]);
+
+    // Ensure selected year is valid
+    useEffect(() => {
+        if (!availableDividendYears.includes(selectedDividendYear) && availableDividendYears.length > 0) {
+            setSelectedDividendYear(availableDividendYears[0]);
+        }
+    }, [availableDividendYears, selectedDividendYear]);
+
+    const selectedMonthlyData = React.useMemo(() => {
+        const yearData = dividendData.yearlyHistorical.find(y => y.year === selectedDividendYear);
+        if (!yearData) {
+            return Array.from({ length: 12 }, (_, i) => ({
+                name: `${i + 1}월`,
+                amount: 0,
+                month: i
+            }));
+        }
+        return yearData.months.map((m, i) => ({
+            name: `${i + 1}월`,
+            amount: m.amount,
+            month: i
+        }));
+    }, [dividendData.yearlyHistorical, selectedDividendYear]);
+
     const [isPending, setIsPending] = useState(false);
 
     const handleBackup = async () => {
@@ -711,14 +741,33 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                         <div className="bg-white dark:bg-[#1A1A1E] rounded-[24px] p-6 shadow-sm border border-zinc-100 dark:border-white/5 flex flex-col gap-4">
                             <div className="flex justify-between items-center">
                                 <h3 className="text-sm font-black text-zinc-900 dark:text-white flex items-center gap-2">
-                                    연도별 추이
+                                    {selectedDividendYear}년 월별 배당
                                 </h3>
-                                <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Year-over-Year</p>
+                                <div className="flex gap-1 overflow-x-auto no-scrollbar max-w-[150px]">
+                                    {availableDividendYears.map(year => (
+                                        <button
+                                            key={year}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedDividendYear(year);
+                                            }}
+                                            className={cn(
+                                                "px-2 py-0.5 rounded-full text-[9px] font-black transition-all whitespace-nowrap",
+                                                selectedDividendYear === year 
+                                                    ? "bg-primary text-white shadow-sm" 
+                                                    : "bg-zinc-50 dark:bg-white/5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+                                            )}
+                                        >
+                                            {year}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                             <div className="h-40 w-full">
-                                <YearlyDividendChartV2 
-                                    yearlyHistorical={dividendData.yearlyHistorical} 
+                                <MonthlyDividendChartV2 
+                                    data={selectedMonthlyData} 
                                     height={160} 
+                                    year={selectedDividendYear}
                                 />
                             </div>
                         </div>
