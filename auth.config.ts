@@ -54,11 +54,22 @@ export const authConfig = {
             if (user) {
                 token.sub = user.id;
                 token.role = (user as any).role;
-                token.picture = user.image;
+                
+                // If it's a base64 image, use our API route to avoid header size issues
+                if (user.image?.startsWith('data:image/')) {
+                    token.picture = `/api/user/profile-image?v=${Date.now()}`;
+                } else {
+                    token.picture = user.image;
+                }
             }
             // Add session update trigger handling
             if (trigger === 'update' && session?.image !== undefined) {
-                token.picture = session.image;
+                // If it's a base64 image, use our API route
+                if (session.image?.startsWith('data:image/')) {
+                    token.picture = `/api/user/profile-image?v=${Date.now()}`;
+                } else {
+                    token.picture = session.image;
+                }
             }
             return token;
         }

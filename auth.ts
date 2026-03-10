@@ -45,7 +45,9 @@ export const { auth, signIn, signOut, handlers: { GET, POST } } = NextAuth({
                         id: user.id,
                         email: user.email,
                         role: user.role,
-                        image: user.image
+                        image: user.image?.startsWith('data:image/') 
+                            ? `/api/user/profile-image?v=${user.id}` 
+                            : user.image
                     };
                 }
 
