@@ -81,7 +81,7 @@ export default function DividendRecordForm({ tickerSymbol, currency, onSuccess, 
                     <div className="flex flex-col gap-1.5">
                         <label className="text-[10px] text-muted-foreground uppercase tracking-widest pl-1">Date Received</label>
                         <div className="relative">
-                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground opacity-50" />
+                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 dark:text-zinc-500" />
                             <input
                                 type="date"
                                 required

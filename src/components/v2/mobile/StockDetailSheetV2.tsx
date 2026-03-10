@@ -13,6 +13,7 @@ import {
     Plus,
     Pencil,
     Star,
+    Calendar,
 } from 'lucide-react';
 import { AssetItem, deleteStockAssetAllEntries, deleteStockEntry, getDividendRecordsBySymbol, addDividendRecord, editDividendRecord, deleteDividendRecord, getPredefinedAccounts } from '@/lib/actions';
 import { cn } from '@/lib/utils';
@@ -1013,12 +1014,15 @@ export default function StockDetailSheetV2({
                                                         )}
                                                         <div>
                                                             <label className="text-[10px] font-bold text-zinc-400 uppercase block mb-1">지급일</label>
+                                                        <div className="relative">
+                                                            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-zinc-400 dark:text-zinc-500 pointer-events-none" />
                                                             <input
                                                                 type="date"
                                                                 value={newDividendDate}
                                                                 onChange={(e) => setNewDividendDate(e.target.value)}
-                                                                className="w-full bg-zinc-50 dark:bg-[#121214] border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-[14px] font-bold text-zinc-900 dark:text-white focus:outline-none focus:border-[#38C798] transition-colors"
+                                                                className="w-full bg-zinc-50 dark:bg-[#121214] border border-zinc-200 dark:border-white/10 rounded-xl pl-11 pr-4 py-3 text-[14px] font-bold text-zinc-900 dark:text-white focus:outline-none focus:border-[#38C798] transition-colors"
                                                             />
+                                                        </div>
                                                         </div>
                                                         <div className="grid grid-cols-2 gap-3">
                                                             <div>
