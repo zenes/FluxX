@@ -770,9 +770,20 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                         {/* Summary Header & Options */}
                         <div className="space-y-4 px-2">
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-1.5 text-zinc-900 dark:text-white font-bold">
-                                    <span>{selectedDividendYear}년</span>
-                                    <ChevronDown className="size-4" />
+                                <div className="relative group">
+                                    <div className="flex items-center gap-1.5 text-zinc-900 dark:text-white font-bold group-active:opacity-60 transition-opacity">
+                                        <span>{selectedDividendYear}년</span>
+                                        <ChevronDown className="size-4" />
+                                    </div>
+                                    <select
+                                        value={selectedDividendYear}
+                                        onChange={(e) => setSelectedDividendYear(parseInt(e.target.value))}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                    >
+                                        {availableDividendYears.map(year => (
+                                            <option key={year} value={year}>{year}년</option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <div className="flex items-center gap-1.5">
