@@ -3,6 +3,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { getStockDisplayName } from '@/lib/stock-utils';
+import { Calendar } from 'lucide-react';
 
 interface DividendBreakdownItem {
     symbol: string;
@@ -35,17 +36,22 @@ export default function DividendBreakdownListV2({
     if (records.length === 0) return null;
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-end">
-                <h2 className="text-2xl font-black text-zinc-900 dark:text-white">
-                    {month + 1}월
-                </h2>
-                <p className="text-lg font-black text-zinc-900 dark:text-white">
+        <div className="bg-white dark:bg-[#1A1A1E] rounded-[32px] shadow-sm border border-zinc-100 dark:border-white/5 overflow-hidden flex flex-col">
+            <header className="px-6 pt-5 pb-2 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-zinc-100 dark:bg-white/5 text-zinc-500 dark:text-zinc-400">
+                        <Calendar className="size-4" />
+                    </div>
+                    <span className="text-xs font-black text-zinc-400 uppercase tracking-widest">
+                        {month + 1}월 배당 리포트
+                    </span>
+                </div>
+                <p className="text-sm font-black text-zinc-900 dark:text-white">
                     {currencySymbol}{Math.round(totalAmount).toLocaleString()}
                 </p>
-            </div>
+            </header>
 
-            <div className="flex flex-col">
+            <div className="flex flex-col px-2 pb-2 mt-2">
                 {records.map((record, idx) => (
                     <div 
                         key={`${record.symbol}-${idx}`} 
@@ -102,11 +108,6 @@ export default function DividendBreakdownListV2({
                         </div>
                     </div>
                 ))}
-            </div>
-            
-            {/* Monthly Separator */}
-            <div className="pt-2">
-                <div className="h-px bg-zinc-200 dark:bg-white/10 w-full" />
             </div>
         </div>
     );
