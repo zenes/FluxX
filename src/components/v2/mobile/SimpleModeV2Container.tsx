@@ -785,16 +785,6 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                                         ))}
                                     </select>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="flex items-center gap-1.5">
-                                        <CheckCircle2 className="size-4 text-primary" />
-                                        <span className="text-[11px] font-bold text-zinc-900 dark:text-white">실수령액</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                        <CheckCircle2 className="size-4 text-primary" />
-                                        <span className="text-[11px] font-bold text-zinc-900 dark:text-white">외화표시</span>
-                                    </div>
-                                </div>
                             </div>
 
                             <div className="space-y-1">
@@ -806,9 +796,6 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                                         <span className="text-xs text-zinc-400">?</span>
                                     </div>
                                 </div>
-                                <p className="text-sm font-bold text-zinc-400">
-                                    투자배당률 <span className="text-zinc-900 dark:text-white">{investmentYield.toFixed(2)}%</span>
-                                </p>
                             </div>
                         </div>
 
