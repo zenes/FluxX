@@ -1031,7 +1031,8 @@ export default function StockDetailSheetV2({
                                                                         const val = e.target.value;
                                                                         setNewDividendAmount(val);
                                                                         if (newDividendHoldingsQuantity && !isNaN(Number(val)) && !isNaN(Number(newDividendHoldingsQuantity)) && Number(newDividendHoldingsQuantity) !== 0) {
-                                                                            setNewDividendPerShare((Number(val) / Number(newDividendHoldingsQuantity)).toString());
+                                                                            const perShare = Number(val) / Number(newDividendHoldingsQuantity);
+                                                                            setNewDividendPerShare(isUSD ? perShare.toString() : Math.round(perShare).toString());
                                                                         }
                                                                     }}
                                                                     className="w-full bg-zinc-50 dark:bg-[#121214] border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-[14px] font-bold text-zinc-900 dark:text-white focus:outline-none focus:border-[#38C798] transition-colors"
@@ -1059,7 +1060,8 @@ export default function StockDetailSheetV2({
                                                                         const val = e.target.value;
                                                                         setNewDividendHoldingsQuantity(val);
                                                                         if (newDividendAmount && !isNaN(Number(val)) && !isNaN(Number(newDividendAmount)) && Number(val) !== 0) {
-                                                                            setNewDividendPerShare((Number(newDividendAmount) / Number(val)).toString());
+                                                                            const perShare = Number(newDividendAmount) / Number(val);
+                                                                            setNewDividendPerShare(isUSD ? perShare.toString() : Math.round(perShare).toString());
                                                                         }
                                                                     }}
                                                                     className="w-full bg-zinc-50 dark:bg-[#121214] border border-zinc-200 dark:border-white/10 rounded-xl px-3 py-2 text-[12px] font-bold text-zinc-900 dark:text-white focus:outline-none focus:border-[#38C798]"
