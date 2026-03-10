@@ -110,6 +110,10 @@ model DividendRecord {
   currency       String
   receivedAt     DateTime
   taxAmount      Float?
+  holdingsQuantity Float?
+  valuationAtTime  Float?
+  dividendPerShare Float?
+  priceAtTime      Float?
   
   stockEntryId   String?
   stockEntry     StockEntry? @relation(fields: [stockEntryId], references: [id], onDelete: SetNull)

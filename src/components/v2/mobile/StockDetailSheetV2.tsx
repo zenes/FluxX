@@ -217,6 +217,10 @@ export default function StockDetailSheetV2({
         currency: string;
         receivedAt: Date | string;
         taxAmount: number | null;
+        holdingsQuantity?: number | null;
+        valuationAtTime?: number | null;
+        dividendPerShare?: number | null;
+        priceAtTime?: number | null;
         predefinedAccountId?: string | null;
         predefinedAccount?: {
             id: string;
@@ -233,6 +237,10 @@ export default function StockDetailSheetV2({
     const [newDividendDate, setNewDividendDate] = useState(new Date().toISOString().split('T')[0]);
     const [newDividendTax, setNewDividendTax] = useState('');
     const [newDividendAccountId, setNewDividendAccountId] = useState<string | null>(null);
+    const [newDividendHoldingsQuantity, setNewDividendHoldingsQuantity] = useState('');
+    const [newDividendValuationAtTime, setNewDividendValuationAtTime] = useState('');
+    const [newDividendPerShare, setNewDividendPerShare] = useState('');
+    const [newDividendPriceAtTime, setNewDividendPriceAtTime] = useState('');
     const [isSubmittingDividend, setIsSubmittingDividend] = useState(false);
 
     // Accounts State
@@ -450,6 +458,10 @@ export default function StockDetailSheetV2({
             setNewDividendAmount('');
             setNewDividendTax('');
             setNewDividendAccountId(null);
+            setNewDividendHoldingsQuantity('');
+            setNewDividendValuationAtTime('');
+            setNewDividendPerShare('');
+            setNewDividendPriceAtTime('');
         }
     }, [isOpen]);
 
@@ -459,28 +471,30 @@ export default function StockDetailSheetV2({
             return;
         }
 
+        const payload = {
+            amount: Number(newDividendAmount),
+            currency: isUSD ? 'USD' : 'KRW',
+            receivedAt: new Date(newDividendDate),
+            taxAmount: newDividendTax ? Number(newDividendTax) : undefined,
+            predefinedAccountId: newDividendAccountId,
+            holdingsQuantity: newDividendHoldingsQuantity ? Number(newDividendHoldingsQuantity) : undefined,
+            valuationAtTime: newDividendValuationAtTime ? Number(newDividendValuationAtTime) : undefined,
+            dividendPerShare: newDividendPerShare ? Number(newDividendPerShare) : undefined,
+            priceAtTime: newDividendPriceAtTime ? Number(newDividendPriceAtTime) : undefined,
+        };
+
         setIsSubmittingDividend(true);
         try {
             if (editingDividendId) {
                 const updatedRecord = await editDividendRecord(
                     editingDividendId,
-                    {
-                        amount: Number(newDividendAmount),
-                        currency: isUSD ? 'USD' : 'KRW',
-                        receivedAt: new Date(newDividendDate),
-                        taxAmount: newDividendTax ? Number(newDividendTax) : undefined,
-                        predefinedAccountId: newDividendAccountId
-                    }
+                    payload
                 );
                 setDividendRecords(prev => prev.map(r => r.id === editingDividendId ? updatedRecord : r).sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()));
             } else {
                 const newRecord = await addDividendRecord({
                     tickerSymbol: stockAsset.assetSymbol,
-                    amount: Number(newDividendAmount),
-                    currency: isUSD ? 'USD' : 'KRW',
-                    receivedAt: new Date(newDividendDate),
-                    taxAmount: newDividendTax ? Number(newDividendTax) : undefined,
-                    predefinedAccountId: newDividendAccountId
+                    ...payload
                 });
                 setDividendRecords(prev => [newRecord, ...prev].sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()));
             }
@@ -927,9 +941,17 @@ export default function StockDetailSheetV2({
                                                                         </span>
                                                                     )}
                                                                 </span>
-                                                                {record.taxAmount && (
-                                                                    <span className="text-[10px] text-zinc-400">세금: {isUSD ? '$' : '₩'}{record.taxAmount.toLocaleString(undefined, { maximumFractionDigits: isUSD ? 2 : 0 })}</span>
-                                                                )}
+                                                                <div className="flex items-center gap-2 mt-0.5">
+                                                                    {record.holdingsQuantity && (
+                                                                        <span className="text-[10px] font-bold text-zinc-400 uppercase">{record.holdingsQuantity.toLocaleString()}주</span>
+                                                                    )}
+                                                                    {record.dividendPerShare && (
+                                                                        <span className="text-[10px] font-bold text-zinc-500 bg-zinc-100 dark:bg-white/5 px-1 rounded">주당 {isUSD ? '$' : '₩'}{record.dividendPerShare.toLocaleString(undefined, { maximumFractionDigits: isUSD ? 2 : 0 })}</span>
+                                                                    )}
+                                                                    {record.taxAmount && (
+                                                                        <span className="text-[10px] text-zinc-400">세: {isUSD ? '$' : '₩'}{record.taxAmount.toLocaleString(undefined, { maximumFractionDigits: isUSD ? 2 : 0 })}</span>
+                                                                    )}
+                                                                </div>
                                                             </div>
                                                             <span className="text-[14px] font-black text-[#38C798]">
                                                                 +{isUSD ? '$' : '₩'}{record.amount.toLocaleString(undefined, { maximumFractionDigits: isUSD ? 2 : 0 })}
@@ -1005,11 +1027,66 @@ export default function StockDetailSheetV2({
                                                                     type="number"
                                                                     placeholder="0.00"
                                                                     value={newDividendAmount}
-                                                                    onChange={(e) => setNewDividendAmount(e.target.value)}
+                                                                    onChange={(e) => {
+                                                                        const val = e.target.value;
+                                                                        setNewDividendAmount(val);
+                                                                        if (newDividendHoldingsQuantity && !isNaN(Number(val)) && !isNaN(Number(newDividendHoldingsQuantity)) && Number(newDividendHoldingsQuantity) !== 0) {
+                                                                            setNewDividendPerShare((Number(val) / Number(newDividendHoldingsQuantity)).toString());
+                                                                        }
+                                                                    }}
                                                                     className="w-full bg-zinc-50 dark:bg-[#121214] border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-[14px] font-bold text-zinc-900 dark:text-white focus:outline-none focus:border-[#38C798] transition-colors"
                                                                 />
                                                             </div>
                                                             <div>
+                                                                <label className="text-[10px] font-bold text-zinc-400 uppercase block mb-1">주당 배당액</label>
+                                                                <input
+                                                                    type="number"
+                                                                    placeholder="0.00"
+                                                                    value={newDividendPerShare}
+                                                                    onChange={(e) => setNewDividendPerShare(e.target.value)}
+                                                                    className="w-full bg-zinc-50 dark:bg-[#121214] border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-[14px] font-bold text-zinc-900 dark:text-white focus:outline-none focus:border-[#38C798] transition-colors border-dashed"
+                                                                />
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="grid grid-cols-3 gap-3 pt-1">
+                                                            <div>
+                                                                <label className="text-[10px] font-bold text-zinc-400 uppercase block mb-1">보유 수량</label>
+                                                                <input
+                                                                    type="number"
+                                                                    value={newDividendHoldingsQuantity}
+                                                                    onChange={(e) => {
+                                                                        const val = e.target.value;
+                                                                        setNewDividendHoldingsQuantity(val);
+                                                                        if (newDividendAmount && !isNaN(Number(val)) && !isNaN(Number(newDividendAmount)) && Number(val) !== 0) {
+                                                                            setNewDividendPerShare((Number(newDividendAmount) / Number(val)).toString());
+                                                                        }
+                                                                    }}
+                                                                    className="w-full bg-zinc-50 dark:bg-[#121214] border border-zinc-200 dark:border-white/10 rounded-xl px-3 py-2 text-[12px] font-bold text-zinc-900 dark:text-white focus:outline-none focus:border-[#38C798]"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-[10px] font-bold text-zinc-400 uppercase block mb-1">당시 주가</label>
+                                                                <input
+                                                                    type="number"
+                                                                    value={newDividendPriceAtTime}
+                                                                    onChange={(e) => setNewDividendPriceAtTime(e.target.value)}
+                                                                    className="w-full bg-zinc-50 dark:bg-[#121214] border border-zinc-200 dark:border-white/10 rounded-xl px-3 py-2 text-[12px] font-bold text-zinc-900 dark:text-white focus:outline-none focus:border-[#38C798]"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-[10px] font-bold text-zinc-400 uppercase block mb-1">평가 금액</label>
+                                                                <input
+                                                                    type="number"
+                                                                    value={newDividendValuationAtTime}
+                                                                    onChange={(e) => setNewDividendValuationAtTime(e.target.value)}
+                                                                    className="w-full bg-zinc-50 dark:bg-[#121214] border border-zinc-200 dark:border-white/10 rounded-xl px-3 py-2 text-[12px] font-bold text-zinc-900 dark:text-white focus:outline-none focus:border-[#38C798]"
+                                                                />
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            <div className="col-span-2">
                                                                 <label className="text-[10px] font-bold text-zinc-400 uppercase block mb-1">세금 (선택)</label>
                                                                 <input
                                                                     type="number"
@@ -1066,6 +1143,12 @@ export default function StockDetailSheetV2({
                                         setNewDividendTax('');
                                         setNewDividendDate(new Date().toISOString().split('T')[0]);
                                         setNewDividendAccountId(null);
+
+                                        // Pre-fill holdings context
+                                        setNewDividendHoldingsQuantity((stockAsset?.amount || 0).toString());
+                                        setNewDividendValuationAtTime(totalValueKrw.toString());
+                                        setNewDividendPriceAtTime((currentPrice || 0).toString());
+                                        
                                         setIsAddingDividend(true);
                                         setIsDividendExpanded(true); // Auto expand to show new entry
                                     }}

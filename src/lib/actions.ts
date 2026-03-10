@@ -618,6 +618,10 @@ export async function addDividendRecord(data: {
     taxAmount?: number;
     stockEntryId?: string;
     predefinedAccountId?: string | null;
+    holdingsQuantity?: number;
+    valuationAtTime?: number;
+    dividendPerShare?: number;
+    priceAtTime?: number;
 }) {
     const session = await auth();
     if (!session?.user?.id) throw new Error('Unauthorized');
@@ -687,6 +691,10 @@ export async function editDividendRecord(
         receivedAt: Date | string;
         taxAmount?: number | null;
         predefinedAccountId?: string | null;
+        holdingsQuantity?: number | null;
+        valuationAtTime?: number | null;
+        dividendPerShare?: number | null;
+        priceAtTime?: number | null;
     }
 ) {
     const session = await auth();
