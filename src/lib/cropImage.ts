@@ -32,7 +32,9 @@ export async function getCroppedImg(
     imageSrc: string,
     pixelCrop: { x: number; y: number; width: number; height: number },
     rotation = 0,
-    flip = { horizontal: false, vertical: false }
+    flip = { horizontal: false, vertical: false },
+    resizeWidth?: number,
+    resizeHeight?: number
 ): Promise<Blob | null> {
     const image = await createImage(imageSrc)
     const canvas = document.createElement('canvas')
@@ -88,10 +90,23 @@ export async function getCroppedImg(
         pixelCrop.height
     )
 
-    // As a blob
+    // If resizing is requested, create a final canvas
+    let finalCanvas = croppedCanvas;
+    if (resizeWidth && resizeHeight) {
+        const resizedCanvas = document.createElement('canvas');
+        const resizedCtx = resizedCanvas.getContext('2d');
+        if (resizedCtx) {
+            resizedCanvas.width = resizeWidth;
+            resizedCanvas.height = resizeHeight;
+            resizedCtx.drawImage(croppedCanvas, 0, 0, resizeWidth, resizeHeight);
+            finalCanvas = resizedCanvas;
+        }
+    }
+
+    // As a blob with reduced quality for storage efficiency
     return new Promise((resolve, reject) => {
-        croppedCanvas.toBlob((file) => {
+        finalCanvas.toBlob((file) => {
             resolve(file)
-        }, 'image/jpeg')
+        }, 'image/jpeg', 0.7)
     })
 }

@@ -55,7 +55,7 @@ export default function ProfilePictureUpload({
 
         setIsUploading(true);
         try {
-            const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
+            const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels, 0, { horizontal: false, vertical: false }, 256, 256);
             if (!croppedBlob) throw new Error('Failed to crop image');
 
             // Generate preview URL for immediate feedback

@@ -851,9 +851,6 @@ export async function getMemos() {
     }
 }
 
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-
 export async function uploadProfilePicture(formData: FormData) {
     const session = await auth();
     if (!session?.user?.id) throw new Error('Unauthorized');
@@ -865,7 +862,7 @@ export async function uploadProfilePicture(formData: FormData) {
     if (!file.type.startsWith('image/')) {
         throw new Error('File must be an image');
     }
-    // Limit to 5MB
+    // Limit to 5MB (though it should be much smaller after resizing)
     if (file.size > 5 * 1024 * 1024) {
         throw new Error('Image must be less than 5MB');
     }
@@ -873,32 +870,18 @@ export async function uploadProfilePicture(formData: FormData) {
     try {
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
-
-        // Save to public/avatars
-        const uploadDir = join(process.cwd(), 'public', 'avatars');
-        try {
-            await mkdir(uploadDir, { recursive: true });
-        } catch (e: any) {
-            if (e.code !== 'EEXIST') throw e;
-        }
-
-        // Use a unique filename
-        const fileExtension = file.name.split('.').pop() || 'jpg';
-        const fileName = `${session.user.id}-${Date.now()}.${fileExtension}`;
-        const filePath = join(uploadDir, fileName);
-
-        await writeFile(filePath, buffer);
-
-        const imageUrl = `/avatars/${fileName}`;
+        
+        // Convert to Base64 Data URL
+        const base64Image = `data:${file.type};base64,${buffer.toString('base64')}`;
 
         // Update user in DB
         await (prisma.user as any).update({
             where: { id: session.user.id },
-            data: { image: imageUrl }
+            data: { image: base64Image }
         });
 
         revalidatePath('/settings');
-        return { success: true, imageUrl };
+        return { success: true, imageUrl: base64Image };
     } catch (e: any) {
         console.error('Failed to upload profile picture:', e);
         throw new Error(`Failed to upload picture: ${e.message || 'Unknown error'}`);
