@@ -143,11 +143,13 @@ export default function StockAliasManager({ initialAliases, onUpdate }: StockAli
 
             {/* Edit / Add Form */}
             <form onSubmit={handleSubmit} className={cn(
-                "mb-6 rounded-[14px] overflow-hidden transition-all duration-300",
-                editingTicker ? "bg-[#1C1C1E] border border-[#38C798]/50 ring-1 ring-[#38C798]/20" : "bg-[#1C1C1E]"
+                "mb-6 rounded-[14px] overflow-hidden transition-all duration-300 border",
+                editingTicker 
+                    ? "bg-white dark:bg-[#1C1C1E] border-[#38C798]/50 ring-1 ring-[#38C798]/20" 
+                    : "bg-white dark:bg-[#1C1C1E] border-zinc-100 dark:border-transparent"
             )}>
-                <div className="flex items-center justify-between px-4 py-3 border-b border-[#38383A] bg-[#2C2C2E]/50">
-                    <span className="text-[15px] font-semibold tracking-tight text-white">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100 dark:border-[#38383A] bg-zinc-50/50 dark:bg-[#2C2C2E]/50">
+                    <span className="text-[15px] font-semibold tracking-tight text-zinc-900 dark:text-white">
                         {editingTicker ? '별명 수정' : '새 별명 추가'}
                     </span>
                     {editingTicker && (
@@ -156,12 +158,12 @@ export default function StockAliasManager({ initialAliases, onUpdate }: StockAli
                             onClick={resetForm}
                             className="text-[13px] font-medium text-[#8E8E93] active:opacity-70 transition-opacity flex items-center gap-1"
                         >
-                            <X size={14} /> 취소
+                            <X size={14} /> {t('common.cancel') || '취소'}
                         </button>
                     )}
                 </div>
 
-                <div className="flex flex-col divide-y divide-[#38383A]">
+                <div className="flex flex-col divide-y divide-zinc-100 dark:divide-[#38383A]">
                     <div className="flex items-center px-4 py-3">
                         <label className="text-[15px] text-[#8E8E93] w-24 shrink-0">티커/종목</label>
                         <input
@@ -170,7 +172,7 @@ export default function StockAliasManager({ initialAliases, onUpdate }: StockAli
                             disabled={!!editingTicker} // Cannot change ticker when editing
                             value={formData.ticker}
                             onChange={(e) => setFormData({ ...formData, ticker: e.target.value.toUpperCase() })}
-                            className="flex-1 text-[16px] text-white bg-transparent outline-none placeholder:text-[#38383A] uppercase font-bold"
+                            className="flex-1 text-[16px] text-zinc-900 dark:text-white bg-transparent outline-none placeholder:text-zinc-200 dark:placeholder:text-[#38383A] uppercase font-bold"
                             placeholder="예: AAPL, 005930"
                         />
                     </div>
@@ -181,19 +183,21 @@ export default function StockAliasManager({ initialAliases, onUpdate }: StockAli
                             type="text"
                             value={formData.alias}
                             onChange={(e) => setFormData({ ...formData, alias: e.target.value })}
-                            className="flex-1 text-[16px] text-white bg-transparent outline-none placeholder:text-[#38383A]"
+                            className="flex-1 text-[16px] text-zinc-900 dark:text-white bg-transparent outline-none placeholder:text-zinc-200 dark:placeholder:text-[#38383A]"
                             placeholder="사용할 이름 입력"
                         />
                     </div>
                 </div>
 
-                <div className="flex justify-end p-3 bg-[#2C2C2E]/30 border-t border-[#38383A]">
+                <div className="flex justify-end p-3 bg-zinc-50/30 dark:bg-[#2C2C2E]/30 border-t border-zinc-100 dark:border-[#38383A]">
                     <button
                         type="submit"
                         disabled={isSubmitting || !formData.ticker || !formData.alias}
                         className={cn(
-                            "flex items-center justify-center rounded-[10px] text-[15px] font-bold py-2 px-5 transition-all active:scale-95 disabled:opacity-50 gap-2",
-                            editingTicker ? "bg-[#38C798] text-white" : "bg-white text-black"
+                            "flex items-center justify-center rounded-[10px] text-[15px] font-bold py-2 px-5 transition-all active:scale-95 disabled:opacity-50 gap-2 shadow-sm",
+                            editingTicker 
+                                ? "bg-[#38C798] text-white shadow-[#38C798]/20" 
+                                : "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white border border-zinc-100 dark:border-transparent"
                         )}
                     >
                         {isSubmitting ? (
@@ -206,7 +210,7 @@ export default function StockAliasManager({ initialAliases, onUpdate }: StockAli
                 </div>
             </form>
 
-            <div className="flex flex-col rounded-[14px] overflow-hidden bg-[#1C1C1E] divide-y divide-[#38383A]">
+            <div className="flex flex-col rounded-[14px] overflow-hidden bg-white dark:bg-[#1C1C1E] divide-y divide-zinc-100 dark:divide-[#38383A] border border-zinc-100 dark:border-transparent">
                 {aliases.length === 0 ? (
                     <div className="text-center py-8 text-[#8E8E93] text-[15px] flex flex-col items-center gap-2">
                         <Tag size={32} className="opacity-10 mb-1" />
@@ -217,18 +221,20 @@ export default function StockAliasManager({ initialAliases, onUpdate }: StockAli
                         {displayAliases.map(item => (
                             <div key={item.id} className={cn(
                                 "flex items-center justify-between py-3.5 px-4 transition-colors",
-                                editingTicker === item.ticker && "bg-[#2C2C2E]"
+                                editingTicker === item.ticker 
+                                    ? "bg-zinc-100 dark:bg-[#2C2C2E]" 
+                                    : "active:bg-zinc-50 dark:active:bg-[#2C2C2E]/50"
                             )}>
                                 <div className="flex flex-col gap-0.5">
                                     <div className="flex items-center gap-2">
-                                        <span className="text-[17px] font-bold text-white leading-tight">
+                                        <span className="text-[17px] font-bold text-zinc-900 dark:text-white leading-tight">
                                             {item.alias}
                                         </span>
                                         {editingTicker === item.ticker && (
                                             <span className="text-[10px] bg-[#38C798]/20 text-[#38C798] px-1.5 py-0.5 rounded-md font-black uppercase">Editing</span>
                                         )}
                                     </div>
-                                    <span className="text-[13px] font-bold text-[#8E8E93] tracking-tight uppercase">
+                                    <span className="text-[13px] font-bold text-zinc-400 dark:text-[#8E8E93] tracking-tight uppercase">
                                         {item.ticker}
                                     </span>
                                 </div>
@@ -236,13 +242,13 @@ export default function StockAliasManager({ initialAliases, onUpdate }: StockAli
                                 <div className="flex items-center gap-1">
                                     <button
                                         onClick={() => handleEditClick(item)}
-                                        className="p-2 text-[#8E8E93] hover:text-white active:bg-white/5 rounded-full transition-colors"
+                                        className="p-2 text-zinc-400 dark:text-[#8E8E93] hover:text-zinc-600 dark:hover:text-white active:bg-zinc-100 dark:active:bg-white/5 rounded-full transition-colors"
                                     >
                                         <Pencil size={18} />
                                     </button>
                                     <button
                                         onClick={() => handleDelete(item.ticker)}
-                                        className="p-2 text-[#8E8E93] hover:text-[#FF453A] active:bg-red-500/5 rounded-full transition-colors"
+                                        className="p-2 text-zinc-400 dark:text-[#8E8E93] hover:text-[#FF453A] active:bg-red-500/5 rounded-full transition-colors"
                                     >
                                         <Trash2 size={18} />
                                     </button>
@@ -252,18 +258,18 @@ export default function StockAliasManager({ initialAliases, onUpdate }: StockAli
                     </>
                 )}
                 
-                {hasMore && (
-                    <button
-                        onClick={() => setIsExpanded(!isExpanded)}
-                        className="w-full py-4 text-[14px] font-bold text-[#0A84FF] active:bg-white/5 transition-colors flex items-center justify-center gap-1"
-                    >
-                        {isExpanded ? (
-                            <>숨기기 <ChevronUp size={16} /></>
-                        ) : (
-                            <>더보기 ({aliases.length - 4}개 더 있음) <ChevronDown size={16} /></>
-                        )}
-                    </button>
-                )}
+            {hasMore && (
+                <button
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="w-full py-4 text-[14px] font-bold text-[#0A84FF] active:bg-zinc-50 dark:active:bg-white/5 transition-colors flex items-center justify-center gap-1"
+                >
+                    {isExpanded ? (
+                        <>숨기기 <ChevronUp size={16} /></>
+                    ) : (
+                        <>더보기 ({aliases.length - 4}개 더 있음) <ChevronDown size={16} /></>
+                    )}
+                </button>
+            )}
             </div>
             <V2ConfirmModal
                 isOpen={modalConfig.isOpen}

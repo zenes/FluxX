@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useId, useEffect, useState } from 'react';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 
 export const Sparkline = ({ isUp, data }: { isUp: boolean, data?: number[] }) => {
-    const color = isUp ? "#FF3B2F" : "#35C759";
+    const { getUpColor, getDownColor } = useUserPreferences();
+    const color = isUp ? getUpColor() : getDownColor();
     const reactId = useId();
     const gradientId = `sparkline-gradient-${reactId.replace(/:/g, '')}`;
     const [isHydrated, setIsHydrated] = useState(false);

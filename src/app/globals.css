@@ -80,6 +80,13 @@
     --radius: 0.75rem;
   }
 
+  .theme-black {
+    --background: 0 0% 0%;
+    /* Pure Black #000000 */
+    --card: 0 0% 0%;
+    --popover: 0 0% 0%;
+  }
+
   .cyber {
     --background: 222 47% 11%;
     /* Mid-tone navy #0b1120 */

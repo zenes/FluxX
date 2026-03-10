@@ -3,7 +3,9 @@ import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import "./globals.css";
 import Providers from "@/components/Providers";
-import { ThemeProvider } from "@/components/ThemeProvider";
+import { UserPreferencesProvider, AppTheme, StockColorMode } from '@/contexts/UserPreferencesContext';
+import { getUserSettings } from "@/lib/actions";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "FluxX",
@@ -32,7 +34,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#121214",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#edf0f4" },
+    { media: "(prefers-color-scheme: dark)", color: "#121214" },
+  ],
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -40,40 +45,65 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const userSettings = await getUserSettings();
+  const initialTheme = (userSettings?.appTheme || 'DARK') as AppTheme;
+
   return (
-    <html lang="en" suppressHydrationWarning className={`${GeistSans.variable} ${GeistMono.variable}`}>
+    <html lang="en" suppressHydrationWarning className={cn(
+      GeistSans.variable, 
+      GeistMono.variable,
+      initialTheme === 'LIGHT' ? "" : "dark",
+      initialTheme === 'BLACK' ? "theme-black" : ""
+    )}>
       <body
         className="font-sans antialiased"
       >
         <script dangerouslySetInnerHTML={{
           __html: `
           (function() {
-            if ('serviceWorker' in navigator) {
-              window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/sw.js').then(function(reg) {
-                  console.log('SW registered:', reg);
-                }).catch(function(err) {
-                  console.log('SW reg error:', err);
+            try {
+              // Service Worker registration
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').then(function(reg) {
+                    console.log('SW registered');
+                  }).catch(function(err) {
+                    console.log('SW reg error:', err);
+                  });
                 });
-              });
-            }
+              }
+
+              // Theme initialization sync with server-rendered logic
+              // This runs BEFORE hydration to ensure localStorage overrides if different from server
+              const savedTheme = localStorage.getItem('app-theme');
+              const html = document.documentElement;
+              const serverTheme = "${initialTheme}";
+              
+              const targetTheme = savedTheme || serverTheme;
+              
+              if (targetTheme === 'BLACK') {
+                html.classList.add('dark', 'theme-black');
+              } else if (targetTheme === 'LIGHT') {
+                html.classList.remove('dark', 'theme-black');
+              } else if (targetTheme === 'DARK') {
+                html.classList.add('dark');
+                html.classList.remove('theme-black');
+              }
+            } catch (e) {}
           })();
         `}} />
         <Providers>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-            themes={["light", "dark", "paper", "cyber", "nature"]}
+          <UserPreferencesProvider 
+            initialTheme={initialTheme} 
+            initialStockColorMode={(userSettings?.stockColorMode || 'KOREA') as StockColorMode}
           >
             {children}
-          </ThemeProvider>
+          </UserPreferencesProvider>
         </Providers>
       </body>
     </html>

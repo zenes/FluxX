@@ -180,6 +180,13 @@ export const en = {
         cancel: "Cancel",
         crop_and_save: "Crop & Save",
         saving: "Saving...",
+        app_preferences: "App Preferences",
+        theme_selection: "Black Theme",
+        theme_black: "Black",
+        theme_white: "White",
+        stock_color_logic: "Stock Color Logic",
+        color_standard: "Up Red / Down Green",
+        color_inverted: "Up Green / Down Red",
     }
 };
 

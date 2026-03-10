@@ -7,6 +7,7 @@ import { Building2, Plus, ChevronRight, TrendingUp, TrendingDown } from 'lucide-
 import { motion } from 'framer-motion';
 import { MarketPrices } from '@/lib/calculations';
 import { getStockDisplayName } from '@/lib/stock-utils';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 
 interface AssetListGroupCardProps {
     title: string;
@@ -42,6 +43,9 @@ export default function AssetListGroupCard({
     stockAliases = {}
 }: AssetListGroupCardProps) {
     const [isExpanded, setIsExpanded] = useState(true);
+    const { getUpColor, getDownColor } = useUserPreferences();
+    const upColor = getUpColor();
+    const downColor = getDownColor();
 
     const isEmpty = assets.length === 0;
 
@@ -87,10 +91,10 @@ export default function AssetListGroupCard({
                             {isHidden ? "******" : `₩${Math.round(summary.totalValue).toLocaleString()}`}
                         </span>
                         {type === 'stock' && !isHidden && (
-                            <div className={cn(
-                                "flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-black mb-1",
-                                summary.pnl >= 0 ? "bg-[#FF3B2F] text-white" : "bg-[#35C759] text-white"
-                            )}>
+                            <div 
+                                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-black mb-1 text-white"
+                                style={{ backgroundColor: summary.pnl >= 0 ? upColor : downColor }}
+                            >
                                 {summary.pnl >= 0 ? "+" : ""}{summary.returnRate.toFixed(2)}%
                             </div>
                         )}
@@ -130,7 +134,7 @@ export default function AssetListGroupCard({
                             const returnRate = bookValue > 0 ? (unrealizedPnl / bookValue) * 100 : 0;
                             const isPersonalUp = unrealizedPnl >= 0;
                             const personalSign = isPersonalUp ? "+" : "";
-                            const personalThemeColorClass = isPersonalUp ? "bg-[#FF3B2F]" : "bg-[#35C759]";
+                            const personalThemeColor = isPersonalUp ? upColor : downColor;
 
                             return (
                                 <button
@@ -154,19 +158,18 @@ export default function AssetListGroupCard({
                                         </span>
                                     </div>
 
-                                    {/* Right Group: Profit & ROI Badge */}
                                     <div className="flex items-center gap-4">
                                         <div className="flex flex-col items-end gap-1.5 min-w-[80px]">
-                                            <span className={cn(
-                                                "text-[14px] font-bold",
-                                                isPersonalUp ? "text-[#FF3B2F]" : "text-[#35C759]"
-                                            )}>
+                                            <span 
+                                                className="text-[14px] font-bold"
+                                                style={{ color: isPersonalUp ? upColor : downColor }}
+                                            >
                                                 {isUSD ? '$' : '₩'}{formatPrice(asset.currency || 'USD', Math.abs(unrealizedPnl))}
                                             </span>
-                                            <div className={cn(
-                                                "px-2 py-0.5 rounded-[6px] text-[11px] font-bold text-white min-w-[60px] text-center",
-                                                personalThemeColorClass
-                                            )}>
+                                            <div 
+                                                className="px-2 py-0.5 rounded-[6px] text-[11px] font-bold text-white min-w-[60px] text-center"
+                                                style={{ backgroundColor: personalThemeColor }}
+                                            >
                                                 {personalSign}{returnRate.toFixed(2)}%
                                             </div>
                                         </div>

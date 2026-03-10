@@ -9,6 +9,7 @@ import { AssetItem } from '@/lib/actions';
 import StockDetailSheetV2 from './StockDetailSheetV2';
 import AssetGrowthDetailSheetV2 from './AssetGrowthDetailSheetV2';
 import { getStockDisplayName, getQuoteFromResults } from '@/lib/stock-utils';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 
 interface SimpleModeV2CardProps {
     id: string | number;
@@ -41,6 +42,7 @@ export default function SimpleModeV2Card({
     const [stockPriceInfo, setStockPriceInfo] = useState<{ price: number; currency: string; change?: number; changePercent?: number; shortName?: string } | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [marketPrices, setMarketPrices] = useState<MarketPrices | null>(null);
+    const { getUpColor, getDownColor } = useUserPreferences();
 
     const isTotal = id === 'total';
     const isStock = !!stockAsset;
@@ -135,8 +137,8 @@ export default function SimpleModeV2Card({
     const changePercent = stockPriceInfo?.changePercent || 0;
     const isUp = changePercent >= 0;
 
-    const COLOR_UP = "#FF4F60";
-    const COLOR_DOWN = "#35C759";
+    const COLOR_UP = getUpColor();
+    const COLOR_DOWN = getDownColor();
 
     const formattedValue = displayValue.toLocaleString(undefined, {
         maximumFractionDigits: (isStock && !stockAsset?.assetSymbol?.endsWith('.KS') && !stockAsset?.assetSymbol?.endsWith('.KQ')) ? 2 : 0

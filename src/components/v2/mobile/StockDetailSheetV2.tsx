@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { isKoreanStock, getNormalizedTicker, getStockDisplayName } from '@/lib/stock-utils';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import StockAliasEditSheet from './StockAliasEditSheet';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 
 // --- Sub-component for individual history entry with sticky swipe ---
 const PurchaseHistoryItem = ({
@@ -41,6 +42,9 @@ const PurchaseHistoryItem = ({
     handleEditEntry: (entry: any) => void;
 }) => {
     const controls = useAnimation();
+    const { getUpColor, getDownColor } = useUserPreferences();
+    const upColor = getUpColor();
+    const downColor = getDownColor();
 
     const entryAvgPrice = entry.qty > 0 ? entry.totalCost / entry.qty : 0;
     const entryAvgPriceInKrw = isUSD ? entryAvgPrice * exchangeRate : entryAvgPrice;
@@ -131,16 +135,16 @@ const PurchaseHistoryItem = ({
                     </div>
                     <div className="flex flex-col items-end">
                         <span className="text-[10px] font-bold text-zinc-400 uppercase mb-0.5">평가 손익</span>
-                        <span className={cn(
-                            "text-[13px] font-black",
-                            isEntryPositive ? "text-[#FF4F60]" : "text-[#35C759]"
-                        )}>
+                        <span 
+                            className="text-[13px] font-black"
+                            style={{ color: isEntryPositive ? upColor : downColor }}
+                        >
                             {isEntryPositive ? '+' : ''}₩{entryPnl.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </span>
-                        <span className={cn(
-                            "text-[10px] font-bold",
-                            isEntryPositive ? "text-[#FF4F60]/70" : "text-[#35C759]/70"
-                        )}>
+                        <span 
+                            className="text-[10px] font-bold"
+                            style={{ color: isEntryPositive ? `${upColor}B3` : `${downColor}B3` }}
+                        >
                             ({entryReturnRate.toFixed(2)}%)
                         </span>
                     </div>
@@ -545,7 +549,10 @@ export default function StockDetailSheetV2({
     const returnRate = bookValue > 0 ? (unrealizedPnl / bookValue) * 100 : 0;
     const isPositive = returnRate >= 0;
 
-    const chartColor = changePercent && changePercent >= 0 ? "#FF3B2F" : "#35C759";
+    const { getUpColor, getDownColor } = useUserPreferences();
+    const upColor = getUpColor();
+    const downColor = getDownColor();
+    const chartColor = changePercent && changePercent >= 0 ? upColor : downColor;
 
     const formatPriceLocal = (value: number) => {
         return value.toLocaleString(undefined, {
@@ -681,10 +688,10 @@ export default function StockDetailSheetV2({
                                         {isUSD ? '$' : '₩'}{formatPriceLocal(hoveredData ? hoveredData.price : (currentPrice || computedAvgPrice))}
                                     </span>
                                     {!hoveredData && (
-                                        <div className={cn(
-                                            "flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-black text-white mb-1",
-                                            (changePercent || 0) >= 0 ? "bg-[#FF3B2F]" : "bg-[#35C759]"
-                                        )}>
+                                        <div 
+                                            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-black text-white mb-1"
+                                            style={{ backgroundColor: (changePercent || 0) >= 0 ? upColor : downColor }}
+                                        >
                                             {(changePercent || 0) >= 0 ? "+" : ""}{(changePercent || 0).toFixed(2)}%
                                         </div>
                                     )}

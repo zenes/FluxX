@@ -27,6 +27,8 @@ export async function GET() {
             userRole: user.role,
             predefinedAccounts: (user as any).predefinedAccounts,
             stockAliases: (user as any).stockAliases,
+            appTheme: (user as any).appTheme || 'DARK',
+            stockColorMode: (user as any).stockColorMode || 'KOREA'
         });
     } catch (error) {
         console.error("Failed to fetch settings data", error);

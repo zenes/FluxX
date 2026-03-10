@@ -20,6 +20,8 @@ model User {
   lastLoginAt   DateTime?
   lastActiveAt  DateTime?
   hideAssets    Boolean   @default(false)
+  appTheme      String    @default("DARK")   // 'LIGHT', 'DARK', 'BLACK'
+  stockColorMode String    @default("KOREA")  // 'KOREA' (Red Up), 'WESTERN' (Green Up)
   createdAt     DateTime  @default(now())
   
   assets              Asset[]

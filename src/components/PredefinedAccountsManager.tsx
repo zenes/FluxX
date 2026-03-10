@@ -1,10 +1,9 @@
-'use client';
-
 import { useState } from 'react';
 import { addPredefinedAccount, deletePredefinedAccount, editPredefinedAccount } from '@/lib/actions';
-import { Plus, Trash2, Building2, UserCircle2, Hash, Pencil, X } from 'lucide-react';
+import { Plus, Trash2, Building2, Pencil, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { cn } from '@/lib/utils';
 
 type Account = {
     id: string;
@@ -93,70 +92,75 @@ export default function PredefinedAccountsManager({ initialAccounts }: { initial
                 </span>
             </div>
 
-            <form onSubmit={handleSubmit} className={`mb-6 rounded-[14px] overflow-hidden transition-colors ${editId ? 'bg-[#1C1C1E] border border-[#0A84FF]/50 ring-1 ring-[#0A84FF]/20' : 'bg-[#1C1C1E]'}`}>
-                <div className="flex items-center justify-between px-4 py-3 border-b border-[#38383A] bg-[#2C2C2E]/50">
-                    <span className="text-[15px] font-semibold tracking-tight text-white">
+            <form onSubmit={handleSubmit} className={cn(
+                "mb-6 rounded-[14px] overflow-hidden transition-all border",
+                editId 
+                    ? "bg-white dark:bg-[#1C1C1E] border-[#0A84FF]/50 ring-1 ring-[#0A84FF]/20" 
+                    : "bg-white dark:bg-[#1C1C1E] border-zinc-100 dark:border-transparent"
+            )}>
+                <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100 dark:border-[#38383A] bg-zinc-50/50 dark:bg-[#2C2C2E]/50">
+                    <span className="text-[15px] font-semibold tracking-tight text-zinc-900 dark:text-white">
                         {editId ? t('settings.edit_preset') : t('settings.add_new_preset')}
                     </span>
                     {editId && (
                         <button
                             type="button"
                             onClick={resetForm}
-                            className="text-[15px] font-medium text-white active:opacity-70 transition-opacity flex items-center gap-1"
+                            className="text-[14px] font-medium text-[#0A84FF] active:opacity-70 transition-opacity flex items-center gap-1"
                         >
-                            <X size={10} /> Cancel Edit
+                            <X size={12} /> {t('common.cancel') || 'Cancel'}
                         </button>
                     )}
                 </div>
 
-                <div className="flex flex-col divide-y divide-[#38383A]">
+                <div className="flex flex-col divide-y divide-zinc-100 dark:divide-[#38383A]">
                     <div className="flex items-center px-4 py-3">
-                        <label className="text-[16px] text-white w-28 shrink-0">{t('settings.alias_label')}</label>
+                        <label className="text-[16px] text-zinc-500 dark:text-white w-28 shrink-0">{t('settings.alias_label')}</label>
                         <input
                             required
                             type="text"
                             value={formData.alias}
                             onChange={(e) => setFormData({ ...formData, alias: e.target.value })}
-                            className="flex-1 text-[16px] text-white bg-transparent outline-none placeholder:text-[#8E8E93]"
+                            className="flex-1 text-[16px] text-zinc-900 dark:text-white bg-transparent outline-none placeholder:text-[#8E8E93]"
                             placeholder={t('settings.alias_placeholder')}
                         />
                     </div>
                     <div className="flex items-center px-4 py-3">
-                        <label className="text-[16px] text-white w-28 shrink-0">{t('settings.broker_label')}</label>
+                        <label className="text-[16px] text-zinc-500 dark:text-white w-28 shrink-0">{t('settings.broker_label')}</label>
                         <input
                             required
                             type="text"
                             value={formData.broker}
                             onChange={(e) => setFormData({ ...formData, broker: e.target.value })}
-                            className="flex-1 text-[16px] text-white bg-transparent outline-none placeholder:text-[#8E8E93]"
+                            className="flex-1 text-[16px] text-zinc-900 dark:text-white bg-transparent outline-none placeholder:text-[#8E8E93]"
                             placeholder={t('settings.broker_placeholder')}
                         />
                     </div>
                     <div className="flex items-center px-4 py-3">
-                        <label className="text-[16px] text-white w-28 shrink-0">{t('settings.account_number_label')}</label>
+                        <label className="text-[16px] text-zinc-500 dark:text-white w-28 shrink-0">{t('settings.account_number_label')}</label>
                         <input
                             required
                             type="text"
                             value={formData.accountNumber}
                             onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })}
-                            className="flex-1 text-[16px] text-white bg-transparent outline-none placeholder:text-[#8E8E93] font-mono"
+                            className="flex-1 text-[16px] text-zinc-900 dark:text-white bg-transparent outline-none placeholder:text-[#8E8E93] font-mono"
                             placeholder={t('settings.account_number_placeholder')}
                         />
                     </div>
                     <div className="flex items-center px-4 py-3">
-                        <label className="text-[16px] text-white w-28 shrink-0">{t('settings.owner_label')}</label>
+                        <label className="text-[16px] text-zinc-500 dark:text-white w-28 shrink-0">{t('settings.owner_label')}</label>
                         <input
                             required
                             type="text"
                             value={formData.owner}
                             onChange={(e) => setFormData({ ...formData, owner: e.target.value })}
-                            className="flex-1 text-[16px] text-white bg-transparent outline-none placeholder:text-[#8E8E93]"
+                            className="flex-1 text-[16px] text-zinc-900 dark:text-white bg-transparent outline-none placeholder:text-[#8E8E93]"
                             placeholder={t('settings.owner_placeholder')}
                         />
                     </div>
                 </div>
 
-                <div className="flex justify-end p-3 bg-[#2C2C2E]/30 border-t border-[#38383A]">
+                <div className="flex justify-end p-3 bg-zinc-50/50 dark:bg-[#2C2C2E]/30 border-t border-zinc-100 dark:border-[#38383A]">
                     <button
                         type="submit"
                         disabled={isSubmitting}
@@ -172,7 +176,7 @@ export default function PredefinedAccountsManager({ initialAccounts }: { initial
                 </div>
             </form>
 
-            <div className="flex flex-col rounded-[14px] overflow-hidden bg-[#1C1C1E] divide-y divide-[#38383A]">
+            <div className="flex flex-col rounded-[14px] overflow-hidden bg-white dark:bg-[#1C1C1E] divide-y divide-zinc-100 dark:divide-[#38383A] border border-zinc-100 dark:border-transparent">
                 {accounts.length === 0 ? (
                     <div className="text-center py-8 text-[#8E8E93] text-[15px] flex flex-col items-center gap-2">
                         <Building2 size={32} className="opacity-30 mb-1" />
@@ -180,10 +184,13 @@ export default function PredefinedAccountsManager({ initialAccounts }: { initial
                     </div>
                 ) : (
                     accounts.map(account => (
-                        <div key={account.id} className={`flex items-center justify-between py-3 px-4 transition-colors ${editId === account.id ? 'bg-[#2C2C2E]' : ''}`}>
+                        <div key={account.id} className={cn(
+                            "flex items-center justify-between py-3 px-4 transition-colors",
+                            editId === account.id ? "bg-zinc-100 dark:bg-[#2C2C2E]" : "active:bg-zinc-50 dark:active:bg-[#2C2C2E]/50"
+                        )}>
                             <div className="flex flex-col gap-1 w-full">
                                 <div className="flex items-center justify-between w-full">
-                                    <span className="text-[17px] tracking-tight text-white flex items-center gap-2">
+                                    <span className="text-[17px] tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
                                         {account.alias}
                                         {editId === account.id && <span className="text-[11px] bg-[#0A84FF]/20 text-[#0A84FF] px-2 py-0.5 rounded-full font-semibold">Editing</span>}
                                     </span>
@@ -191,13 +198,13 @@ export default function PredefinedAccountsManager({ initialAccounts }: { initial
                                     <div className="flex items-center gap-3">
                                         <button
                                             onClick={() => handleEditClick(account)}
-                                            className="text-white active:opacity-70 transition-opacity p-1"
+                                            className="text-zinc-400 dark:text-white active:opacity-70 transition-opacity p-1"
                                         >
                                             <Pencil size={18} />
                                         </button>
                                         <button
                                             onClick={() => handleDelete(account.id)}
-                                            className="text-white active:opacity-70 transition-opacity p-1"
+                                            className="text-zinc-400 dark:text-white active:opacity-70 transition-opacity p-1"
                                         >
                                             <Trash2 size={18} />
                                         </button>

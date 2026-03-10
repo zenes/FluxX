@@ -20,6 +20,7 @@ import { getStockDisplayName, getNormalizedTicker, isKoreanStock } from '@/lib/s
 import { Sparkline } from './Sparkline';
 import { toggleWatchlistStock } from '@/lib/watchlist-actions';
 import StockAliasEditSheet from './StockAliasEditSheet';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 
 const TABS = ['주요', 'MY종목', 'MY지수', '환율', '주가지수', '원자재', '국채수익률'];
 
@@ -105,6 +106,9 @@ export default function MarketQuoteWidgetV2({
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [hoveredData, setHoveredData] = useState<{ price: number; time: string } | null>(null);
     const [isAliasEditOpen, setIsAliasEditOpen] = useState(false);
+    const { getUpColor, getDownColor } = useUserPreferences();
+    const upColor = getUpColor();
+    const downColor = getDownColor();
 
     // --- SEARCH & BOTTOM SHEET STATE ---
     const [searchQuery, setSearchQuery] = useState('');
@@ -175,7 +179,7 @@ export default function MarketQuoteWidgetV2({
     }, [selectedAsset?.ticker, selectedRange]);
 
     const isUp = selectedAsset?.changeAmount ? selectedAsset.changeAmount >= 0 : true;
-    const chartColor = isUp ? "#FF3B2F" : "#35C759";
+    const chartColor = isUp ? upColor : downColor;
 
     const CustomTooltip = ({ active, payload }: any) => {
         if (active && payload && payload.length) {
@@ -330,7 +334,8 @@ export default function MarketQuoteWidgetV2({
                 {displayedStocks.map((item, index) => {
                     const isUp = item.changeAmount >= 0;
                     const sign = isUp ? "+" : "";
-                    const themeColorClass = isUp ? "bg-[#FF3B2F]" : "bg-[#35C759]";
+                    // Using inline style for dynamic colors that might not be in tailwind
+                    const themeColor = isUp ? upColor : downColor;
 
                     return (
                         <button
@@ -357,10 +362,10 @@ export default function MarketQuoteWidgetV2({
                                     <span className="text-[14px] font-bold text-zinc-900 dark:text-white">
                                         {formatPrice(item.type, item.currentPrice)}
                                     </span>
-                                    <div className={cn(
-                                        "px-2 py-0.5 rounded-[6px] text-[11px] font-bold text-white min-w-[60px] text-center",
-                                        themeColorClass
-                                    )}>
+                                    <div 
+                                        className="px-2 py-0.5 rounded-[6px] text-[11px] font-bold text-white min-w-[60px] text-center"
+                                        style={{ backgroundColor: themeColor }}
+                                    >
                                         {sign}{item.changeRate.toFixed(2)}%
                                     </div>
                                 </div>
@@ -605,10 +610,10 @@ export default function MarketQuoteWidgetV2({
                                             {formatPrice(selectedAsset?.type || 'US', hoveredData ? hoveredData.price : selectedAsset?.currentPrice || 0)}
                                         </span>
                                         {!hoveredData && (
-                                            <div className={cn(
-                                                "flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-black text-white mb-1",
-                                                (selectedAsset?.changeAmount || 0) >= 0 ? "bg-[#FF3B2F]" : "bg-[#35C759]"
-                                            )}>
+                                            <div 
+                                                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-black text-white mb-1"
+                                                style={{ backgroundColor: (selectedAsset?.changeAmount || 0) >= 0 ? upColor : downColor }}
+                                            >
                                                 {(selectedAsset?.changeAmount || 0) >= 0 ? "+" : ""}{(selectedAsset?.changeRate || 0).toFixed(2)}%
                                             </div>
                                         )}

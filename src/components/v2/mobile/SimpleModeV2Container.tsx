@@ -489,7 +489,7 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
     }, [currentPage]);
 
     return (
-        <div className="overflow-hidden min-h-screen relative bg-[#edf0f4] dark:bg-[#0D0D0E]" ref={containerRef}>
+        <div className="overflow-hidden min-h-screen relative bg-[#edf0f4] dark:bg-background" ref={containerRef}>
             <motion.div
                 className="flex"
                 drag={isAnyModalOpen ? false : "x"}
@@ -541,25 +541,8 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                             </div>
                         </div>
 
-                        {/* Right: Theme Toggle, Settings, Profile */}
+                        {/* Right: Settings & Profile */}
                         <div className="flex items-center gap-1">
-                            <button
-                                onClick={() => {
-                                    const html = document.documentElement;
-                                    const isDark = html.classList.contains('dark');
-                                    if (isDark) {
-                                        html.classList.remove('dark');
-                                        localStorage.setItem('theme', 'light');
-                                    } else {
-                                        html.classList.add('dark');
-                                        localStorage.setItem('theme', 'dark');
-                                    }
-                                }}
-                                className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                            >
-                                <svg className="size-5 text-[#2B364B] dark:text-white dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-                                <svg className="size-5 text-[#2B364B] dark:text-white hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
-                            </button>
                             <button onClick={() => setIsSettingsOpen(true)} className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
                                 <svg className="size-5 text-[#2B364B] dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <circle cx="12" cy="12" r="3"></circle>

@@ -180,5 +180,12 @@ export const ko = {
         cancel: "취소",
         crop_and_save: "자르기 및 저장",
         saving: "저장 중...",
+        app_preferences: "앱 환경 설정",
+        theme_selection: "블랙 테마",
+        theme_black: "블랙",
+        theme_white: "화이트",
+        stock_color_logic: "주식 색상 로직",
+        color_standard: "상승 빨강 / 하락 초록",
+        color_inverted: "상승 초록 / 하락 빨강",
     }
 };

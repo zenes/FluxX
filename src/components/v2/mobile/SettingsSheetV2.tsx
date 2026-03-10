@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ClientSettingsDashboard from '@/app/v2/settings/ClientSettingsDashboard';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
+import { cn } from '@/lib/utils';
 
 interface SettingsSheetV2Props {
     isOpen: boolean;
@@ -12,6 +14,7 @@ interface SettingsSheetV2Props {
 }
 
 export default function SettingsSheetV2({ isOpen, onClose, stockAliases, onAliasUpdate }: SettingsSheetV2Props) {
+    const { theme } = useUserPreferences();
     const [userData, setUserData] = useState<{
         userImage: string | null;
         userEmail: string;
@@ -51,11 +54,17 @@ export default function SettingsSheetV2({ isOpen, onClose, stockAliases, onAlias
                     animate={{ x: 0 }}
                     exit={{ x: "100%" }}
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    className="fixed inset-0 z-[200] bg-black overflow-y-auto"
+                    className={cn(
+                        "fixed inset-0 z-[200] overflow-y-auto transition-colors duration-300",
+                        theme === 'LIGHT' ? "bg-[#edf0f4]" : "bg-black"
+                    )}
                 >
                     {isLoading || !userData ? (
-                        <div className="flex items-center justify-center h-full bg-black">
-                            <div className="w-8 h-8 border-2 border-zinc-600 border-t-white rounded-full animate-spin"></div>
+                        <div className={cn(
+                            "flex items-center justify-center h-full transition-colors duration-300",
+                            theme === 'LIGHT' ? "bg-[#edf0f4]" : "bg-black"
+                        )}>
+                            <div className="w-8 h-8 border-2 border-zinc-600 border-t-white dark:border-t-white rounded-full animate-spin"></div>
                         </div>
                     ) : (
                         <ClientSettingsDashboard

@@ -40,17 +40,49 @@ export async function getUserSettings() {
         userId = (await prisma.user.findFirst())?.id;
     }
 
-    if (!userId) return { hideAssets: false };
+    if (!userId) return { hideAssets: false, appTheme: 'DARK', stockColorMode: 'KOREA' };
 
     try {
         const user = await prisma.user.findUnique({
             where: { id: userId },
-            select: { hideAssets: true } as any
+            select: { 
+                hideAssets: true,
+                appTheme: true,
+                stockColorMode: true
+            } as any
         });
-        return { hideAssets: !!(user as any)?.hideAssets };
+        return { 
+            hideAssets: !!(user as any)?.hideAssets,
+            appTheme: (user as any)?.appTheme || 'DARK',
+            stockColorMode: (user as any)?.stockColorMode || 'KOREA'
+        };
     } catch (e) {
         console.error('Failed to fetch user settings:', e);
-        return { hideAssets: false };
+        return { hideAssets: false, appTheme: 'DARK', stockColorMode: 'KOREA' };
+    }
+}
+
+export async function updateUserPreferences(data: { appTheme?: string, stockColorMode?: string }) {
+    let session = await auth();
+    let userId = session?.user?.id;
+
+    if (!userId && process.env.NODE_ENV === 'development') {
+        userId = (await prisma.user.findFirst())?.id;
+    }
+
+    if (!userId) throw new Error('Unauthorized');
+
+    try {
+        console.log(`Updating preferences for user ${userId}:`, data);
+        await (prisma.user as any).update({
+            where: { id: userId },
+            data
+        });
+        revalidatePath('/v2/m');
+        return { success: true };
+    } catch (e: any) {
+        console.error('Failed to update user preferences:', e);
+        throw new Error(`Failed to update settings: ${e.message || 'Unknown error'}`);
     }
 }
 
@@ -70,7 +102,7 @@ export async function updateUserPrivacy(hideAssets: boolean) {
             where: { id: userId },
             data: { hideAssets }
         });
-        revalidatePath('/m/v2');
+        revalidatePath('/v2/m');
         return { success: true };
     } catch (e: any) {
         console.error('Failed to update user privacy. Error detail:', e);
@@ -466,7 +498,7 @@ export async function deleteStockEntry(entryId: string, tickerSymbol: string) {
         console.log(`deleteStockEntry: Successfully deleted record:`, result);
         await recalculateStockAsset(userId, tickerSymbol);
         revalidatePath('/operations');
-        revalidatePath('/m/v2');
+        revalidatePath('/v2/m');
         return { success: true };
     } catch (e: any) {
         if (e.code === 'P2025') {
@@ -474,7 +506,7 @@ export async function deleteStockEntry(entryId: string, tickerSymbol: string) {
             // Even if not found, we want the UI to sync, so we still revalidate and return success
             await recalculateStockAsset(userId, tickerSymbol);
             revalidatePath('/operations');
-            revalidatePath('/m/v2');
+            revalidatePath('/v2/m');
             return { success: true };
         }
         console.error('Failed to delete stock entry:', e);

@@ -3,10 +3,13 @@
 import { useState } from 'react';
 import { Download, Trash2, ShieldAlert, Loader2, User, Mail, Shield, ChevronRight, ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 import ProfilePictureUpload from '@/components/ProfilePictureUpload';
 import PredefinedAccountsManager from '@/components/PredefinedAccountsManager';
 import StockAliasManager from '@/components/v2/mobile/StockAliasManager';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Switch } from '@/components/ui/switch';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 
 interface ClientSettingsDashboardProps {
     userImage?: string | null;
@@ -28,6 +31,7 @@ export default function ClientSettingsDashboard({
     onAliasUpdate
 }: ClientSettingsDashboardProps) {
     const { t } = useLanguage();
+    const { theme, stockColorMode, setTheme, setStockColorMode } = useUserPreferences();
     const [isExporting, setIsExporting] = useState(false);
 
     const handleExportCSV = async () => {
@@ -66,19 +70,28 @@ export default function ClientSettingsDashboard({
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-black text-white pb-24 font-sans selection:bg-primary/30">
+        <div className={cn(
+            "flex flex-col min-h-screen pb-24 font-sans selection:bg-primary/30 transition-colors duration-300",
+            theme === 'LIGHT' ? "bg-[#edf0f4] text-zinc-900" : "bg-black text-white"
+        )}>
             {/* iOS Style Navigation Header */}
-            <header className="relative flex items-center justify-center px-4 py-4 bg-black">
+            <header className={cn(
+                "relative flex items-center justify-center px-4 py-4 transition-colors duration-300",
+                theme === 'LIGHT' ? "bg-[#edf0f4]" : "bg-black"
+            )}>
                 {onClose ? (
-                    <button onClick={onClose} className="absolute left-4 w-8 h-8 flex items-center justify-center bg-[#2C2C2E] rounded-full active:opacity-70 transition-opacity">
-                        <ChevronLeft size={20} className="text-white" />
+                    <button onClick={onClose} className="absolute left-4 w-8 h-8 flex items-center justify-center bg-zinc-200 dark:bg-[#2C2C2E] rounded-full active:opacity-70 transition-opacity">
+                        <ChevronLeft size={20} className="text-zinc-600 dark:text-white" />
                     </button>
                 ) : (
-                    <Link href="/" className="absolute left-4 w-8 h-8 flex items-center justify-center bg-[#2C2C2E] rounded-full active:opacity-70 transition-opacity">
-                        <ChevronLeft size={20} className="text-white" />
+                    <Link href="/" className="absolute left-4 w-8 h-8 flex items-center justify-center bg-zinc-200 dark:bg-[#2C2C2E] rounded-full active:opacity-70 transition-opacity">
+                        <ChevronLeft size={20} className="text-zinc-600 dark:text-white" />
                     </Link>
                 )}
-                <h1 className="text-[17px] font-semibold tracking-tight text-white">{t('settings.user_profile') || 'Apple 계정'}</h1>
+                <h1 className={cn(
+                    "text-[17px] font-semibold tracking-tight",
+                    theme === 'LIGHT' ? "text-zinc-900" : "text-white"
+                )}>{t('settings.user_profile') || 'Apple 계정'}</h1>
             </header>
 
             <main className="flex-1 w-full max-w-2xl mx-auto space-y-8 mt-2">
@@ -90,7 +103,10 @@ export default function ClientSettingsDashboard({
                         userEmail={userEmail}
                         variant="ios"
                     />
-                    <h2 className="text-[28px] font-bold mt-3 tracking-tight text-white leading-tight">
+                    <h2 className={cn(
+                        "text-[28px] font-bold mt-3 tracking-tight leading-tight",
+                        theme === 'LIGHT' ? "text-zinc-900" : "text-white"
+                    )}>
                         {userEmail.split('@')[0]}
                     </h2>
                     <p className="text-[15px] text-[#98989E] mt-0.5">
@@ -100,18 +116,21 @@ export default function ClientSettingsDashboard({
 
                 {/* Profile Information List (iOS style) */}
                 <section className="px-4">
-                    <div className="bg-[#1C1C1E] rounded-[14px] overflow-hidden divide-y divide-[#38383A] mx-auto w-full">
+                    <div className="bg-white dark:bg-[#1C1C1E] rounded-[14px] overflow-hidden divide-y divide-zinc-100 dark:divide-[#38383A] mx-auto w-full border border-zinc-100 dark:border-transparent">
                         {/* Role Row */}
-                        <div className="flex items-center justify-between px-4 py-3 active:bg-[#2C2C2E] transition-colors cursor-pointer select-none">
+                        <div className="flex items-center justify-between px-4 py-3 active:bg-zinc-50 dark:active:bg-[#2C2C2E] transition-colors cursor-pointer select-none">
                             <div className="flex items-center gap-3">
                                 <div className="p-1.5 bg-[#8E8E93]/20 rounded-[8px] flex items-center justify-center w-8 h-8">
-                                    <Shield size={18} className="text-[#E5E5EA]" />
+                                    <Shield size={18} className="text-[#8E8E93] dark:text-[#E5E5EA]" />
                                 </div>
-                                <span className="text-[17px] text-white tracking-tight">{t('settings.role')}</span>
+                                <span className={cn(
+                                    "text-[17px] tracking-tight",
+                                    theme === 'LIGHT' ? "text-zinc-900" : "text-white"
+                                )}>{t('settings.role')}</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="text-[16px] text-[#8E8E93] capitalize mr-1">{userRole}</span>
-                                <ChevronRight size={18} className="text-[#38383A]" />
+                                <ChevronRight size={18} className="text-zinc-300 dark:text-[#38383A]" />
                             </div>
                         </div>
                     </div>
@@ -119,9 +138,12 @@ export default function ClientSettingsDashboard({
 
                 {/* Predefined Accounts Section */}
                 <section className="px-4">
-                    <div className="bg-[#1C1C1E] rounded-[14px] overflow-hidden divide-y divide-[#38383A] mx-auto w-full">
-                        <div className="px-4 py-3 border-b border-[#38383A]">
-                            <h2 className="text-[17px] tracking-tight text-white flex items-center gap-2">
+                    <div className="bg-white dark:bg-[#1C1C1E] rounded-[14px] overflow-hidden mx-auto w-full border border-zinc-100 dark:border-transparent">
+                        <div className="px-4 py-3 border-b border-zinc-100 dark:border-[#38383A]">
+                            <h2 className={cn(
+                                "text-[17px] tracking-tight flex items-center gap-2",
+                                theme === 'LIGHT' ? "text-zinc-900" : "text-white"
+                            )}>
                                 {t('settings.accounts')}
                             </h2>
                         </div>
@@ -133,9 +155,12 @@ export default function ClientSettingsDashboard({
 
                 {/* Stock Alias Management Section */}
                 <section className="px-4">
-                    <div className="bg-[#1C1C1E] rounded-[14px] overflow-hidden divide-y divide-[#38383A] mx-auto w-full">
-                        <div className="px-4 py-3 border-b border-[#38383A]">
-                            <h2 className="text-[17px] tracking-tight text-white flex items-center gap-2">
+                    <div className="bg-white dark:bg-[#1C1C1E] rounded-[14px] overflow-hidden mx-auto w-full border border-zinc-100 dark:border-transparent">
+                        <div className="px-4 py-3 border-b border-zinc-100 dark:border-[#38383A]">
+                            <h2 className={cn(
+                                "text-[17px] tracking-tight flex items-center gap-2",
+                                theme === 'LIGHT' ? "text-zinc-900" : "text-white"
+                            )}>
                                 종목 별명 관리
                             </h2>
                         </div>
@@ -148,10 +173,56 @@ export default function ClientSettingsDashboard({
                     </div>
                 </section>
 
+                {/* App Preferences Section */}
+                <section className="px-4">
+                    <div className="bg-white dark:bg-[#1C1C1E] rounded-[14px] overflow-hidden mx-auto w-full border border-zinc-100 dark:border-transparent">
+                        <div className="px-4 py-3 border-b border-zinc-100 dark:border-[#38383A]">
+                            <h2 className={cn(
+                                "text-[17px] tracking-tight flex items-center gap-2",
+                                theme === 'LIGHT' ? "text-zinc-900" : "text-white"
+                            )}>
+                                {t('settings.app_preferences')}
+                            </h2>
+                        </div>
+                        
+                        <div className="flex flex-col gap-0 divide-y divide-zinc-100 dark:divide-[#38383A]">
+                            {/* Theme Selection Switch */}
+                            <div className="flex items-center justify-between px-4 py-3.5">
+                                <div className="flex flex-col">
+                                    <span className={cn(
+                                        "text-[17px] tracking-tight",
+                                        theme === 'LIGHT' ? "text-zinc-900" : "text-white"
+                                    )}>{t('settings.theme_selection')}</span>
+                                    <span className="text-[13px] text-[#8E8E93]">{theme === 'BLACK' ? t('settings.theme_black') : t('settings.theme_white')}</span>
+                                </div>
+                                <Switch 
+                                    checked={theme === 'BLACK'} 
+                                    onCheckedChange={(checked) => setTheme(checked ? 'BLACK' : 'LIGHT')} 
+                                />
+                            </div>
+
+                            {/* Stock Color Logic Switch */}
+                            <div className="flex items-center justify-between px-4 py-3.5">
+                                <div className="flex flex-col">
+                                    <span className={cn(
+                                        "text-[17px] tracking-tight",
+                                        theme === 'LIGHT' ? "text-zinc-900" : "text-white"
+                                    )}>{t('settings.stock_color_logic')}</span>
+                                    <span className="text-[13px] text-[#8E8E93]">{stockColorMode === 'KOREA' ? t('settings.color_standard') : t('settings.color_inverted')}</span>
+                                </div>
+                                <Switch 
+                                    checked={stockColorMode === 'WESTERN'} 
+                                    onCheckedChange={(checked) => setStockColorMode(checked ? 'WESTERN' : 'KOREA')} 
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 {/* Danger Zone Section */}
                 <section className="px-4">
-                    <div className="bg-[#1C1C1E] rounded-[14px] overflow-hidden divide-y divide-[#38383A] mx-auto w-full">
-                        <div className="px-4 py-3 border-b border-[#38383A]">
+                    <div className="bg-white dark:bg-[#1C1C1E] rounded-[14px] overflow-hidden mx-auto w-full border border-zinc-100 dark:border-transparent">
+                        <div className="px-4 py-3 border-b border-zinc-100 dark:border-[#38383A]">
                             <h2 className="text-[17px] tracking-tight text-[#FF453A] flex items-center gap-2">
                                 <ShieldAlert size={18} />
                                 {t('settings.danger_zone')}
@@ -163,29 +234,32 @@ export default function ClientSettingsDashboard({
                                 {t('settings.danger_zone_desc')}
                             </p>
 
-                            <div className="flex flex-col gap-0 divide-y divide-[#38383A] bg-[#2C2C2E] rounded-[10px] overflow-hidden">
+                            <div className="flex flex-col gap-0 divide-y divide-zinc-200 dark:divide-[#38383A] bg-zinc-50 dark:bg-[#2C2C2E] rounded-[10px] overflow-hidden border border-zinc-100 dark:border-transparent">
                                 <button
                                     onClick={handleExportCSV}
                                     disabled={isExporting}
-                                    className="w-full flex items-center justify-between px-4 py-3.5 active:bg-[#3A3A3C] transition-colors disabled:opacity-50 group"
+                                    className="w-full flex items-center justify-between px-4 py-3.5 active:bg-zinc-100 dark:active:bg-[#3A3A3C] transition-colors disabled:opacity-50 group"
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className="p-1.5 bg-[#0A84FF] rounded-[8px] flex items-center justify-center w-8 h-8">
                                             {isExporting ? <Loader2 size={18} className="text-white animate-spin" /> : <Download size={18} className="text-white" />}
                                         </div>
-                                        <span className="text-[17px] text-white tracking-tight">{isExporting ? t('common.loading') || 'EXPORTING...' : t('settings.export_csv')}</span>
+                                        <span className={cn(
+                                            "text-[17px] tracking-tight",
+                                            theme === 'LIGHT' ? "text-zinc-900" : "text-white"
+                                        )}>{isExporting ? t('common.loading') || 'EXPORTING...' : t('settings.export_csv')}</span>
                                     </div>
-                                    <ChevronRight size={18} className="text-[#38383A]" />
+                                    <ChevronRight size={18} className="text-zinc-300 dark:text-[#38383A]" />
                                 </button>
 
-                                <button className="w-full flex items-center justify-between px-4 py-3.5 active:bg-[#3A3A3C] transition-colors group">
+                                <button className="w-full flex items-center justify-between px-4 py-3.5 active:bg-zinc-100 dark:active:bg-[#3A3A3C] transition-colors group">
                                     <div className="flex items-center gap-3">
                                         <div className="p-1.5 bg-[#FF453A] rounded-[8px] flex items-center justify-center w-8 h-8">
                                             <Trash2 size={18} className="text-white" />
                                         </div>
                                         <span className="text-[17px] text-[#FF453A] tracking-tight">{t('settings.reset_assets')}</span>
                                     </div>
-                                    <ChevronRight size={18} className="text-[#38383A]" />
+                                    <ChevronRight size={18} className="text-zinc-300 dark:text-[#38383A]" />
                                 </button>
                             </div>
                         </div>
