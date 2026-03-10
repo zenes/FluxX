@@ -77,7 +77,7 @@ export default function DividendBreakdownListV2({
                                 </p>
                             )}
                             <p className="text-[10px] text-zinc-400 font-bold mt-0.5">
-                                배당락일 {record.date || '미정'} · {record.isExpected ? '예상' : '확정'}
+                                {record.isExpected ? '예상' : '확정'}
                             </p>
                         </div>
                     </div>
