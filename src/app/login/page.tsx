@@ -41,6 +41,7 @@ function LoginForm() {
                 )}
 
                 <form action={dispatch} className="flex flex-col gap-4">
+                    <input type="hidden" name="redirectTo" value={searchParams.get('callbackUrl') || '/v2/m'} />
                     <div className="space-y-2">
                         <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground" htmlFor="email">Operative ID (Email)</label>
                         <input

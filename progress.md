@@ -1,3 +1,12 @@
+# Project Progress - 2026-03-10
+
+## [2026-03-10 10:40] 로그인 리다이렉션 버그 수정 및 로컬 DB 연결 안정화
+- **로그인 리다이렉션 해결**: 
+    - `signIn` 함수 호출 시 명시적인 `redirectTo` 경로를 전달하도록 `authenticate` 서버 액션 수정.
+    - 로그인 폼에 숨겨진 `redirectTo` 입력을 추가하여 로그인 성공 시 즉시 대시보드(`/v2/m`)로 전환되도록 UX 개선.
+- **로컬 DB 연결 오류 수정**: 
+    - `schema.prisma` 설정(PostgreSQL)과 로컬 Prisma Client(SQLite) 간의 불일치로 발생하던 런타임 에러를 `npx prisma generate`를 통해 해결.
+
 # Project Progress - 2026-03-09
 
 ## [2026-03-09 23:55] 데이터 마이그레이션 최종 완료 (SQLite -> Supabase)
