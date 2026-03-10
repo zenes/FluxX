@@ -822,7 +822,7 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                         </div>
 
                         {/* Interactive Monthly Breakdown List */}
-                        <div className="space-y-10 pb-10 border-t border-zinc-100 dark:border-white/5 pt-8">
+                        <div className="space-y-4 pb-10 border-t border-zinc-100 dark:border-white/5 pt-6">
                             {monthlyRecords.length > 0 ? (
                                 monthlyRecords.map((m) => (
                                     <DividendBreakdownListV2 
