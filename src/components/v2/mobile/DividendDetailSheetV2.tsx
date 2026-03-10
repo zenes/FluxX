@@ -2,9 +2,20 @@
 
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, TrendingUp, ArrowRight } from 'lucide-react';
+import { X, TrendingUp, ArrowRight, Calendar } from 'lucide-react';
 import { MonthlyDividend, YearlyHistoricalDividend } from '@/lib/dividend-utils';
 import { cn } from '@/lib/utils';
+import { 
+    BarChart, 
+    Bar, 
+    XAxis, 
+    YAxis, 
+    CartesianGrid, 
+    Tooltip, 
+    ResponsiveContainer, 
+    Cell,
+    Rectangle
+} from 'recharts';
 
 interface DividendDetailSheetV2Props {
     isOpen: boolean;
@@ -28,12 +39,46 @@ export default function DividendDetailSheetV2({
     yearlyHistorical 
 }: DividendDetailSheetV2Props) {
     const [expandedYears, setExpandedYears] = React.useState<number[]>([]);
+    const [selectedYear, setSelectedYear] = React.useState<number>(new Date().getFullYear());
 
     const toggleYear = (year: number) => {
         setExpandedYears(prev => 
             prev.includes(year) ? prev.filter(y => y !== year) : [...prev, year]
         );
     };
+
+    // available years from data
+    const availableYears = useMemo(() => {
+        const years = yearlyHistorical.map(y => y.year).sort((a, b) => b - a);
+        // fallback to current year if no data
+        return years.length > 0 ? years : [new Date().getFullYear()];
+    }, [yearlyHistorical]);
+
+    // Ensure selectedYear is valid when data changes
+    React.useEffect(() => {
+        if (!availableYears.includes(selectedYear) && availableYears.length > 0) {
+            setSelectedYear(availableYears[0]);
+        }
+    }, [availableYears, selectedYear]);
+
+    // Chart data for selected year
+    const chartData = useMemo(() => {
+        const yearData = yearlyHistorical.find(y => y.year === selectedYear);
+        if (!yearData) {
+            // Empty 12 months data
+            return Array.from({ length: 12 }, (_, i) => ({
+                name: `${i + 1}월`,
+                amount: 0,
+                month: i
+            }));
+        }
+        
+        return yearData.months.map((m, i) => ({
+            name: `${i + 1}월`,
+            amount: m.amount,
+            month: i
+        }));
+    }, [yearlyHistorical, selectedYear]);
 
     // Auto-expand the most recent year if none expanded
     React.useEffect(() => {
@@ -108,6 +153,94 @@ export default function DividendDetailSheetV2({
                                             <div className="text-sm font-black text-white/90">
                                                 {annualTotal > 0 ? Math.round((historicalAnnualTotal / annualTotal) * 100) : 0}%
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Year Selector & Chart Section */}
+                                <div className="mt-8 space-y-6">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-lg font-black text-zinc-900 dark:text-white flex items-center gap-2">
+                                            연도별 배당 추이
+                                        </h3>
+                                        <div className="flex gap-1 overflow-x-auto no-scrollbar pb-1 max-w-[200px]">
+                                            {availableYears.map(year => (
+                                                <button
+                                                    key={year}
+                                                    onClick={() => setSelectedYear(year)}
+                                                    className={cn(
+                                                        "px-3 py-1 rounded-full text-[10px] font-black transition-all whitespace-nowrap",
+                                                        selectedYear === year 
+                                                            ? "bg-primary text-white shadow-lg shadow-primary/20 scale-105" 
+                                                            : "bg-white dark:bg-zinc-900 text-zinc-400 border border-zinc-100 dark:border-white/5 hover:text-zinc-600 dark:hover:text-zinc-300"
+                                                    )}
+                                                >
+                                                    {year}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white dark:bg-[#121214] rounded-[32px] p-6 border border-zinc-100 dark:border-white/5 shadow-sm">
+                                        <div className="h-[200px] w-full">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <BarChart data={chartData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="text-zinc-100 dark:text-white/5" />
+                                                    <XAxis 
+                                                        dataKey="name" 
+                                                        axisLine={false} 
+                                                        tickLine={false} 
+                                                        tick={{ fontSize: 10, fontWeight: 700, fill: 'currentColor' }}
+                                                        className="text-zinc-400"
+                                                    />
+                                                    <YAxis 
+                                                        axisLine={false} 
+                                                        tickLine={false} 
+                                                        tick={{ fontSize: 10, fontWeight: 700, fill: 'currentColor' }}
+                                                        className="text-zinc-400"
+                                                        tickFormatter={(value) => value === 0 ? '0' : `₩${(value / 10000).toFixed(0)}만`}
+                                                    />
+                                                    <Tooltip 
+                                                        cursor={{ fill: 'currentColor', opacity: 0.05 }}
+                                                        content={({ active, payload }) => {
+                                                            if (active && payload && payload.length) {
+                                                                const data = payload[0].payload;
+                                                                return (
+                                                                    <div className="bg-zinc-900 dark:bg-zinc-800 rounded-2xl p-3 shadow-2xl border border-white/5">
+                                                                        <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">{selectedYear}년 {data.month + 1}월</p>
+                                                                        <p className="text-sm font-black text-white">₩{data.amount.toLocaleString()}</p>
+                                                                    </div>
+                                                                );
+                                                            }
+                                                            return null;
+                                                        }}
+                                                    />
+                                                    <Bar 
+                                                        dataKey="amount" 
+                                                        radius={[6, 6, 6, 6]}
+                                                        barSize={12}
+                                                        activeBar={<Rectangle fill="var(--primary)" fillOpacity={0.8} />}
+                                                    >
+                                                        {chartData.map((entry, index) => (
+                                                            <Cell 
+                                                                key={`cell-${index}`} 
+                                                                fill={entry.amount > 0 ? "var(--primary)" : "currentColor"}
+                                                                className={cn(entry.amount > 0 ? "fill-primary" : "text-zinc-100 dark:text-white/5")}
+                                                                fillOpacity={entry.amount > 0 ? 1 : 1}
+                                                            />
+                                                        ))}
+                                                    </Bar>
+                                                </BarChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                        
+                                        <div className="mt-4 flex justify-between items-center text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                                            <span>Jan</span>
+                                            <div className="flex gap-2 items-center">
+                                                <div className="size-2 rounded-full bg-primary" />
+                                                <span>Monthly RECEIVED</span>
+                                            </div>
+                                            <span>Dec</span>
                                         </div>
                                     </div>
                                 </div>
