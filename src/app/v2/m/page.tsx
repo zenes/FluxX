@@ -27,11 +27,12 @@ async function getInitialMarketData(allSymbols: string[]) {
 }
 
 export default async function SimpleModeV2Page() {
-    const [assets, watchlist, userSettings, stockAliases] = await Promise.all([
+    const [assets, watchlist, userSettings, stockAliases, dividendRecords] = await Promise.all([
         getAssets(),
         getWatchlistStocks(),
         getUserSettings(),
-        getStockAliases()
+        getStockAliases(),
+        import('@/lib/actions').then(m => m.getDividendRecords())
     ]);
 
     // Gather all unique symbols for initial pre-fetch
@@ -56,6 +57,7 @@ export default async function SimpleModeV2Page() {
                 marketData={marketData}
                 initialHideAssets={userSettings.hideAssets}
                 stockAliases={stockAliases}
+                dividendRecords={dividendRecords}
             />
         </div>
     );

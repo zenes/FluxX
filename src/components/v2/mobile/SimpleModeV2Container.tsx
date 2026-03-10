@@ -26,7 +26,7 @@ import Link from 'next/link';
 import SettingsSheetV2 from './SettingsSheetV2';
 import { MarketAsset, INITIAL_STOCKS } from './typesV2';
 import DividendDetailSheetV2 from './DividendDetailSheetV2';
-import { calculateMonthlyDividends } from '@/lib/dividend-utils';
+import { calculateMonthlyDividends, calculateHistoricalMonthlyDividends } from '@/lib/dividend-utils';
 
 interface SimpleModeV2ContainerProps {
     assets: AssetItem[];
@@ -38,9 +38,10 @@ interface SimpleModeV2ContainerProps {
     };
     initialHideAssets?: boolean;
     stockAliases?: Record<string, string>;
+    dividendRecords?: any[];
 }
 
-export default function SimpleModeV2Container({ assets, marketData, initialHideAssets = false, stockAliases: initialStockAliases = {} }: SimpleModeV2ContainerProps) {
+export default function SimpleModeV2Container({ assets, marketData, initialHideAssets = false, stockAliases: initialStockAliases = {}, dividendRecords = [] }: SimpleModeV2ContainerProps) {
     const [stockAliases, setStockAliases] = useState<Record<string, string>>(initialStockAliases);
     const [activeTag, setActiveTag] = useState('all');
     const [currentPage, setCurrentPage] = useState(0);
@@ -383,8 +384,13 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
     }, [displayAssets, marketPrices]);
 
     const dividendData = React.useMemo(() => {
-        return calculateMonthlyDividends(assets, marketPrices?.usdKrw || 1400);
-    }, [assets, marketPrices?.usdKrw]);
+        const projection = calculateMonthlyDividends(assets, marketPrices?.usdKrw || 1400);
+        const historical = calculateHistoricalMonthlyDividends(dividendRecords, marketPrices?.usdKrw || 1400);
+        return {
+            ...projection,
+            ...historical
+        };
+    }, [assets, dividendRecords, marketPrices?.usdKrw]);
 
     const [isPending, setIsPending] = useState(false);
 
@@ -823,7 +829,9 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                 isOpen={isDividendDetailOpen}
                 onClose={() => setIsDividendDetailOpen(false)}
                 monthlyData={dividendData.monthlyData}
+                historicalMonthlyData={dividendData.historicalMonthlyData}
                 annualTotal={dividendData.annualTotal}
+                historicalAnnualTotal={dividendData.historicalAnnualTotal}
             />
         </div>
     );

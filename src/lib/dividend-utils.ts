@@ -88,3 +88,42 @@ export function calculateMonthlyDividends(assets: AssetItem[], exchangeRate: num
         annualTotal
     };
 }
+
+export function calculateHistoricalMonthlyDividends(records: any[], exchangeRate: number) {
+    const historicalMonthlyData: MonthlyDividend[] = Array.from({ length: 12 }, (_, i) => ({
+        month: i,
+        amount: 0,
+        stocks: []
+    }));
+
+    const currentYear = new Date().getFullYear();
+
+    records.forEach(record => {
+        const receivedAt = new Date(record.receivedAt);
+        if (receivedAt.getFullYear() !== currentYear) return;
+
+        const month = receivedAt.getMonth();
+        const amount = record.amount || 0;
+        const amountInKrw = record.currency === 'USD' ? amount * exchangeRate : amount;
+
+        historicalMonthlyData[month].amount += amountInKrw;
+
+        const existingStock = historicalMonthlyData[month].stocks.find(s => s.symbol === record.tickerSymbol);
+        if (existingStock) {
+            existingStock.amount += amountInKrw;
+        } else {
+            historicalMonthlyData[month].stocks.push({
+                symbol: record.tickerSymbol,
+                amount: amountInKrw,
+                currency: record.currency
+            });
+        }
+    });
+
+    const historicalAnnualTotal = historicalMonthlyData.reduce((sum, data) => sum + data.amount, 0);
+
+    return {
+        historicalMonthlyData,
+        historicalAnnualTotal
+    };
+}

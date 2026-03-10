@@ -11,17 +11,20 @@ interface DividendDetailSheetV2Props {
     isOpen: boolean;
     onClose: () => void;
     monthlyData: MonthlyDividend[];
+    historicalMonthlyData: MonthlyDividend[];
     annualTotal: number;
+    historicalAnnualTotal: number;
 }
 
-export default function DividendDetailSheetV2({ isOpen, onClose, monthlyData, annualTotal }: DividendDetailSheetV2Props) {
+export default function DividendDetailSheetV2({ isOpen, onClose, monthlyData, historicalMonthlyData, annualTotal, historicalAnnualTotal }: DividendDetailSheetV2Props) {
     const chartData = useMemo(() => {
         return monthlyData.map((d, i) => ({
             name: `${i + 1}월`,
-            amount: d.amount,
+            projected: d.amount,
+            actual: historicalMonthlyData[i]?.amount || 0,
             stocks: d.stocks
         }));
-    }, [monthlyData]);
+    }, [monthlyData, historicalMonthlyData]);
 
     const cumulativeData = useMemo(() => {
         let cumulative = 0;
@@ -97,13 +100,15 @@ export default function DividendDetailSheetV2({ isOpen, onClose, monthlyData, an
                                 </div>
                                 <div className="mt-4 flex items-center gap-4 border-t border-white/5 pt-4">
                                     <div>
-                                        <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-0.5">Monthly Avg</div>
-                                        <div className="text-sm font-black text-white/90">₩{Math.round(annualTotal / 12).toLocaleString()}</div>
+                                        <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-0.5">Actual (YTD)</div>
+                                        <div className="text-sm font-black text-[#38C798]">₩{historicalAnnualTotal.toLocaleString()}</div>
                                     </div>
                                     <div className="w-px h-8 bg-white/5" />
                                     <div>
-                                        <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-0.5">Est. Yield</div>
-                                        <div className="text-sm font-black text-primary">Calculation Needed</div>
+                                        <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-0.5">Achievement</div>
+                                        <div className="text-sm font-black text-white/90">
+                                            {annualTotal > 0 ? Math.round((historicalAnnualTotal / annualTotal) * 100) : 0}%
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -130,26 +135,33 @@ export default function DividendDetailSheetV2({ isOpen, onClose, monthlyData, an
                                                 tickLine={false} 
                                                 tick={{ fill: '#888', fontSize: 10, fontWeight: 700 }}
                                             />
-                                            <YAxis hide domain={[0, maxMonthlyAmount * 1.1]} />
+                                            <YAxis hide domain={[0, 'dataMax + 10000']} />
                                             <Tooltip 
                                                 cursor={{ fill: '#88888810' }}
                                                 content={({ active, payload }) => {
                                                     if (active && payload && payload.length) {
                                                         const data = payload[0].payload;
                                                         return (
-                                                            <div className="bg-zinc-900 p-3 rounded-2xl shadow-2xl border border-white/10">
-                                                                <p className="text-[10px] font-bold text-zinc-500 mb-1">{data.name}</p>
-                                                                <p className="text-sm font-black text-white">₩{data.amount.toLocaleString()}</p>
-                                                                <div className="mt-2 space-y-1">
+                                                            <div className="bg-zinc-900 p-3 rounded-2xl shadow-2xl border border-white/10 min-w-[140px]">
+                                                                <p className="text-[10px] font-bold text-zinc-500 mb-2">{data.name}</p>
+                                                                <div className="space-y-1 mb-3">
+                                                                    <div className="flex justify-between items-center">
+                                                                        <span className="text-[10px] text-zinc-400 font-bold">Projected</span>
+                                                                        <span className="text-[11px] text-white font-black">₩{data.projected.toLocaleString()}</span>
+                                                                    </div>
+                                                                    <div className="flex justify-between items-center">
+                                                                        <span className="text-[10px] text-zinc-400 font-bold">Actual</span>
+                                                                        <span className="text-[11px] text-[#38C798] font-black">₩{data.actual.toLocaleString()}</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="pt-2 border-t border-white/5 space-y-1">
+                                                                    <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Stocks Paying</p>
                                                                     {data.stocks.slice(0, 3).map((s: any, idx: number) => (
                                                                         <div key={idx} className="flex justify-between items-center gap-4">
                                                                             <span className="text-[9px] font-bold text-zinc-400">{s.symbol}</span>
                                                                             <span className="text-[9px] font-black text-primary">₩{s.amount.toLocaleString()}</span>
                                                                         </div>
                                                                     ))}
-                                                                    {data.stocks.length > 3 && (
-                                                                        <div className="text-[8px] text-zinc-600 font-bold text-center mt-1">외 {data.stocks.length - 3}개 더보기</div>
-                                                                    )}
                                                                 </div>
                                                             </div>
                                                         );
@@ -157,9 +169,14 @@ export default function DividendDetailSheetV2({ isOpen, onClose, monthlyData, an
                                                     return null;
                                                 }}
                                             />
-                                            <Bar dataKey="amount" radius={[8, 8, 0, 0]}>
+                                            <Bar dataKey="projected" radius={[4, 4, 0, 0]} barSize={12}>
                                                 {chartData.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={entry.amount > 0 ? '#38C798' : '#88888820'} />
+                                                    <Cell key={`cell-proj-${index}`} fill="#88888820" />
+                                                ))}
+                                            </Bar>
+                                            <Bar dataKey="actual" radius={[4, 4, 0, 0]} barSize={12}>
+                                                {chartData.map((entry, index) => (
+                                                    <Cell key={`cell-act-${index}`} fill="#38C798" />
                                                 ))}
                                             </Bar>
                                         </BarChart>
@@ -201,8 +218,11 @@ export default function DividendDetailSheetV2({ isOpen, onClose, monthlyData, an
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
-                                                    <div className="text-[14px] font-black text-zinc-900 dark:text-white">₩{data.amount.toLocaleString()}</div>
-                                                    <div className="text-[9px] font-bold text-zinc-400">
+                                                    <div className="flex flex-col items-end">
+                                                        <span className="text-[14px] font-black text-zinc-900 dark:text-white">₩{historicalMonthlyData[idx].amount.toLocaleString()}</span>
+                                                        <span className="text-[10px] font-bold text-zinc-400">/ ₩{data.amount.toLocaleString()}</span>
+                                                    </div>
+                                                    <div className="text-[9px] font-bold text-zinc-400 mt-1">
                                                         누적: ₩{cumulativeData[idx].cumulative.toLocaleString()}
                                                     </div>
                                                 </div>
