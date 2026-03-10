@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { RefreshCw, ChevronDown, ChevronUp, Plus, Minus, X, Search, Loader2, GripVertical } from 'lucide-react';
+import { RefreshCw, ChevronDown, ChevronUp, Plus, Minus, X, Search, Loader2, GripVertical, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence, Reorder, useDragControls } from 'framer-motion';
 import { AssetType, MarketAsset } from './typesV2';
@@ -19,6 +19,7 @@ import {
 import { getStockDisplayName, getNormalizedTicker, isKoreanStock } from '@/lib/stock-utils';
 import { Sparkline } from './Sparkline';
 import { toggleWatchlistStock } from '@/lib/watchlist-actions';
+import StockAliasEditSheet from './StockAliasEditSheet';
 
 const TABS = ['주요', 'MY종목', 'MY지수', '환율', '주가지수', '원자재', '국채수익률'];
 
@@ -28,14 +29,17 @@ interface MarketQuoteWidgetV2Props {
     setMyStocks: React.Dispatch<React.SetStateAction<MarketAsset[]>>;
     onModalToggle?: (isOpen: boolean) => void;
     onRefresh?: () => Promise<void>;
+    stockAliases?: Record<string, string>;
+    onAliasUpdate?: (ticker: string, alias: string) => void;
 }
-
 const StockReorderItem = ({
     stock,
-    onDelete
+    onDelete,
+    stockAliases = {}
 }: {
     stock: MarketAsset;
     onDelete: (id: string | number) => void;
+    stockAliases?: Record<string, string>;
 }) => {
     const dragControls = useDragControls();
     const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
@@ -68,7 +72,7 @@ const StockReorderItem = ({
                 </div>
                 <div className="flex flex-col">
                     <span className="font-bold text-[14px] text-zinc-900 dark:text-white truncate max-w-[150px]">
-                        {stock.name}
+                        {getStockDisplayName(stock.ticker, stock.name, undefined, stockAliases[stock.ticker])}
                     </span>
                     <span className="text-[11px] font-bold text-zinc-400 tracking-tight">
                         {stock.ticker}
@@ -85,7 +89,14 @@ const StockReorderItem = ({
     );
 };
 
-export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalToggle, onRefresh }: MarketQuoteWidgetV2Props) {
+export default function MarketQuoteWidgetV2({
+    myStocks,
+    setMyStocks,
+    onModalToggle,
+    onRefresh,
+    stockAliases = {},
+    onAliasUpdate
+}: MarketQuoteWidgetV2Props) {
     const [activeTab, setActiveTab] = useState('MY종목');
     const [isExpanded, setIsExpanded] = useState(false);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -93,6 +104,7 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
     const [selectedRange, setSelectedRange] = useState('1일');
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [hoveredData, setHoveredData] = useState<{ price: number; time: string } | null>(null);
+    const [isAliasEditOpen, setIsAliasEditOpen] = useState(false);
 
     // --- SEARCH & BOTTOM SHEET STATE ---
     const [searchQuery, setSearchQuery] = useState('');
@@ -329,10 +341,9 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
                                 index !== displayedStocks.length - 1 && "border-b border-zinc-100 dark:border-white/5"
                             )}
                         >
-                            {/* Left: Ticker & Name */}
                             <div className="flex flex-col gap-0.5 flex-1 min-w-0 pr-2">
                                 <span className="text-[15px] font-bold text-zinc-900 dark:text-white uppercase tracking-tight truncate">
-                                    {getStockDisplayName(item.ticker, item.name)}
+                                    {getStockDisplayName(item.ticker, item.name, undefined, stockAliases[item.ticker])}
                                 </span>
                                 <span className="text-[12px] text-zinc-500 dark:text-zinc-400 line-clamp-1 break-all uppercase font-bold tracking-tighter">
                                     {item.type === 'KR' ? item.ticker : item.name}
@@ -522,6 +533,7 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
                                                         key={stock.id}
                                                         stock={stock}
                                                         onDelete={handleDeleteStock}
+                                                        stockAliases={stockAliases}
                                                     />
                                                 ))}
                                             </Reorder.Group>
@@ -573,10 +585,16 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
                                 <div className="px-6 pt-4 mb-6">
                                     <div className="flex flex-col gap-1 mb-4">
                                         <span className="text-[13px] font-black text-zinc-400 uppercase tracking-widest">
-                                            {selectedAsset.ticker}
+                                            {selectedAsset?.ticker}
                                         </span>
-                                        <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">
-                                            {selectedAsset.name}
+                                        <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight flex items-center gap-2">
+                                            {getStockDisplayName(selectedAsset?.ticker || '', selectedAsset?.name || '', undefined, stockAliases[selectedAsset?.ticker || ''])}
+                                            <button
+                                                onClick={() => setIsAliasEditOpen(true)}
+                                                className="p-1.5 rounded-xl bg-zinc-100 dark:bg-white/5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-all active:scale-95"
+                                            >
+                                                <Pencil className="size-3.5" />
+                                            </button>
                                         </h2>
                                     </div>
                                     <div className="flex items-end gap-3">
@@ -584,14 +602,14 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
                                             "text-3xl font-black transition-colors",
                                             hoveredData ? "text-[#38C798]" : "text-zinc-900 dark:text-white"
                                         )}>
-                                            {formatPrice(selectedAsset.type, hoveredData ? hoveredData.price : selectedAsset.currentPrice)}
+                                            {formatPrice(selectedAsset?.type || 'US', hoveredData ? hoveredData.price : selectedAsset?.currentPrice || 0)}
                                         </span>
                                         {!hoveredData && (
                                             <div className={cn(
                                                 "flex items-center gap-1 px-2.5 py-1 rounded-lg text-[13px] font-black text-white mb-1",
-                                                selectedAsset.changeAmount >= 0 ? "bg-[#FF3B2F]" : "bg-[#35C759]"
+                                                (selectedAsset?.changeAmount || 0) >= 0 ? "bg-[#FF3B2F]" : "bg-[#35C759]"
                                             )}>
-                                                {selectedAsset.changeAmount >= 0 ? "+" : ""}{selectedAsset.changeRate.toFixed(2)}%
+                                                {(selectedAsset?.changeAmount || 0) >= 0 ? "+" : ""}{(selectedAsset?.changeRate || 0).toFixed(2)}%
                                             </div>
                                         )}
                                         {hoveredData && (
@@ -723,12 +741,12 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
                                     <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-4 px-1">주요 통계</h3>
                                     <div className="grid grid-cols-2 gap-3">
                                         {[
-                                            { label: '시가', value: formatPrice(selectedAsset.type, selectedAsset.currentPrice * 0.98) },
-                                            { label: '고가', value: formatPrice(selectedAsset.type, selectedAsset.currentPrice * 1.02) },
-                                            { label: '저가', value: formatPrice(selectedAsset.type, selectedAsset.currentPrice * 0.97) },
-                                            { label: '거래량', value: selectedAsset.type === 'KR' ? '1.2M' : '45.8M' },
-                                            { label: '52주 최고', value: formatPrice(selectedAsset.type, selectedAsset.currentPrice * 1.5) },
-                                            { label: '52주 최저', value: formatPrice(selectedAsset.type, selectedAsset.currentPrice * 0.6) },
+                                            { label: '시가', value: formatPrice(selectedAsset?.type || 'US', (selectedAsset?.currentPrice || 0) * 0.98) },
+                                            { label: '고가', value: formatPrice(selectedAsset?.type || 'US', (selectedAsset?.currentPrice || 0) * 1.02) },
+                                            { label: '저가', value: formatPrice(selectedAsset?.type || 'US', (selectedAsset?.currentPrice || 0) * 0.97) },
+                                            { label: '거래량', value: selectedAsset?.type === 'KR' ? '1.2M' : '45.8M' },
+                                            { label: '52주 최고', value: formatPrice(selectedAsset?.type || 'US', (selectedAsset?.currentPrice || 0) * 1.5) },
+                                            { label: '52주 최저', value: formatPrice(selectedAsset?.type || 'US', (selectedAsset?.currentPrice || 0) * 0.6) },
                                         ].map((stat) => (
                                             <div key={stat.label} className="bg-zinc-50 dark:bg-white/5 p-4 rounded-2xl flex flex-col gap-1">
                                                 <span className="text-[11px] font-bold text-zinc-400">{stat.label}</span>
@@ -742,6 +760,16 @@ export default function MarketQuoteWidgetV2({ myStocks, setMyStocks, onModalTogg
                     </>
                 )}
             </AnimatePresence>
+
+            <StockAliasEditSheet
+                isOpen={isAliasEditOpen}
+                onClose={() => setIsAliasEditOpen(false)}
+                ticker={selectedAsset?.ticker || ''}
+                initialAlias={selectedAsset ? stockAliases[selectedAsset.ticker] || '' : ''}
+                onUpdate={(ticker: string, alias: string) => {
+                    onAliasUpdate?.(ticker, alias);
+                }}
+            />
         </div>
     );
 }

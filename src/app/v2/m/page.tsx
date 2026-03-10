@@ -3,6 +3,7 @@ import SimpleModeV2Container from '@/components/v2/mobile/SimpleModeV2Container'
 import { getStockQuotes } from "@/lib/stock-service";
 import { getNormalizedTicker } from "@/lib/stock-utils";
 import { getWatchlistStocks } from "@/lib/watchlist-actions";
+import { getStockAliases } from "@/lib/stock-alias-actions";
 
 async function getInitialMarketData(allSymbols: string[]) {
     try {
@@ -26,10 +27,11 @@ async function getInitialMarketData(allSymbols: string[]) {
 }
 
 export default async function SimpleModeV2Page() {
-    const [assets, watchlist, userSettings] = await Promise.all([
+    const [assets, watchlist, userSettings, stockAliases] = await Promise.all([
         getAssets(),
         getWatchlistStocks(),
-        getUserSettings()
+        getUserSettings(),
+        getStockAliases()
     ]);
 
     // Gather all unique symbols for initial pre-fetch
@@ -53,6 +55,7 @@ export default async function SimpleModeV2Page() {
                 assets={assets}
                 marketData={marketData}
                 initialHideAssets={userSettings.hideAssets}
+                stockAliases={stockAliases}
             />
         </div>
     );

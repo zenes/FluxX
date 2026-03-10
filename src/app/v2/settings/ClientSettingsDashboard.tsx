@@ -5,6 +5,7 @@ import { Download, Trash2, ShieldAlert, Loader2, User, Mail, Shield, ChevronRigh
 import Link from 'next/link';
 import ProfilePictureUpload from '@/components/ProfilePictureUpload';
 import PredefinedAccountsManager from '@/components/PredefinedAccountsManager';
+import StockAliasManager from '@/components/v2/mobile/StockAliasManager';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ClientSettingsDashboardProps {
@@ -12,7 +13,9 @@ interface ClientSettingsDashboardProps {
     userEmail: string;
     userRole: string;
     predefinedAccounts: any[];
+    initialStockAliases?: any[];
     onClose?: () => void;
+    onAliasUpdate?: (ticker: string, alias: string) => void;
 }
 
 export default function ClientSettingsDashboard({
@@ -20,7 +23,9 @@ export default function ClientSettingsDashboard({
     userEmail,
     userRole,
     predefinedAccounts,
+    initialStockAliases = [],
     onClose,
+    onAliasUpdate
 }: ClientSettingsDashboardProps) {
     const { t } = useLanguage();
     const [isExporting, setIsExporting] = useState(false);
@@ -122,6 +127,23 @@ export default function ClientSettingsDashboard({
                         </div>
                         <div className="p-0 sm:p-5">
                             <PredefinedAccountsManager initialAccounts={predefinedAccounts} />
+                        </div>
+                    </div>
+                </section>
+
+                {/* Stock Alias Management Section */}
+                <section className="px-4">
+                    <div className="bg-[#1C1C1E] rounded-[14px] overflow-hidden divide-y divide-[#38383A] mx-auto w-full">
+                        <div className="px-4 py-3 border-b border-[#38383A]">
+                            <h2 className="text-[17px] tracking-tight text-white flex items-center gap-2">
+                                종목 별명 관리
+                            </h2>
+                        </div>
+                        <div className="p-0 sm:p-5">
+                            <StockAliasManager 
+                                initialAliases={initialStockAliases} 
+                                onUpdate={onAliasUpdate}
+                            />
                         </div>
                     </div>
                 </section>

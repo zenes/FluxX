@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { AssetItem } from '@/lib/actions';
 import { Building2, Plus, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react';
@@ -24,6 +24,7 @@ interface AssetListGroupCardProps {
         returnRate: number;
     };
     isHidden?: boolean;
+    stockAliases?: Record<string, string>;
 }
 
 export default function AssetListGroupCard({
@@ -37,8 +38,11 @@ export default function AssetListGroupCard({
     debugLabel,
     onAddClick,
     summary,
-    isHidden = false
+    isHidden = false,
+    stockAliases = {}
 }: AssetListGroupCardProps) {
+    const [isExpanded, setIsExpanded] = useState(true);
+
     const isEmpty = assets.length === 0;
 
     const formatPrice = (currency: string, price: number) => {
@@ -139,9 +143,9 @@ export default function AssetListGroupCard({
                                 >
                                     {/* Left: Ticker & Name */}
                                     <div className="flex flex-col gap-0.5 flex-1 min-w-0 pr-2">
-                                        <span className="text-[15px] font-bold text-zinc-900 dark:text-white uppercase tracking-tight truncate">
-                                            {getStockDisplayName(asset.assetSymbol, asset.assetSymbol, priceData)}
-                                        </span>
+                                            <h4 className="font-bold text-zinc-900 dark:text-white mb-0.5">
+                                                {getStockDisplayName(asset.assetSymbol, (asset as any).assetName || (asset as any).name, priceData, stockAliases[asset.assetSymbol || ''])}
+                                            </h4>
                                         <span className="text-[12px] text-zinc-500 dark:text-zinc-400 line-clamp-1 break-all uppercase font-bold tracking-tighter">
                                             {asset.amount.toLocaleString()}주 보유 • {isUSD ? '$' : '₩'}{formatPrice(asset.currency || 'USD', marketValue)}
                                             {isUSD && marketPrices && (

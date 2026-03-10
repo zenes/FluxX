@@ -35,9 +35,11 @@ interface SimpleModeV2ContainerProps {
         accounts: any[];
     };
     initialHideAssets?: boolean;
+    stockAliases?: Record<string, string>;
 }
 
-export default function SimpleModeV2Container({ assets, marketData, initialHideAssets = false }: SimpleModeV2ContainerProps) {
+export default function SimpleModeV2Container({ assets, marketData, initialHideAssets = false, stockAliases: initialStockAliases = {} }: SimpleModeV2ContainerProps) {
+    const [stockAliases, setStockAliases] = useState<Record<string, string>>(initialStockAliases);
     const [activeTag, setActiveTag] = useState('all');
     const [currentPage, setCurrentPage] = useState(0);
     const [myStocks, setMyStocks] = useState<MarketAsset[]>(INITIAL_STOCKS);
@@ -138,7 +140,7 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                 id: s.ticker + Date.now().toString(),
                 ticker: s.ticker,
                 type: s.type as any,
-                name: getStockDisplayName(s.ticker),
+                name: getStockDisplayName(s.ticker, undefined, undefined, stockAliases[s.ticker]),
                 currentPrice: 0,
                 changeAmount: 0,
                 changeRate: 0,
@@ -147,6 +149,10 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
         } catch (e) {
             console.error("Failed to toggle watchlist:", e);
         }
+    };
+
+    const handleAliasUpdate = (ticker: string, alias: string) => {
+        setStockAliases(prev => ({ ...prev, [ticker]: alias }));
     };
 
     // Persistence: Load stocks from DB and sync from localStorage if needed
@@ -178,7 +184,7 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                         id: s.ticker + Date.now().toString(),
                         ticker: s.ticker,
                         type: s.type as any,
-                        name: getStockDisplayName(s.ticker, undefined, qData),
+                        name: getStockDisplayName(s.ticker, undefined, qData, stockAliases[s.ticker]),
                         currentPrice: qData?.price || 0,
                         changeAmount: qData?.change || 0,
                         changeRate: qData?.changePercent || 0,
@@ -265,7 +271,7 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                 if (qData) {
                     return {
                         ...s,
-                        name: getStockDisplayName(s.ticker, s.name, qData),
+                        name: getStockDisplayName(s.ticker, s.name, qData, stockAliases[s.ticker]),
                         currentPrice: qData.price,
                         changeAmount: qData.change || 0,
                         changeRate: qData.changePercent || 0,
@@ -583,6 +589,8 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                             setMyStocks={setMyStocks}
                             onModalToggle={setIsAnyModalOpen}
                             onRefresh={refreshAll}
+                            stockAliases={stockAliases}
+                            onAliasUpdate={handleAliasUpdate}
                         />
 
                         <InvestmentNewsCardV2
@@ -638,6 +646,7 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                                 returnRate: totalStockPnLInfo.rate
                             }}
                             isHidden={isHidden}
+                            stockAliases={stockAliases}
                         />
 
                         {/* Group 2: Cash & Commodities */}
@@ -770,6 +779,8 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                 isWatchlisted={selectedAsset ? myStocks.some(s => s.ticker === selectedAsset.assetSymbol) : false}
                 onToggleWatchlist={handleToggleWatchlist}
                 priceData={selectedAsset ? marketPrices?.stockPrices?.[selectedAsset.assetSymbol?.toUpperCase() || ''] : undefined}
+                stockAlias={selectedAsset ? stockAliases[selectedAsset.assetSymbol || ''] : undefined}
+                onAliasUpdate={handleAliasUpdate}
             />
 
             {/* Total Analysis Sheet (Always rendered for exit animation) */}
@@ -805,6 +816,8 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
             <SettingsSheetV2
                 isOpen={isSettingsOpen}
                 onClose={() => setIsSettingsOpen(false)}
+                stockAliases={stockAliases}
+                onAliasUpdate={handleAliasUpdate}
             />
         </div>
     );

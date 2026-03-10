@@ -29,6 +29,7 @@ model User {
   memos               Memo[]
   assetMemos          AssetMemo[]
   watchlistStocks     WatchlistStock[]
+  stockAliases        StockAlias[]
 }
 
 model WatchlistStock {
@@ -158,4 +159,16 @@ model AssetMemo {
   createdAt    DateTime @default(now())
 
   @@index([userId, tickerSymbol])
+}
+model StockAlias {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ticker       String   // e.g., 'AAPL' or '005930'
+  alias        String   // Custom name
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, ticker])
+  @@index([userId])
 }

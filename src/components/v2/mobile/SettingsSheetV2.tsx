@@ -7,20 +7,23 @@ import ClientSettingsDashboard from '@/app/v2/settings/ClientSettingsDashboard';
 interface SettingsSheetV2Props {
     isOpen: boolean;
     onClose: () => void;
+    stockAliases?: Record<string, string>;
+    onAliasUpdate?: (ticker: string, alias: string) => void;
 }
 
-export default function SettingsSheetV2({ isOpen, onClose }: SettingsSheetV2Props) {
+export default function SettingsSheetV2({ isOpen, onClose, stockAliases, onAliasUpdate }: SettingsSheetV2Props) {
     const [userData, setUserData] = useState<{
         userImage: string | null;
         userEmail: string;
         userRole: string;
         predefinedAccounts: any[];
+        stockAliases: any[];
     } | null>(null);
 
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        if (isOpen && !userData) {
+        if (isOpen) {
             const fetchUserData = async () => {
                 setIsLoading(true);
                 try {
@@ -38,7 +41,7 @@ export default function SettingsSheetV2({ isOpen, onClose }: SettingsSheetV2Prop
             };
             fetchUserData();
         }
-    }, [isOpen, userData]);
+    }, [isOpen]);
 
     return (
         <AnimatePresence>
@@ -60,7 +63,9 @@ export default function SettingsSheetV2({ isOpen, onClose }: SettingsSheetV2Prop
                             userEmail={userData.userEmail}
                             userRole={userData.userRole}
                             predefinedAccounts={userData.predefinedAccounts}
+                            initialStockAliases={userData.stockAliases}
                             onClose={onClose}
+                            onAliasUpdate={onAliasUpdate}
                         />
                     )}
                 </motion.div>

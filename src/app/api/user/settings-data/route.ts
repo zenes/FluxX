@@ -9,9 +9,12 @@ export async function GET() {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const user = await prisma.user.findUnique({
+        const user = await (prisma.user as any).findUnique({
             where: { email: session.user.email },
-            include: { predefinedAccounts: true },
+            include: { 
+                predefinedAccounts: true,
+                stockAliases: true
+            },
         });
 
         if (!user) {
@@ -22,7 +25,8 @@ export async function GET() {
             userImage: user.image,
             userEmail: user.email,
             userRole: user.role,
-            predefinedAccounts: user.predefinedAccounts,
+            predefinedAccounts: (user as any).predefinedAccounts,
+            stockAliases: (user as any).stockAliases,
         });
     } catch (error) {
         console.error("Failed to fetch settings data", error);

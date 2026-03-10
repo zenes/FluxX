@@ -18,6 +18,7 @@ import { AssetItem, deleteStockAssetAllEntries, deleteStockEntry, getDividendRec
 import { cn } from '@/lib/utils';
 import { isKoreanStock, getNormalizedTicker, getStockDisplayName } from '@/lib/stock-utils';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
+import StockAliasEditSheet from './StockAliasEditSheet';
 
 // --- Sub-component for individual history entry with sticky swipe ---
 const PurchaseHistoryItem = ({
@@ -172,10 +173,11 @@ interface StockDetailSheetV2Props {
     changePercent: number | null;
     exchangeRate: number;
     totalNetWorth: number;
-    title?: string;
     isWatchlisted?: boolean;
     onToggleWatchlist?: (ticker: string) => void;
     priceData?: any;
+    stockAlias?: string;
+    onAliasUpdate?: (ticker: string, alias: string) => void;
 }
 
 const RANGES = ['1D', '1W', '1M', '3M', '6M', 'YTD', '1Y', 'MAX'];
@@ -190,12 +192,15 @@ export default function StockDetailSheetV2({
     changePercent,
     exchangeRate,
     totalNetWorth,
-    title,
     onEditEntry,
-    isWatchlisted = false,
+    isWatchlisted,
     onToggleWatchlist,
     priceData,
+    stockAlias,
+    onAliasUpdate
 }: StockDetailSheetV2Props) {
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isAliasEditOpen, setIsAliasEditOpen] = useState(false);
     const [activeRange, setActiveRange] = useState('1M');
     const [chartData, setChartData] = useState<any[]>([]);
     const [isLoadingChart, setIsLoadingChart] = useState(false);
@@ -272,10 +277,10 @@ export default function StockDetailSheetV2({
     const openVerification = (mode: 'entry' | 'asset', entryId: string | null = null) => {
         const pin = Math.floor(1000 + Math.random() * 9000).toString();
         setVerification({
-            isOpen: true,
-            mode,
-            entryId,
-            targetPin: pin,
+            isOpen: false,
+            mode: 'entry',
+            entryId: null,
+            targetPin: '',
             currentInput: '',
             isDeleting: false,
         });
@@ -646,15 +651,28 @@ export default function StockDetailSheetV2({
                         <div className="overflow-y-auto hide-scrollbar pb-10">
                             {/* Header Info */}
                             <div className="px-6 pt-4 mb-6">
-                                <div className="flex flex-col gap-1 mb-4">
-                                    <span className="text-[13px] font-black text-zinc-400 uppercase tracking-widest flex items-center gap-1">
-                                        {isKRStock ? stockAsset?.assetSymbol : (title || stockAsset?.assetSymbol || '---')}
-                                        <span className="text-[10px] font-black opacity-30">[F]</span>
-                                    </span>
-                                    <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">
-                                        {getStockDisplayName(stockAsset?.assetSymbol, title, priceData)}
-                                    </h2>
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">
+                                                {getStockDisplayName(stockAsset?.assetSymbol, (stockAsset as any)?.assetName || (stockAsset as any)?.name, priceData, stockAlias)}
+                                            </h2>
+                                            <button
+                                                onClick={() => setIsAliasEditOpen(true)}
+                                                className="p-1.5 rounded-full bg-zinc-100 dark:bg-white/5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+                                            >
+                                                <Pencil className="size-3.5" />
+                                            </button>
+                                            {stockAsset?.currency === 'USD' && (
+                                                <span className="px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-500 text-[10px] font-bold">USD</span>
+                                            )}
+                                        </div>
+                                        <p className="text-zinc-400 font-bold tracking-wider text-xs">
+                                            {stockAsset?.assetSymbol} • {isKoreanStock(stockAsset?.assetSymbol || '') ? 'KOSPI' : 'NASDAQ'}
+                                        </p>
+                                    </div>
                                 </div>
+
                                 <div className="flex items-end gap-3">
                                     <span className={cn(
                                         "text-3xl font-black transition-colors",
@@ -1145,6 +1163,16 @@ export default function StockDetailSheetV2({
                     </motion.div>
                 </>
             )}
+
+            <StockAliasEditSheet
+                isOpen={isAliasEditOpen}
+                onClose={() => setIsAliasEditOpen(false)}
+                ticker={stockAsset?.assetSymbol || ''}
+                initialAlias={stockAlias || ''}
+                onUpdate={(ticker, alias) => {
+                    onAliasUpdate?.(ticker, alias);
+                }}
+            />
         </AnimatePresence>
     );
 }

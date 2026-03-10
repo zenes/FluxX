@@ -14,9 +14,9 @@ declare global {
 let prisma = globalThis.prismaGlobal ?? prismaClientSingleton()
 
 if (process.env.NODE_ENV !== 'production') {
-    // Force refresh if models are missing or if client is suspected stale (v2.1: added hideAssets)
-    if (!(prisma as any).memo || !(prisma as any).user) {
-        console.log('Prisma Client stale (missing models). Force refreshing singleton...');
+    // Force refresh if models are missing or if client is suspected stale (v2.1: added hideAssets, stockAlias)
+    if (!(prisma as any).memo || !(prisma as any).user || !(prisma as any).stockAlias) {
+        console.log('Prisma Client stale (missing models: memo, user, or stockAlias). Force refreshing singleton...');
         prisma = prismaClientSingleton()
         globalThis.prismaGlobal = prisma
     }

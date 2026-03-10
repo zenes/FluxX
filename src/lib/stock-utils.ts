@@ -38,8 +38,12 @@ export function getNormalizedTicker(symbol: string | null | undefined): string {
 export function getStockDisplayName(
     symbol: string | null | undefined,
     fallbackName?: string | null,
-    priceData?: { shortName?: string } | null
+    priceData?: { shortName?: string } | null,
+    customAlias?: string | null
 ): string {
+    // 0. Use custom alias if provided
+    if (customAlias) return customAlias;
+
     if (!symbol) return fallbackName || '---';
 
     const normalized = symbol.toUpperCase();
