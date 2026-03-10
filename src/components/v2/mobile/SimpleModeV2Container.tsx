@@ -390,7 +390,7 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
     const dividendData = React.useMemo(() => {
         const projection = calculateMonthlyDividends(assets, marketPrices?.usdKrw || 1400);
         const historical = calculateHistoricalMonthlyDividends(dividendRecords, marketPrices?.usdKrw || 1400);
-        const yearlyHistorical = calculateHistoricalYearlyDividends(dividendRecords, marketPrices?.usdKrw || 1400);
+        const yearlyHistorical = calculateHistoricalYearlyDividends(dividendRecords, marketPrices?.usdKrw || 1400, assets);
         return {
             ...projection,
             ...historical,
@@ -441,6 +441,8 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                 shares: s.holdingsQuantity || 0,
                 dividendPerShare: s.dividendPerShare || 0,
                 type: s.type,
+                frequency: s.frequency,
+                frequencyMonths: s.frequencyMonths,
                 isExpected: false
             }))
         })).filter(m => m.records.length > 0);

@@ -9,6 +9,8 @@ export interface DividendStockBreakdown {
     dividendPerShare?: number;
     date?: string;
     type?: string;
+    frequency?: number;
+    frequencyMonths?: string;
 }
 
 export interface MonthlyDividend {
@@ -144,8 +146,24 @@ export interface YearlyHistoricalDividend {
     months: MonthlyDividend[];
 }
 
-export function calculateHistoricalYearlyDividends(records: any[], exchangeRate: number) {
+export function calculateHistoricalYearlyDividends(records: any[], exchangeRate: number, assets: any[] = []) {
     const yearlyMap = new Map<number, YearlyHistoricalDividend>();
+
+    // Helper to find frequency info from assets
+    const findFrequencyInfo = (symbol: string) => {
+        const asset = assets.find(a => a.assetSymbol === symbol);
+        if (asset && asset.entries && asset.entries.length > 0) {
+            // Take info from the first entry that has frequency info
+            const entry = asset.entries.find((e: any) => e.dividendFrequency || e.dividendMonths);
+            if (entry) {
+                return {
+                    frequency: entry.dividendFrequency,
+                    frequencyMonths: entry.dividendMonths
+                };
+            }
+        }
+        return { frequency: undefined, frequencyMonths: undefined };
+    };
 
     records.forEach(record => {
         const receivedAt = new Date(record.receivedAt);
@@ -172,6 +190,8 @@ export function calculateHistoricalYearlyDividends(records: any[], exchangeRate:
         const monthData = yearData.months[month];
         monthData.amount += amountInKrw;
 
+        const { frequency, frequencyMonths } = findFrequencyInfo(record.tickerSymbol);
+
         // Since we want a detailed breakdown per record in the UI, we might actually want to 
         // keep records separate or at least store more info.
         // For the new UI, let's append to the stocks list even if same symbol exists, 
@@ -184,7 +204,9 @@ export function calculateHistoricalYearlyDividends(records: any[], exchangeRate:
             holdingsQuantity: record.holdingsQuantity,
             dividendPerShare: record.dividendPerShare,
             date: record.receivedAt ? new Date(record.receivedAt).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' }) : undefined,
-            type: record.type
+            type: record.type,
+            frequency,
+            frequencyMonths
         });
     });
 

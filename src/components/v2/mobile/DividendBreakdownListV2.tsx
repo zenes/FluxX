@@ -13,6 +13,8 @@ interface DividendBreakdownItem {
     dividendPerShare: number;
     type?: string;
     isExpected?: boolean;
+    frequency?: number;
+    frequencyMonths?: string;
 }
 
 interface DividendBreakdownListV2Props {
@@ -43,9 +45,15 @@ export default function DividendBreakdownListV2({
                 </p>
             </div>
 
-            <div className="space-y-4">
+            <div className="flex flex-col">
                 {records.map((record, idx) => (
-                    <div key={`${record.symbol}-${idx}`} className="flex items-center justify-between group">
+                    <div 
+                        key={`${record.symbol}-${idx}`} 
+                        className={cn(
+                            "flex items-center justify-between group py-4",
+                            idx !== records.length - 1 && "border-b border-zinc-100 dark:border-white/5"
+                        )}
+                    >
                         <div className="flex items-center gap-4">
                             <div className="size-10 rounded-full bg-zinc-900 flex items-center justify-center overflow-hidden border border-white/5">
                                 {/* Placeholder for Logo/Icon */}
@@ -77,14 +85,27 @@ export default function DividendBreakdownListV2({
                                 </p>
                             )}
                             <p className="text-[10px] text-zinc-400 font-bold mt-0.5">
-                                {record.isExpected ? '예상' : '확정'}
+                                {(() => {
+                                    if (record.isExpected) return '예상';
+                                    
+                                    const freqMap: Record<number, string> = {
+                                        12: '월배당',
+                                        4: '분기배당',
+                                        2: '반기배당',
+                                        1: '연배당'
+                                    };
+                                    
+                                    const freqText = record.frequency ? freqMap[record.frequency] : '';
+                                    const monthsText = record.frequencyMonths ? ` (${record.frequencyMonths})` : '';
+                                    
+                                    return `${freqText}${monthsText}`;
+                                })()}
                             </p>
                         </div>
                     </div>
                 ))}
             </div>
             
-            <div className="h-px bg-zinc-100 dark:bg-white/5 w-full" />
         </div>
     );
 }
