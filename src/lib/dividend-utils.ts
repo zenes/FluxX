@@ -3,7 +3,12 @@ import { AssetItem } from './actions';
 export interface DividendStockBreakdown {
     symbol: string;
     amount: number;
+    amountUsd?: number;
     currency: string;
+    holdingsQuantity?: number;
+    dividendPerShare?: number;
+    date?: string;
+    type?: string;
 }
 
 export interface MonthlyDividend {
@@ -167,16 +172,20 @@ export function calculateHistoricalYearlyDividends(records: any[], exchangeRate:
         const monthData = yearData.months[month];
         monthData.amount += amountInKrw;
 
-        const existingStock = monthData.stocks.find(s => s.symbol === record.tickerSymbol);
-        if (existingStock) {
-            existingStock.amount += amountInKrw;
-        } else {
-            monthData.stocks.push({
-                symbol: record.tickerSymbol,
-                amount: amountInKrw,
-                currency: record.currency
-            });
-        }
+        // Since we want a detailed breakdown per record in the UI, we might actually want to 
+        // keep records separate or at least store more info.
+        // For the new UI, let's append to the stocks list even if same symbol exists, 
+        // but maybe we should rename it to 'records' or just use it as a list of entries.
+        monthData.stocks.push({
+            symbol: record.tickerSymbol,
+            amount: amountInKrw,
+            amountUsd: record.currency === 'USD' ? amount : undefined,
+            currency: record.currency,
+            holdingsQuantity: record.holdingsQuantity,
+            dividendPerShare: record.dividendPerShare,
+            date: record.receivedAt ? new Date(record.receivedAt).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' }) : undefined,
+            type: record.type
+        });
     });
 
     // Convert map to array and sort by year descending

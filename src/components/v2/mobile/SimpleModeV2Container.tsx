@@ -20,7 +20,7 @@ import { AssetItem, getAssets, getMemos, getPredefinedAccounts } from '@/lib/act
 import { calculateNetWorth, MarketPrices, GOLD_TROY_OUNCE_GRAMS } from '@/lib/calculations';
 import { cn } from '@/lib/utils';
 import { motion, animate, useMotionValue } from 'framer-motion';
-import { Briefcase, Coins, PieChart, TrendingUp, Landmark, Plus } from 'lucide-react';
+import { Briefcase, Coins, PieChart, TrendingUp, Landmark, Plus, Info, ChevronDown, CheckCircle2, ChevronRight } from 'lucide-react';
 import V2AuthProfileIcon from './V2AuthProfileIcon';
 import Link from 'next/link';
 import SettingsSheetV2 from './SettingsSheetV2';
@@ -29,6 +29,7 @@ import DividendDetailSheetV2 from './DividendDetailSheetV2';
 import { calculateMonthlyDividends, calculateHistoricalMonthlyDividends, calculateHistoricalYearlyDividends } from '@/lib/dividend-utils';
 import YearlyDividendChartV2 from './YearlyDividendChartV2';
 import MonthlyDividendChartV2 from './MonthlyDividendChartV2';
+import DividendBreakdownListV2 from './DividendBreakdownListV2';
 
 interface SimpleModeV2ContainerProps {
     assets: AssetItem[];
@@ -425,6 +426,33 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
         }));
     }, [dividendData.yearlyHistorical, selectedDividendYear]);
 
+    // Group actual records by month for the selected year
+    const monthlyRecords = React.useMemo(() => {
+        const yearData = dividendData.yearlyHistorical.find(y => y.year === selectedDividendYear);
+        if (!yearData) return [];
+        
+        return yearData.months.map((m, i) => ({
+            month: i,
+            records: m.stocks.map(s => ({
+                symbol: s.symbol,
+                amount: s.amount,
+                amountUsd: s.amountUsd,
+                date: s.date,
+                shares: s.holdingsQuantity || 0,
+                dividendPerShare: s.dividendPerShare || 0,
+                type: s.type,
+                isExpected: false
+            }))
+        })).filter(m => m.records.length > 0);
+    }, [dividendData.yearlyHistorical, selectedDividendYear]);
+
+    // Calculate Yield (투자배당률)
+    const investmentYield = React.useMemo(() => {
+        if (totalNetWorth === 0) return 0;
+        // Using annual projection for yield estimation
+        return (dividendData.annualTotal / totalNetWorth) * 100;
+    }, [dividendData.annualTotal, totalNetWorth]);
+
     const [isPending, setIsPending] = useState(false);
 
     const handleBackup = async () => {
@@ -704,72 +732,111 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                     </div>
                 </div>
 
-                {/* Page 3: Dividend Insights */}
-                <div className={cn("w-[100vw] shrink-0 px-4 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)] pb-24 transition-opacity duration-300", currentPage !== 2 && "opacity-40 pointer-events-none")}>
-                    <header className="mb-6 flex items-center justify-between">
-                        <div>
-                            <h1 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight flex items-center gap-2">
-                                <span className="bg-zinc-900 dark:bg-zinc-800 text-white text-xs px-2 py-0.5 rounded-md">#03</span>
-                                배당 인사이트
+                {/* Page 3: Dividend Insights (Redesigned) */}
+                <div className={cn("w-[100vw] shrink-0 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)] pb-24 transition-opacity duration-300", currentPage !== 2 && "opacity-40 pointer-events-none")}>
+                    <header className="px-4 mb-2">
+                        <div className="flex items-center justify-center relative mb-6">
+                            <h1 className="text-lg font-bold text-zinc-900 dark:text-white flex items-center gap-1">
+                                분석
+                                <Info className="size-4 text-zinc-400" />
                             </h1>
-                            <p className="text-sm text-zinc-400 font-medium">월별 배당금 흐름 및 전망</p>
                         </div>
-                        <div className="size-10 rounded-full bg-white dark:bg-zinc-800 shadow-sm border border-zinc-100 dark:border-zinc-700 flex items-center justify-center">
-                            <TrendingUp className="size-5 text-zinc-900 dark:text-white" />
+                        
+                        <div className="flex border-b border-zinc-100 dark:border-white/5 mb-6">
+                            {['수익', '세금', '배당', '추이', '비중'].map((tab) => (
+                                <div 
+                                    key={tab} 
+                                    className={cn(
+                                        "flex-1 text-center py-3 text-sm font-bold transition-all relative",
+                                        tab === '배당' ? "text-zinc-900 dark:text-white" : "text-zinc-400"
+                                    )}
+                                >
+                                    {tab}
+                                    {tab === '배당' && (
+                                        <motion.div 
+                                            layoutId="activeTab"
+                                            className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-900 dark:bg-white" 
+                                        />
+                                    )}
+                                </div>
+                            ))}
                         </div>
                     </header>
 
-                    <div className="space-y-4">
-                        <div 
-                            onClick={() => setIsDividendDetailOpen(true)}
-                            className="bg-white dark:bg-[#1A1A1E] rounded-[24px] p-6 shadow-sm border border-zinc-100 dark:border-white/5 active:scale-[0.98] transition-all cursor-pointer group"
-                        >
-                            <div className="flex justify-between items-start mb-1">
-                                <h3 className="text-zinc-400 text-sm font-bold">누적 배당금</h3>
-                                <div className="p-1.5 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                                    <TrendingUp className="size-3 text-primary" />
+                    <div className="px-4 space-y-8">
+                        {/* Summary Header */}
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1.5 text-zinc-900 dark:text-white font-bold">
+                                    <span>{selectedDividendYear}년</span>
+                                    <ChevronDown className="size-4" />
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-1.5">
+                                        <CheckCircle2 className="size-4 text-primary" />
+                                        <span className="text-[11px] font-bold text-zinc-900 dark:text-white">실수령액</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <CheckCircle2 className="size-4 text-primary" />
+                                        <span className="text-[11px] font-bold text-zinc-900 dark:text-white">외화표시</span>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="flex items-baseline gap-1">
-                                <span className="text-xl font-bold text-zinc-300">₩</span>
-                                <span className="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter">
-                                    {dividendData.allTimeTotal.toLocaleString()}
-                                </span>
+
+                            <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                    <h2 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tight">
+                                        {dividendData.yearlyHistorical.find(y => y.year === selectedDividendYear)?.totalAmount.toLocaleString()}원
+                                    </h2>
+                                    <div className="size-5 rounded-full bg-zinc-100 dark:bg-white/10 flex items-center justify-center">
+                                        <span className="text-xs text-zinc-400">?</span>
+                                    </div>
+                                </div>
+                                <p className="text-sm font-bold text-zinc-400">
+                                    투자배당률 <span className="text-zinc-900 dark:text-white">{investmentYield.toFixed(2)}%</span>
+                                </p>
                             </div>
                         </div>
 
-                        <div className="bg-white dark:bg-[#1A1A1E] rounded-[24px] p-6 shadow-sm border border-zinc-100 dark:border-white/5 flex flex-col gap-4">
-                            <div className="flex justify-between items-center">
-                                <h3 className="text-sm font-black text-zinc-900 dark:text-white flex items-center gap-2">
-                                    {selectedDividendYear}년 월별 배당
-                                </h3>
-                                <div className="flex gap-1 overflow-x-auto no-scrollbar max-w-[150px]">
-                                    {availableDividendYears.map(year => (
-                                        <button
-                                            key={year}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setSelectedDividendYear(year);
-                                            }}
-                                            className={cn(
-                                                "px-2 py-0.5 rounded-full text-[9px] font-black transition-all whitespace-nowrap",
-                                                selectedDividendYear === year 
-                                                    ? "bg-primary text-white shadow-sm" 
-                                                    : "bg-zinc-50 dark:bg-white/5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
-                                            )}
-                                        >
-                                            {year}
-                                        </button>
-                                    ))}
+                        {/* Enhanced Monthly Chart */}
+                        <div className="py-2">
+                            <MonthlyDividendChartV2 
+                                data={selectedMonthlyData} 
+                                height={180} 
+                                year={selectedDividendYear}
+                            />
+                        </div>
+
+                        {/* Allocation Link Card */}
+                        <div className="bg-white dark:bg-[#1A1A1E] rounded-[24px] p-4 flex items-center justify-between shadow-sm border border-zinc-100 dark:border-white/5 active:scale-[0.98] transition-transform">
+                            <div className="flex items-center gap-3">
+                                <div className="size-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                                    <PieChart className="size-5 text-blue-500" />
                                 </div>
+                                <span className="font-bold text-zinc-900 dark:text-white">배당 비중</span>
                             </div>
-                            <div className="h-40 w-full">
-                                <MonthlyDividendChartV2 
-                                    data={selectedMonthlyData} 
-                                    height={160} 
-                                    year={selectedDividendYear}
-                                />
-                            </div>
+                            <ChevronRight className="size-5 text-zinc-300" />
+                        </div>
+
+                        {/* Interactive Monthly Breakdown List */}
+                        <div className="space-y-10 pb-10 border-t border-zinc-100 dark:border-white/5 pt-8">
+                            {monthlyRecords.length > 0 ? (
+                                monthlyRecords.map((m) => (
+                                    <DividendBreakdownListV2 
+                                        key={m.month}
+                                        month={m.month}
+                                        records={m.records}
+                                        stockAliases={stockAliases}
+                                    />
+                                ))
+                            ) : (
+                                <div className="py-20 text-center space-y-4">
+                                    <div className="size-16 rounded-full bg-zinc-50 dark:bg-white/5 flex items-center justify-center mx-auto">
+                                        <TrendingUp className="size-8 text-zinc-200 dark:text-zinc-800" />
+                                    </div>
+                                    <p className="text-zinc-400 font-bold">기록된 배당 내역이 없습니다.</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

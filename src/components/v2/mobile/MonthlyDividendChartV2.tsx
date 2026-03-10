@@ -10,7 +10,8 @@ import {
     Tooltip, 
     ResponsiveContainer, 
     Cell,
-    Rectangle
+    Rectangle,
+    LabelList
 } from 'recharts';
 import { cn } from '@/lib/utils';
 
@@ -25,25 +26,24 @@ export default function MonthlyDividendChartV2({
     height = 200,
     year
 }: MonthlyDividendChartV2Props) {
+    const currentMonth = new Date().getMonth();
+    const isCurrentYear = year === new Date().getFullYear();
     
     return (
         <div className="w-full" style={{ height }}>
             <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                <BarChart data={data} margin={{ top: 25, right: 0, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="text-zinc-100 dark:text-white/5" />
                     <XAxis 
-                        dataKey="name" 
+                        dataKey="month" 
                         axisLine={false} 
                         tickLine={false} 
-                        tick={{ fontSize: 10, fontWeight: 700, fill: 'currentColor' }}
+                        tick={{ fontSize: 11, fontWeight: 700, fill: 'currentColor' }}
                         className="text-zinc-400"
+                        tickFormatter={(value) => `${value + 1}`}
                     />
                     <YAxis 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fontSize: 10, fontWeight: 700, fill: 'currentColor' }}
-                        className="text-zinc-400"
-                        tickFormatter={(value) => value === 0 ? '0' : `₩${(value / 10000).toFixed(0)}만`}
+                        hide
                     />
                     <Tooltip 
                         cursor={{ fill: 'currentColor', opacity: 0.05 }}
@@ -63,16 +63,29 @@ export default function MonthlyDividendChartV2({
                     <Bar 
                         dataKey="amount" 
                         radius={[6, 6, 6, 6]}
-                        barSize={12}
-                        activeBar={<Rectangle fill="var(--primary)" fillOpacity={0.8} />}
+                        barSize={18}
+                        activeBar={<Rectangle fillOpacity={0.8} />}
                     >
-                        {data.map((entry, index) => (
-                            <Cell 
-                                key={`cell-${index}`} 
-                                fill={entry.amount > 0 ? "var(--primary)" : "currentColor"}
-                                className={cn(entry.amount > 0 ? "fill-primary" : "text-zinc-100 dark:text-white/5")}
-                            />
-                        ))}
+                        <LabelList 
+                            dataKey="amount" 
+                            position="top" 
+                            formatter={(value: any) => {
+                                if (typeof value !== 'number' || value === 0) return '';
+                                return `${(value / 10000).toFixed(0)}만`;
+                            }}
+                            style={{ fontSize: '10px', fontWeight: 700, fill: 'currentColor' }}
+                            className="text-zinc-400"
+                        />
+                        {data.map((entry, index) => {
+                            const isCurrent = isCurrentYear && index === currentMonth;
+                            return (
+                                <Cell 
+                                    key={`cell-${index}`} 
+                                    fill={isCurrent ? "#FF4F60" : "#4A2226"}
+                                    className={cn(isCurrent ? "fill-[#FF4F60]" : "fill-[#4A2226] dark:fill-[#321619]")}
+                                />
+                            );
+                        })}
                     </Bar>
                 </BarChart>
             </ResponsiveContainer>

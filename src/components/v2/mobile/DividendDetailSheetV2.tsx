@@ -113,13 +113,12 @@ export default function DividendDetailSheetV2({
                                     </div>
                                 </div>
 
-                                {/* Yearly Trend Chart Section */}
-                                <div className="mt-8 space-y-6">
+                                <div className="mt-8 space-y-8">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="text-lg font-black text-zinc-900 dark:text-white flex items-center gap-2">
-                                            연도별 배당 추이
+                                        <h3 className="text-lg font-black text-zinc-900 dark:text-white">
+                                            연도별 배당 추위
                                         </h3>
-                                        <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Year-over-Year</p>
+                                        <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest text-[#FF4F60]">Growth Trend</p>
                                     </div>
 
                                     <div className="bg-white dark:bg-[#121214] rounded-[32px] p-6 border border-zinc-100 dark:border-white/5 shadow-sm">
@@ -129,8 +128,8 @@ export default function DividendDetailSheetV2({
                                         />
                                         
                                         <div className="mt-4 flex justify-center items-center text-[10px] font-bold text-zinc-400 uppercase tracking-widest gap-2">
-                                            <div className="size-2 rounded-full bg-primary" />
-                                            <span>Annual RECEIVED TOTAL</span>
+                                            <div className="size-2 rounded-full bg-[#FF4F60]" />
+                                            <span>Annual Dividend Growth</span>
                                         </div>
                                     </div>
                                 </div>
