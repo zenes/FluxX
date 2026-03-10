@@ -133,3 +133,61 @@ export function calculateHistoricalMonthlyDividends(records: any[], exchangeRate
         allTimeTotal
     };
 }
+export interface YearlyHistoricalDividend {
+    year: number;
+    totalAmount: number;
+    months: MonthlyDividend[];
+}
+
+export function calculateHistoricalYearlyDividends(records: any[], exchangeRate: number) {
+    const yearlyMap = new Map<number, YearlyHistoricalDividend>();
+
+    records.forEach(record => {
+        const receivedAt = new Date(record.receivedAt);
+        const year = receivedAt.getFullYear();
+        const month = receivedAt.getMonth();
+        const amount = record.amount || 0;
+        const amountInKrw = record.currency === 'USD' ? amount * exchangeRate : amount;
+
+        if (!yearlyMap.has(year)) {
+            yearlyMap.set(year, {
+                year,
+                totalAmount: 0,
+                months: Array.from({ length: 12 }, (_, i) => ({
+                    month: i,
+                    amount: 0,
+                    stocks: []
+                }))
+            });
+        }
+
+        const yearData = yearlyMap.get(year)!;
+        yearData.totalAmount += amountInKrw;
+        
+        const monthData = yearData.months[month];
+        monthData.amount += amountInKrw;
+
+        const existingStock = monthData.stocks.find(s => s.symbol === record.tickerSymbol);
+        if (existingStock) {
+            existingStock.amount += amountInKrw;
+        } else {
+            monthData.stocks.push({
+                symbol: record.tickerSymbol,
+                amount: amountInKrw,
+                currency: record.currency
+            });
+        }
+    });
+
+    // Convert map to array and sort by year descending
+    const yearlyData = Array.from(yearlyMap.values()).sort((a, b) => b.year - a.year);
+    
+    // Sort stocks in each month by amount descending
+    yearlyData.forEach(year => {
+        year.months.forEach(month => {
+            month.stocks.sort((a, b) => b.amount - a.amount);
+        });
+    });
+
+    return yearlyData;
+}

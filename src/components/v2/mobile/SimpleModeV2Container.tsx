@@ -26,7 +26,7 @@ import Link from 'next/link';
 import SettingsSheetV2 from './SettingsSheetV2';
 import { MarketAsset, INITIAL_STOCKS } from './typesV2';
 import DividendDetailSheetV2 from './DividendDetailSheetV2';
-import { calculateMonthlyDividends, calculateHistoricalMonthlyDividends } from '@/lib/dividend-utils';
+import { calculateMonthlyDividends, calculateHistoricalMonthlyDividends, calculateHistoricalYearlyDividends } from '@/lib/dividend-utils';
 
 interface SimpleModeV2ContainerProps {
     assets: AssetItem[];
@@ -386,9 +386,11 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
     const dividendData = React.useMemo(() => {
         const projection = calculateMonthlyDividends(assets, marketPrices?.usdKrw || 1400);
         const historical = calculateHistoricalMonthlyDividends(dividendRecords, marketPrices?.usdKrw || 1400);
+        const yearlyHistorical = calculateHistoricalYearlyDividends(dividendRecords, marketPrices?.usdKrw || 1400);
         return {
             ...projection,
-            ...historical
+            ...historical,
+            yearlyHistorical
         };
     }, [assets, dividendRecords, marketPrices?.usdKrw]);
 
@@ -833,6 +835,7 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                 annualTotal={dividendData.annualTotal}
                 historicalAnnualTotal={dividendData.historicalAnnualTotal}
                 allTimeTotal={dividendData.allTimeTotal}
+                yearlyHistorical={dividendData.yearlyHistorical}
             />
         </div>
     );
