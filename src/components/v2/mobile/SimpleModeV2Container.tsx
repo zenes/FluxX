@@ -25,6 +25,8 @@ import V2AuthProfileIcon from './V2AuthProfileIcon';
 import Link from 'next/link';
 import SettingsSheetV2 from './SettingsSheetV2';
 import { MarketAsset, INITIAL_STOCKS } from './typesV2';
+import DividendDetailSheetV2 from './DividendDetailSheetV2';
+import { calculateMonthlyDividends } from '@/lib/dividend-utils';
 
 interface SimpleModeV2ContainerProps {
     assets: AssetItem[];
@@ -68,6 +70,7 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
     const [isBackupRestoreOpen, setIsBackupRestoreOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [backups, setBackups] = useState<any[]>([]);
+    const [isDividendDetailOpen, setIsDividendDetailOpen] = useState(false);
 
     const handleAddAssetEntry = (symbol?: string) => {
         setEntryType('stock');
@@ -379,6 +382,10 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
             }, 0);
     }, [displayAssets, marketPrices]);
 
+    const dividendData = React.useMemo(() => {
+        return calculateMonthlyDividends(assets, marketPrices?.usdKrw || 1400);
+    }, [assets, marketPrices?.usdKrw]);
+
     const [isPending, setIsPending] = useState(false);
 
     const handleBackup = async () => {
@@ -674,11 +681,21 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                     </header>
 
                     <div className="space-y-4">
-                        <div className="bg-white dark:bg-[#1A1A1E] rounded-[24px] p-6 shadow-sm border border-zinc-100 dark:border-white/5">
-                            <h3 className="text-zinc-400 text-sm font-bold mb-1">연간 예상 배당금</h3>
+                        <div 
+                            onClick={() => setIsDividendDetailOpen(true)}
+                            className="bg-white dark:bg-[#1A1A1E] rounded-[24px] p-6 shadow-sm border border-zinc-100 dark:border-white/5 active:scale-[0.98] transition-all cursor-pointer group"
+                        >
+                            <div className="flex justify-between items-start mb-1">
+                                <h3 className="text-zinc-400 text-sm font-bold">연간 예상 배당금</h3>
+                                <div className="p-1.5 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                                    <TrendingUp className="size-3 text-primary" />
+                                </div>
+                            </div>
                             <div className="flex items-baseline gap-1">
                                 <span className="text-xl font-bold text-zinc-300">₩</span>
-                                <span className="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter">0</span>
+                                <span className="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter">
+                                    {dividendData.annualTotal.toLocaleString()}
+                                </span>
                             </div>
                         </div>
 
@@ -801,6 +818,12 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                 onClose={() => setIsSettingsOpen(false)}
                 stockAliases={stockAliases}
                 onAliasUpdate={handleAliasUpdate}
+            />
+            <DividendDetailSheetV2
+                isOpen={isDividendDetailOpen}
+                onClose={() => setIsDividendDetailOpen(false)}
+                monthlyData={dividendData.monthlyData}
+                annualTotal={dividendData.annualTotal}
             />
         </div>
     );
