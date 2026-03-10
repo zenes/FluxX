@@ -732,40 +732,43 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                     </div>
                 </div>
 
-                {/* Page 3: Dividend Insights (Redesigned) */}
-                <div className={cn("w-[100vw] shrink-0 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)] pb-24 transition-opacity duration-300", currentPage !== 2 && "opacity-40 pointer-events-none")}>
-                    <header className="px-4 mb-2">
-                        <div className="flex items-center justify-center relative mb-6">
-                            <h1 className="text-lg font-bold text-zinc-900 dark:text-white flex items-center gap-1">
-                                분석
-                                <Info className="size-4 text-zinc-400" />
+                {/* Page 3: Dividend Insights (Refined) */}
+                <div className={cn("w-[100vw] shrink-0 px-4 pt-[calc(env(safe-area-inset-top,0px)+0.5rem)] pb-24 transition-opacity duration-300", currentPage !== 2 && "opacity-40 pointer-events-none")}>
+                    <header className="mb-6 flex items-center justify-between">
+                        <div>
+                            <h1 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight flex items-center gap-2">
+                                <span className="bg-zinc-900 dark:bg-zinc-800 text-white text-xs px-2 py-0.5 rounded-md">#03</span>
+                                배당 인사이트
                             </h1>
+                            <p className="text-sm text-zinc-400 font-medium">월별 배당금 흐름 및 전망</p>
                         </div>
-                        
-                        <div className="flex border-b border-zinc-100 dark:border-white/5 mb-6">
-                            {['수익', '세금', '배당', '추이', '비중'].map((tab) => (
-                                <div 
-                                    key={tab} 
-                                    className={cn(
-                                        "flex-1 text-center py-3 text-sm font-bold transition-all relative",
-                                        tab === '배당' ? "text-zinc-900 dark:text-white" : "text-zinc-400"
-                                    )}
-                                >
-                                    {tab}
-                                    {tab === '배당' && (
-                                        <motion.div 
-                                            layoutId="activeTab"
-                                            className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-900 dark:bg-white" 
-                                        />
-                                    )}
-                                </div>
-                            ))}
+                        <div className="size-10 rounded-full bg-white dark:bg-zinc-800 shadow-sm border border-zinc-100 dark:border-zinc-700 flex items-center justify-center">
+                            <TrendingUp className="size-5 text-zinc-900 dark:text-white" />
                         </div>
                     </header>
 
-                    <div className="px-4 space-y-8">
-                        {/* Summary Header */}
-                        <div className="space-y-4">
+                    <div className="space-y-8">
+                        {/* Cumulative Dividend Card (Restored) */}
+                        <div 
+                            onClick={() => setIsDividendDetailOpen(true)}
+                            className="bg-white dark:bg-[#1A1A1E] rounded-[24px] p-6 shadow-sm border border-zinc-100 dark:border-white/5 active:scale-[0.98] transition-all cursor-pointer group"
+                        >
+                            <div className="flex justify-between items-start mb-1">
+                                <h3 className="text-zinc-400 text-sm font-bold">누적 배당금</h3>
+                                <div className="p-1.5 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                                    <TrendingUp className="size-3 text-primary" />
+                                </div>
+                            </div>
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-xl font-bold text-zinc-300">₩</span>
+                                <span className="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter">
+                                    {dividendData.allTimeTotal.toLocaleString()}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Summary Header & Options */}
+                        <div className="space-y-4 px-2">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-1.5 text-zinc-900 dark:text-white font-bold">
                                     <span>{selectedDividendYear}년</span>
