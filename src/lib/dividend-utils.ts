@@ -121,9 +121,15 @@ export function calculateHistoricalMonthlyDividends(records: any[], exchangeRate
     });
 
     const historicalAnnualTotal = historicalMonthlyData.reduce((sum, data) => sum + data.amount, 0);
+    const allTimeTotal = records.reduce((sum, record) => {
+        const amount = record.amount || 0;
+        const amountInKrw = record.currency === 'USD' ? amount * exchangeRate : amount;
+        return sum + amountInKrw;
+    }, 0);
 
     return {
         historicalMonthlyData,
-        historicalAnnualTotal
+        historicalAnnualTotal,
+        allTimeTotal
     };
 }

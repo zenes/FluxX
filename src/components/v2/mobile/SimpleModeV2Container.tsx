@@ -692,7 +692,7 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                             className="bg-white dark:bg-[#1A1A1E] rounded-[24px] p-6 shadow-sm border border-zinc-100 dark:border-white/5 active:scale-[0.98] transition-all cursor-pointer group"
                         >
                             <div className="flex justify-between items-start mb-1">
-                                <h3 className="text-zinc-400 text-sm font-bold">연간 예상 배당금</h3>
+                                <h3 className="text-zinc-400 text-sm font-bold">누적 배당금</h3>
                                 <div className="p-1.5 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
                                     <TrendingUp className="size-3 text-primary" />
                                 </div>
@@ -700,7 +700,7 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                             <div className="flex items-baseline gap-1">
                                 <span className="text-xl font-bold text-zinc-300">₩</span>
                                 <span className="text-4xl font-black text-zinc-900 dark:text-white tracking-tighter">
-                                    {dividendData.annualTotal.toLocaleString()}
+                                    {dividendData.allTimeTotal.toLocaleString()}
                                 </span>
                             </div>
                         </div>
@@ -832,6 +832,7 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                 historicalMonthlyData={dividendData.historicalMonthlyData}
                 annualTotal={dividendData.annualTotal}
                 historicalAnnualTotal={dividendData.historicalAnnualTotal}
+                allTimeTotal={dividendData.allTimeTotal}
             />
         </div>
     );

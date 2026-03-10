@@ -14,9 +14,10 @@ interface DividendDetailSheetV2Props {
     historicalMonthlyData: MonthlyDividend[];
     annualTotal: number;
     historicalAnnualTotal: number;
+    allTimeTotal: number;
 }
 
-export default function DividendDetailSheetV2({ isOpen, onClose, monthlyData, historicalMonthlyData, annualTotal, historicalAnnualTotal }: DividendDetailSheetV2Props) {
+export default function DividendDetailSheetV2({ isOpen, onClose, monthlyData, historicalMonthlyData, annualTotal, historicalAnnualTotal, allTimeTotal }: DividendDetailSheetV2Props) {
     const chartData = useMemo(() => {
         return monthlyData.map((d, i) => ({
             name: `${i + 1}월`,
@@ -71,9 +72,9 @@ export default function DividendDetailSheetV2({ isOpen, onClose, monthlyData, hi
                             <div className="flex justify-between items-start mb-4">
                                 <div>
                                     <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight flex items-center gap-2">
-                                        배당 포트폴리오
+                                        누적 배당 내역
                                     </h2>
-                                    <p className="text-sm text-zinc-500 font-bold">연간 예상 배당금 흐름 분석</p>
+                                    <p className="text-sm text-zinc-500 font-bold">기록된 전체 배당금 분석</p>
                                 </div>
                                 <button
                                     onClick={onClose}
@@ -90,12 +91,12 @@ export default function DividendDetailSheetV2({ isOpen, onClose, monthlyData, hi
                                     <div className="size-5 rounded-full bg-primary/20 flex items-center justify-center">
                                         <TrendingUp className="size-3 text-primary" />
                                     </div>
-                                    <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Annual Est. Projection</span>
+                                    <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">All-time Cumulative</span>
                                 </div>
                                 <div className="flex items-baseline gap-1">
                                     <span className="text-xl font-bold text-primary/50">₩</span>
                                     <span className="text-4xl font-black text-white tracking-tighter">
-                                        {annualTotal.toLocaleString()}
+                                        {allTimeTotal.toLocaleString()}
                                     </span>
                                 </div>
                                 <div className="mt-4 flex items-center gap-4 border-t border-white/5 pt-4">
