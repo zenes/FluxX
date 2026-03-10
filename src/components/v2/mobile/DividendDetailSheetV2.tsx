@@ -61,15 +61,10 @@ export default function DividendDetailSheetV2({
                         animate={{ y: 0 }}
                         exit={{ y: '100%' }}
                         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                        className="fixed inset-x-0 bottom-0 h-[85vh] bg-[#F4F7F9] dark:bg-[#09090B] rounded-t-[40px] z-[101] flex flex-col shadow-2xl overflow-hidden"
+                        className="fixed inset-0 bg-[#F4F7F9] dark:bg-[#09090B] z-[101] flex flex-col shadow-2xl overflow-hidden"
                     >
-                        {/* Grab Handle */}
-                        <div className="w-full h-1.5 flex justify-center pt-3 pb-6 shrink-0">
-                            <div className="w-12 h-1.5 bg-zinc-300 dark:bg-zinc-800 rounded-full" />
-                        </div>
-
                         {/* Unified Scroll Area */}
-                        <div className="flex-1 overflow-y-auto px-6 pb-10 space-y-8 scroll-smooth no-scrollbar">
+                        <div className="flex-1 overflow-y-auto px-6 pt-[calc(env(safe-area-inset-top,0px)+1rem)] pb-10 space-y-8 scroll-smooth no-scrollbar">
                             {/* Header Section */}
                             <div className="pt-2">
                                 <div className="flex justify-between items-start mb-4">
