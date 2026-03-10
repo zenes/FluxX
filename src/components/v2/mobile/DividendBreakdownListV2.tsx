@@ -106,6 +106,10 @@ export default function DividendBreakdownListV2({
                 ))}
             </div>
             
+            {/* Monthly Separator */}
+            <div className="pt-2">
+                <div className="h-px bg-zinc-200 dark:bg-white/10 w-full" />
+            </div>
         </div>
     );
 }
