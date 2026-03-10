@@ -790,7 +790,7 @@ export default function SimpleModeV2Container({ assets, marketData, initialHideA
                             <div className="space-y-1">
                                 <div className="flex items-center gap-2">
                                     <h2 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tight">
-                                        {dividendData.yearlyHistorical.find(y => y.year === selectedDividendYear)?.totalAmount.toLocaleString()}원
+                                        {Math.round(dividendData.yearlyHistorical.find(y => y.year === selectedDividendYear)?.totalAmount || 0).toLocaleString()}원
                                     </h2>
                                     <div className="size-5 rounded-full bg-zinc-100 dark:bg-white/10 flex items-center justify-center">
                                         <span className="text-xs text-zinc-400">?</span>

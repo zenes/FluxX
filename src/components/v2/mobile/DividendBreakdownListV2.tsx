@@ -39,7 +39,7 @@ export default function DividendBreakdownListV2({
                     {month + 1}월
                 </h2>
                 <p className="text-lg font-black text-zinc-900 dark:text-white">
-                    {currencySymbol}{totalAmount.toLocaleString()}
+                    {currencySymbol}{Math.round(totalAmount).toLocaleString()}
                 </p>
             </div>
 
@@ -57,7 +57,7 @@ export default function DividendBreakdownListV2({
                                 </h4>
                                 <div className="flex items-center gap-2 mt-0.5">
                                     <p className="text-[11px] text-zinc-400 font-bold">
-                                        {record.shares.toLocaleString()}주 · 주당 {record.dividendPerShare.toLocaleString()}{record.symbol.endsWith('.K') ? '원' : '$'}
+                                        {record.shares.toLocaleString()}주 · 주당 {record.symbol.endsWith('.K') ? Math.round(record.dividendPerShare).toLocaleString() : record.dividendPerShare.toLocaleString()}{record.symbol.endsWith('.K') ? '원' : '$'}
                                     </p>
                                     {record.type && (
                                         <span className="bg-zinc-100 dark:bg-white/5 text-zinc-400 text-[9px] px-1.5 py-0.5 rounded-md font-black">
@@ -69,7 +69,7 @@ export default function DividendBreakdownListV2({
                         </div>
                         <div className="text-right">
                             <p className="font-black text-zinc-900 dark:text-white">
-                                {currencySymbol}{record.amount.toLocaleString()}
+                                {currencySymbol}{Math.round(record.amount).toLocaleString()}
                             </p>
                             {record.amountUsd && record.amountUsd > 0 && (
                                 <p className="text-[10px] text-zinc-400 font-bold">

@@ -56,7 +56,7 @@ export default function MonthlyDividendChartV2({
                                 return (
                                     <div className="bg-zinc-900 dark:bg-zinc-800 rounded-2xl p-3 shadow-2xl border border-white/5">
                                         <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">{year ? `${year}년 ` : ''}{d.month + 1}월</p>
-                                        <p className="text-sm font-black text-white">₩{d.amount.toLocaleString()}</p>
+                                        <p className="text-sm font-black text-white">₩{Math.round(d.amount).toLocaleString()}</p>
                                     </div>
                                 );
                             }
