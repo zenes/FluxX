@@ -4,6 +4,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { getStockDisplayName } from '@/lib/stock-utils';
 import { Calendar } from 'lucide-react';
+import TickerIcon from '@/components/TickerIcon';
 
 interface DividendBreakdownItem {
     symbol: string;
@@ -60,19 +61,22 @@ export default function DividendBreakdownListV2({
                             idx !== records.length - 1 && "border-b border-zinc-100 dark:border-white/5"
                         )}
                     >
-                        <div className="flex flex-col gap-0.5 flex-1 min-w-0 pr-2">
-                            <h4 className="font-bold text-zinc-900 dark:text-white mb-0.5 leading-tight">
-                                {getStockDisplayName(record.symbol, undefined, undefined, stockAliases[record.symbol])}
-                            </h4>
-                            <div className="flex items-center gap-2">
-                                <span className="text-[12px] text-zinc-500 dark:text-zinc-400 line-clamp-1 break-all uppercase font-bold tracking-tighter">
-                                    {record.shares.toLocaleString()}주 보유 • 주당 {record.symbol.endsWith('.K') ? Math.round(record.dividendPerShare).toLocaleString() : record.dividendPerShare.toLocaleString()}{record.symbol.endsWith('.K') ? '원' : '$'}
-                                </span>
-                                {record.type && (
-                                    <span className="bg-zinc-100 dark:bg-white/5 text-zinc-400 text-[9px] px-1.5 py-0.5 rounded-md font-black">
-                                        {record.type}
+                        <div className="flex items-center gap-3 flex-1 min-w-0 pr-2">
+                            <TickerIcon symbol={record.symbol} size={36} className="rounded-xl border-none bg-zinc-100 dark:bg-white/5" />
+                            <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                                <h4 className="font-bold text-zinc-900 dark:text-white mb-0.5 leading-tight">
+                                    {getStockDisplayName(record.symbol, undefined, undefined, stockAliases[record.symbol])}
+                                </h4>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[12px] text-zinc-500 dark:text-zinc-400 line-clamp-1 break-all uppercase font-bold tracking-tighter">
+                                        {record.shares.toLocaleString()}주 보유 • 주당 {record.symbol.endsWith('.K') ? Math.round(record.dividendPerShare).toLocaleString() : record.dividendPerShare.toLocaleString()}{record.symbol.endsWith('.K') ? '원' : '$'}
                                     </span>
-                                )}
+                                    {record.type && (
+                                        <span className="bg-zinc-100 dark:bg-white/5 text-zinc-400 text-[9px] px-1.5 py-0.5 rounded-md font-black">
+                                            {record.type}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
