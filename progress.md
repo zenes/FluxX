@@ -1,4 +1,22 @@
-# Project Progress - 2026-03-10
+# Project Progress - 2026-06-05
+
+## [2026-06-05 14:45] 로컬 개발 환경을 SQLite 기반으로 전환 (DB 기본 백엔드 변경)
+- **배경 (Supabase 접속 불가)**:
+    - Supabase 프로젝트(`postgres.ieyxojdwadhwteuursxq`)가 장기 미사용으로 비활성화/일시정지된 것으로 추정되어 `FATAL: (ENOTFOUND) tenant/user ... not found` 오류 발생.
+    - 로컬에서 즉시 개발 가능하도록 **PostgreSQL(Supabase) → 로컬 SQLite**로 기본 데이터 소스를 전환.
+- **스키마 및 환경 변수 변경**:
+    - `prisma/schema.prisma`: `provider`를 `postgresql`에서 **`sqlite`**로 변경, `directUrl` 라인 제거.
+    - `.env`: `DATABASE_URL`을 **`file:./dev.db`**로 변경. PostgreSQL 전용인 `DIRECT_URL`은 주석 처리하여 Supabase 재배포 시 복구 가능하도록 보존.
+- **스키마 드리프트 정리**:
+    - 기존 로컬 `prisma/dev.db`(2026-03-10 시점)에는 `StockAlias` 테이블이 없었음 (PostgreSQL 이주 후 추가된 모델).
+    - `npx prisma db push`로 SQLite DB에 `StockAlias` 테이블을 추가하여 현재 코드와 동기화.
+- **데이터 보존**:
+    - 전환 전 `prisma/dev.db.backup-20260605-143927`로 백업 (gitignore의 `*.db` 규칙으로 인해 커밋에서 자동 제외).
+    - 기존 사용자(`zenespace@gmail.com`) 및 자산/배당 기록은 그대로 사용 가능.
+    - 단, Supabase 이주 이후 클라우드에서 추가된 변경분은 반영되지 않으므로 추후 Supabase 복귀 시 별도 마이그레이션 필요.
+- **부수 작업**:
+    - Prisma Client 재생성(`npx prisma generate`)으로 SQLite 드라이버 적용.
+    - `.next` 캐시 폴더를 삭제하여 정적 자산 404 잔재 정리.
 
 ## [2026-03-10 18:00] 배당 인사이트(Page 3) 카드 D 스타일 일원화 및 레이아웃 압축 개편
 - **카드 D(자산 리스트) 스타일 완벽 이식**:
