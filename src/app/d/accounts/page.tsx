@@ -1,9 +1,9 @@
 import { auth } from "@/../auth";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
-import ClientAccountDashboard from "@/app/account/ClientAccountDashboard";
+import ClientAccounts from "@/app/d/accounts/ClientAccounts";
 
-export default async function AccountPage() {
+export default async function AccountsPage() {
     const session = await auth();
     if (!session?.user?.id) {
         redirect("/login");
@@ -22,7 +22,7 @@ export default async function AccountPage() {
     return (
         <div className="flex-1 w-full bg-background overflow-hidden flex flex-col h-[calc(100vh-3.5rem)] md:h-screen">
             <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8 w-full">
-                <ClientAccountDashboard accounts={accounts} assets={assets} />
+                <ClientAccounts accounts={accounts} assets={assets} />
             </main>
         </div>
     );

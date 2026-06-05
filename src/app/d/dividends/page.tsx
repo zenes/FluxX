@@ -1,5 +1,5 @@
 import { getAssets } from '@/lib/actions';
-import ClientDividends from '@/app/dividends/ClientDividends';
+import ClientDividends from '@/app/d/dividends/ClientDividends';
 import { redirect } from 'next/navigation';
 import { auth } from '@/../auth';
 

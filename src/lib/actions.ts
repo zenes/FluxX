@@ -78,7 +78,7 @@ export async function updateUserPreferences(data: { appTheme?: string, stockColo
             where: { id: userId },
             data
         });
-        revalidatePath('/v2/m');
+        revalidatePath('/m');
         return { success: true };
     } catch (e: any) {
         console.error('Failed to update user preferences:', e);
@@ -102,7 +102,7 @@ export async function updateUserPrivacy(hideAssets: boolean) {
             where: { id: userId },
             data: { hideAssets }
         });
-        revalidatePath('/v2/m');
+        revalidatePath('/m');
         return { success: true };
     } catch (e: any) {
         console.error('Failed to update user privacy. Error detail:', e);
@@ -252,8 +252,8 @@ export async function upsertAsset(assetType: string, amount: number, predefinedA
     }
 
     // Refresh the page data
-    revalidatePath('/operations');
-    revalidatePath('/account');
+    revalidatePath('/d/portfolio');
+    revalidatePath('/d/accounts');
     return { success: true };
 }
 
@@ -314,7 +314,7 @@ export async function addStockEntry(data: {
             }
         });
 
-        revalidatePath('/operations');
+        revalidatePath('/d/portfolio');
         return entry;
     } catch (e: any) {
         console.error('Failed to add stock entry:', e);
@@ -366,7 +366,7 @@ export async function addPredefinedAccount(data: {
                 ...data
             }
         });
-        revalidatePath('/settings');
+        revalidatePath('/d/settings');
         return account;
     } catch (e) {
         console.error('Failed to add predefined account:', e);
@@ -388,7 +388,7 @@ export async function editPredefinedAccount(id: string, data: {
             where: { id, userId: session.user.id },
             data
         });
-        revalidatePath('/settings');
+        revalidatePath('/d/settings');
         return account;
     } catch (e) {
         console.error('Failed to edit predefined account:', e);
@@ -404,7 +404,7 @@ export async function deletePredefinedAccount(id: string) {
         await prisma.predefinedAccount.delete({
             where: { id, userId: session.user.id }
         });
-        revalidatePath('/settings');
+        revalidatePath('/d/settings');
         return true;
     } catch (e) {
         console.error('Failed to delete predefined account:', e);
@@ -497,16 +497,16 @@ export async function deleteStockEntry(entryId: string, tickerSymbol: string) {
         });
         console.log(`deleteStockEntry: Successfully deleted record:`, result);
         await recalculateStockAsset(userId, tickerSymbol);
-        revalidatePath('/operations');
-        revalidatePath('/v2/m');
+        revalidatePath('/d/portfolio');
+        revalidatePath('/m');
         return { success: true };
     } catch (e: any) {
         if (e.code === 'P2025') {
             console.warn('deleteStockEntry: Record already deleted or not found:', entryId);
             // Even if not found, we want the UI to sync, so we still revalidate and return success
             await recalculateStockAsset(userId, tickerSymbol);
-            revalidatePath('/operations');
-            revalidatePath('/v2/m');
+            revalidatePath('/d/portfolio');
+            revalidatePath('/m');
             return { success: true };
         }
         console.error('Failed to delete stock entry:', e);
@@ -529,7 +529,7 @@ export async function deleteStockAssetAllEntries(tickerSymbol: string) {
             where: { tickerSymbol, userId: userId }
         });
         await recalculateStockAsset(userId, tickerSymbol);
-        revalidatePath('/operations');
+        revalidatePath('/d/portfolio');
         return { success: true };
     } catch (e) {
         console.error('Failed to delete all stock entries:', e);
@@ -576,7 +576,7 @@ export async function editStockEntry(
             }
         });
         await recalculateStockAsset(userId, tickerSymbol);
-        revalidatePath('/operations');
+        revalidatePath('/d/portfolio');
         return { success: true };
     } catch (e: any) {
         console.error('Failed to edit stock entry:', e);
@@ -601,8 +601,8 @@ export async function updateDividendConfig(
             where: { id: entryId, userId: session.user.id },
             data
         });
-        revalidatePath('/dividends');
-        revalidatePath('/operations');
+        revalidatePath('/d/dividends');
+        revalidatePath('/d/portfolio');
         return { success: true };
     } catch (e: any) {
         console.error('Failed to update dividend config:', e);
@@ -639,7 +639,7 @@ export async function addDividendRecord(data: {
             },
             include: { predefinedAccount: true }
         });
-        revalidatePath('/dividends');
+        revalidatePath('/d/dividends');
         return record;
     } catch (e: any) {
         console.error('Failed to add dividend record:', e);
@@ -709,7 +709,7 @@ export async function editDividendRecord(
             },
             include: { predefinedAccount: true }
         });
-        revalidatePath('/dividends');
+        revalidatePath('/d/dividends');
         return record;
     } catch (e: any) {
         console.error('Failed to edit dividend record:', e);
@@ -725,7 +725,7 @@ export async function deleteDividendRecord(id: string) {
         await (prisma as any).dividendRecord.delete({
             where: { id, userId: session.user.id }
         });
-        revalidatePath('/dividends');
+        revalidatePath('/d/dividends');
         return { success: true };
     } catch (e: any) {
         console.error('Failed to delete dividend record:', e);
@@ -750,7 +750,7 @@ export async function addAssetMemo(tickerSymbol: string, content: string) {
                 content
             }
         });
-        revalidatePath('/operations');
+        revalidatePath('/d/portfolio');
         return JSON.parse(JSON.stringify(memo));
     } catch (e: any) {
         console.error('Failed to add asset memo:', e);
@@ -815,7 +815,7 @@ export async function deleteAssetMemo(memoId: string) {
                 userId: session.user.id
             }
         });
-        revalidatePath('/operations');
+        revalidatePath('/d/portfolio');
         return { success: true };
     } catch (e: any) {
         console.error('Failed to delete asset memo:', e);
@@ -835,7 +835,7 @@ export async function addMemo(content: string) {
                 content
             }
         });
-        revalidatePath('/account');
+        revalidatePath('/d/accounts');
         revalidatePath('/');
         return JSON.parse(JSON.stringify(memo));
     } catch (e: any) {
@@ -905,7 +905,7 @@ export async function uploadProfilePicture(formData: FormData) {
             data: { image: imageUrl }
         });
 
-        revalidatePath('/settings');
+        revalidatePath('/d/settings');
         return { success: true, imageUrl };
     } catch (e: any) {
         console.error('Failed to upload profile picture:', e);

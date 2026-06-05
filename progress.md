@@ -1,5 +1,32 @@
 # Project Progress - 2026-06-05
 
+## [2026-06-05 15:30] 라우트/네이밍 정리 Phase 1 — /m·/d 분기 및 페이지 리네임
+- **배경**: 기존 `v1`/`v2` 버전 prefix가 URL에 노출되고, "operations"·"intelligence" 같은 모호한 명칭이 직관성을 해침. 모바일/PC 라우트가 동일 트리 안에 섞여 있어 위계가 어지러움.
+- **확정 구조** ([docs/ROUTING_PLAN.md](./docs/ROUTING_PLAN.md) 참조):
+    - 최상단을 **모바일(`/m`)** 과 **데스크탑(`/d`)** 으로 분기.
+    - 행위 중심 네이밍: `operations` → **`portfolio`**, `intelligence` → **`insights`**, `account` → **`accounts`**.
+- **이동/리네임**:
+    - `/v2/m/*` → **`/m/*`** (메인 모바일).
+    - `/v1/page.tsx` → `/d/page.tsx` (데스크탑 대시보드).
+    - `/v1/operations` → **`/d/portfolio`**, `ClientOperations` → `ClientPortfolio`.
+    - `/v1/account` → **`/d/accounts`**, `ClientAccountDashboard` → `ClientAccounts`.
+    - `/v1/dividends` → `/d/dividends`.
+    - `/v1/intelligence` → **`/d/insights`**, `IntelligenceClient` → `ClientInsights`.
+    - `/settings` (루트) → `/d/settings`.
+    - 빈 `/v2/page.tsx` (Coming Soon) 삭제.
+- **루트 진입 동작 (`src/app/page.tsx`)**:
+    - `view-mode` 쿠키 우선 → 없으면 User-Agent 기반으로 `/m` 또는 `/d`로 자동 리다이렉트.
+- **네비게이션 갱신**:
+    - `AppSidebar` NAV_ITEMS를 `/d/portfolio`, `/d/accounts`, `/d/dividends`, `/d/insights`로 교체.
+    - "모바일 보기" 버튼이 쿠키 + `/m`으로 직접 이동하도록 수정.
+- **호환성 보장 (next.config.mjs)**:
+    - 구 URL 모두 301 리다이렉트: `/v2/m → /m`, `/v1/* → /d/*`, `/operations → /d/portfolio` 등 15여 개 매핑.
+- **부수 갱신**:
+    - 서버 액션 `revalidatePath` 호출 일괄 갱신 (`/v2/m → /m`, `/operations → /d/portfolio` 등).
+    - `auth.config.ts`의 `protectedPaths`를 `['/m', '/d']`로 단순화.
+- **빌드 검증**: `npm run build` 성공. 신규 라우트 `/m`, `/d/*` 모두 정상 컴파일.
+- **남은 정리 (Phase 3 예정)**: `/v1/m/*` 레거시 모바일, 비어버린 루트 디렉터리, `/v2/settings/ClientSettingsDashboard.tsx` 위치.
+
 ## [2026-06-05 14:45] 로컬 개발 환경을 SQLite 기반으로 전환 (DB 기본 백엔드 변경)
 - **배경 (Supabase 접속 불가)**:
     - Supabase 프로젝트(`postgres.ieyxojdwadhwteuursxq`)가 장기 미사용으로 비활성화/일시정지된 것으로 추정되어 `FATAL: (ENOTFOUND) tenant/user ... not found` 오류 발생.

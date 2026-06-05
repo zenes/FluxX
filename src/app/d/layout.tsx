@@ -1,6 +1,6 @@
 import { AppSidebar, MobileTabs } from "@/components/AppSidebar";
 
-export default function V1Layout({
+export default function DesktopLayout({
     children,
 }: {
     children: React.ReactNode;

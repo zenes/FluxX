@@ -1,9 +1,9 @@
 import { getIntelligenceData } from '@/lib/actions';
-import IntelligenceClient from '@/app/intelligence/IntelligenceClient';
+import ClientInsights from '@/app/d/insights/ClientInsights';
 import { auth } from '@/../auth';
 import { redirect } from 'next/navigation';
 
-export default async function IntelligencePage() {
+export default async function InsightsPage() {
     const session = await auth();
     if (!session?.user) {
         redirect('/login');
@@ -13,7 +13,7 @@ export default async function IntelligencePage() {
 
     return (
         <div className="flex-1 space-y-4 p-8 pt-6">
-            <IntelligenceClient initialData={data} />
+            <ClientInsights initialData={data} />
         </div>
     );
 }

@@ -43,3 +43,4 @@ next-env.d.ts
 # uploads
 /public/avatars/*
 !/public/avatars/.gitkeep
+prisma/dev.db.backup-*

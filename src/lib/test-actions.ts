@@ -44,9 +44,9 @@ export async function bulkDeleteTestData() {
         ]);
 
         revalidatePath('/');
-        revalidatePath('/operations');
-        revalidatePath('/account');
-        revalidatePath('/dividends');
+        revalidatePath('/d/portfolio');
+        revalidatePath('/d/accounts');
+        revalidatePath('/d/dividends');
         return { success: true };
     } catch (error: any) {
         console.error('Bulk delete failed:', error);
@@ -321,9 +321,9 @@ export async function bulkInsertTestData() {
         ]);
 
         revalidatePath('/');
-        revalidatePath('/operations');
-        revalidatePath('/account');
-        revalidatePath('/dividends');
+        revalidatePath('/d/portfolio');
+        revalidatePath('/d/accounts');
+        revalidatePath('/d/dividends');
         return { success: true };
     } catch (error: any) {
         console.error('Bulk insert failed:', error);

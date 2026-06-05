@@ -11,17 +11,17 @@ import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const NAV_ITEMS = [
-    { name: "Dashboard", href: "/", icon: LayoutDashboard },
-    { name: "Operations", href: "/operations", icon: Briefcase },
-    { name: "Accounts", href: "/account", icon: Landmark },
-    { name: "Dividends", href: "/dividends", icon: Coins },
-    { name: "Intelligence", href: "/intelligence", icon: Activity },
+    { name: "Dashboard", href: "/d", icon: LayoutDashboard },
+    { name: "Portfolio", href: "/d/portfolio", icon: Briefcase },
+    { name: "Accounts", href: "/d/accounts", icon: Landmark },
+    { name: "Dividends", href: "/d/dividends", icon: Coins },
+    { name: "Insights", href: "/d/insights", icon: Activity },
 ];
 
 const TAB_ITEMS = [
-    { name: "Operations", href: "/operations" },
-    { name: "Accounts", href: "/account" },
-    { name: "Dividends", href: "/dividends" },
+    { name: "Portfolio", href: "/d/portfolio" },
+    { name: "Accounts", href: "/d/accounts" },
+    { name: "Dividends", href: "/d/dividends" },
 ];
 
 export function MobileTabs() {
@@ -33,7 +33,7 @@ export function MobileTabs() {
         setIsMounted(true);
     }, []);
 
-    if (!isMounted || pathname === "/") return null;
+    if (!isMounted || pathname === "/" || pathname === "/d") return null;
 
     return (
         <div className="md:hidden flex h-11 border-b bg-muted/20 overflow-x-auto no-scrollbar">
@@ -88,7 +88,7 @@ export function AppSidebar() {
                     <button
                         onClick={() => {
                             document.cookie = 'view-mode=mobile; path=/; max-age=86400';
-                            window.location.reload();
+                            window.location.href = '/m';
                         }}
                         className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                         title="모바일 버전 보기"
@@ -149,7 +149,7 @@ export function AppSidebar() {
                     <button
                         onClick={() => {
                             document.cookie = 'view-mode=mobile; path=/; max-age=86400';
-                            window.location.reload();
+                            window.location.href = '/m';
                         }}
                         className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                         title="모바일 버전 보기"
