@@ -11,8 +11,8 @@ export default auth((req) => {
         const override = req.cookies.get('view-mode')?.value;
         const target =
             override === 'mobile' ? '/m'
-            : override === 'desktop' ? '/d'
-            : MOBILE_UA.test(req.headers.get('user-agent') || '') ? '/m' : '/d';
+            : override === 'desktop' ? '/d/portfolio'
+            : MOBILE_UA.test(req.headers.get('user-agent') || '') ? '/m' : '/d/portfolio';
         return NextResponse.redirect(new URL(target, req.nextUrl));
     }
     return NextResponse.next();
